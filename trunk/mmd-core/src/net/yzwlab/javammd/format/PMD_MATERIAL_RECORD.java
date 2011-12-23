@@ -1,6 +1,6 @@
 package net.yzwlab.javammd.format;
 
-import net.yzwlab.javammd.ReadBuffer;
+import net.yzwlab.javammd.IReadBuffer;
 import net.yzwlab.javammd.ReadException;
 
 
@@ -85,7 +85,7 @@ public class PMD_MATERIAL_RECORD {
 		this.textureFileName = textureFileName;
 	}
 	
-	public PMD_MATERIAL_RECORD Read(ReadBuffer buffer) throws ReadException {
+	public PMD_MATERIAL_RECORD Read(IReadBuffer buffer) throws ReadException {
 		if(buffer == null) {
 			throw new IllegalArgumentException();
 		}
@@ -146,7 +146,7 @@ public class PMD_MATERIAL_RECORD {
 			this.a = a;
 		}
 		
-		public S5 Read(ReadBuffer buffer) throws ReadException {
+		public S5 Read(IReadBuffer buffer) throws ReadException {
 			if(buffer == null) {
 				throw new IllegalArgumentException();
 			}
@@ -194,7 +194,7 @@ public class PMD_MATERIAL_RECORD {
 			this.b = b;
 		}
 		
-		public S6 Read(ReadBuffer buffer) throws ReadException {
+		public S6 Read(IReadBuffer buffer) throws ReadException {
 			if(buffer == null) {
 				throw new IllegalArgumentException();
 			}

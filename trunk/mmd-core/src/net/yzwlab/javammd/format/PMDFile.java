@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import net.yzwlab.javammd.ReadBuffer;
+import net.yzwlab.javammd.IReadBuffer;
 import net.yzwlab.javammd.ReadException;
 
 public class PMDFile {
@@ -50,7 +50,7 @@ public class PMDFile {
 	public void dispose() {
 	}
 
-	public boolean Open(ReadBuffer fs) throws ReadException {
+	public boolean Open(IReadBuffer fs) throws ReadException {
 		byte[] boneDispName = new byte[50];
 		byte[] boneName = new byte[20];
 		byte[] ename = new byte[276];

@@ -5,7 +5,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import net.yzwlab.javammd.ReadBuffer;
+import net.yzwlab.javammd.IReadBuffer;
 import net.yzwlab.javammd.ReadException;
 import net.yzwlab.javammd.model.DataUtils;
 
@@ -55,7 +55,7 @@ public class VMDFile {
 	public void dispose() {
 	}
 
-	public boolean Open(ReadBuffer fs) throws ReadException {
+	public boolean Open(IReadBuffer fs) throws ReadException {
 		int size = 0;
 		;
 		if (false || false)

@@ -1,6 +1,6 @@
 package net.yzwlab.javammd.format;
 
-import net.yzwlab.javammd.ReadBuffer;
+import net.yzwlab.javammd.IReadBuffer;
 import net.yzwlab.javammd.ReadException;
 
 public class MMD_MATRIX {
@@ -32,7 +32,7 @@ public class MMD_MATRIX {
 		this.values = values;
 	}
 
-	public MMD_MATRIX Read(ReadBuffer buffer) throws ReadException {
+	public MMD_MATRIX Read(IReadBuffer buffer) throws ReadException {
 		if (buffer == null) {
 			throw new IllegalArgumentException();
 		}

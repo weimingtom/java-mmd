@@ -1,6 +1,6 @@
 package net.yzwlab.javammd.format;
 
-import net.yzwlab.javammd.ReadBuffer;
+import net.yzwlab.javammd.IReadBuffer;
 import net.yzwlab.javammd.ReadException;
 
 public class MMD_MOTION_PAD {
@@ -51,7 +51,7 @@ public class MMD_MOTION_PAD {
 		this.cInterpolationRot = cInterpolationRot;
 	}
 
-	public MMD_MOTION_PAD Read(ReadBuffer buffer) throws ReadException {
+	public MMD_MOTION_PAD Read(IReadBuffer buffer) throws ReadException {
 		if (buffer == null) {
 			throw new IllegalArgumentException();
 		}

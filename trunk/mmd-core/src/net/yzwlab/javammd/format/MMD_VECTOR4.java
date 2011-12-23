@@ -1,6 +1,6 @@
 package net.yzwlab.javammd.format;
 
-import net.yzwlab.javammd.ReadBuffer;
+import net.yzwlab.javammd.IReadBuffer;
 import net.yzwlab.javammd.ReadException;
 
 public class MMD_VECTOR4 {
@@ -61,7 +61,7 @@ public class MMD_VECTOR4 {
 		this.w = w;
 	}
 
-	public MMD_VECTOR4 Read(ReadBuffer buffer) throws ReadException {
+	public MMD_VECTOR4 Read(IReadBuffer buffer) throws ReadException {
 		if (buffer == null) {
 			throw new IllegalArgumentException();
 		}

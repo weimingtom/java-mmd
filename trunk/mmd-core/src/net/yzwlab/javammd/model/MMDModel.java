@@ -8,7 +8,7 @@ import java.util.List;
 import net.yzwlab.javammd.IDataMutex;
 import net.yzwlab.javammd.IGL;
 import net.yzwlab.javammd.IMMDTextureProvider;
-import net.yzwlab.javammd.ReadBuffer;
+import net.yzwlab.javammd.IReadBuffer;
 import net.yzwlab.javammd.ReadException;
 import net.yzwlab.javammd.format.MMD_VERTEX_DESC;
 import net.yzwlab.javammd.format.PMDFile;
@@ -45,7 +45,7 @@ public class MMDModel {
 		m_scale = 1.0f;
 	}
 
-	public void OpenPMD(ReadBuffer buffer) throws ReadException {
+	public void OpenPMD(IReadBuffer buffer) throws ReadException {
 		PMD_MORP_RECORD baseMorp = new PMD_MORP_RECORD();
 		PMD_BONE_RECORD bone = new PMD_BONE_RECORD();
 		List<PMD_BONE_RECORD> bones = new ArrayList<PMD_BONE_RECORD>();
@@ -117,7 +117,7 @@ public class MMDModel {
 		return;
 	}
 
-	public void OpenVMD(ReadBuffer buffer) throws ReadException {
+	public void OpenVMD(IReadBuffer buffer) throws ReadException {
 		boolean added = false;
 		boolean br = false;
 		VMD_MORP_RECORD morp = null;

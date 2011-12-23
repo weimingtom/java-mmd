@@ -3,7 +3,7 @@ package net.yzwlab.javammd.format;
 import java.util.List;
 import java.util.ArrayList;
 
-import net.yzwlab.javammd.ReadBuffer;
+import net.yzwlab.javammd.IReadBuffer;
 import net.yzwlab.javammd.ReadException;
 
 public class PMD_HEADER {
@@ -32,7 +32,7 @@ public class PMD_HEADER {
 		this.header2 = header2;
 	}
 	
-	public PMD_HEADER Read(ReadBuffer buffer) throws ReadException {
+	public PMD_HEADER Read(IReadBuffer buffer) throws ReadException {
 		if(buffer == null) {
 			throw new IllegalArgumentException();
 		}

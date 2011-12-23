@@ -5,7 +5,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import net.yzwlab.javammd.ReadBuffer;
+import net.yzwlab.javammd.IReadBuffer;
 import net.yzwlab.javammd.ReadException;
 import net.yzwlab.javammd.format.MMD_MATRIX;
 import net.yzwlab.javammd.format.MMD_MOTION_PAD;
@@ -174,7 +174,7 @@ public class MMDBone {
 	 * @throws ReadException
 	 *             ì«Ç›çûÇ›ä÷åWÇÃÉGÉâÅ[ÅB
 	 */
-	public void AddMotion(ReadBuffer buffer, VMD_MOTION_RECORD pMotion)
+	public void AddMotion(IReadBuffer buffer, VMD_MOTION_RECORD pMotion)
 			throws ReadException {
 		if (buffer == null || pMotion == null) {
 			throw new IllegalArgumentException("E_POINTER");
@@ -368,7 +368,7 @@ public class MMDBone {
 
 		protected BezierCurve m_pRotBez;
 
-		public Motion(ReadBuffer buffer, VMD_MOTION_RECORD pMotion)
+		public Motion(IReadBuffer buffer, VMD_MOTION_RECORD pMotion)
 				throws ReadException {
 			this.m_pRotBez = null;
 			this.m_pZBez = null;
