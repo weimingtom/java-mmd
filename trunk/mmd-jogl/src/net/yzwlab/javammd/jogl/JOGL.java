@@ -38,7 +38,7 @@ public class JOGL implements IGL, IMMDTextureProvider {
 		if (filename == null) {
 			throw new IllegalArgumentException();
 		}
-		String sfilename = DataUtils.getString(filename);
+		String sfilename = new String(DataUtils.getStringData(filename));
 		int pos = sfilename.indexOf("*");
 		if (pos > 0) {
 			sfilename = sfilename.substring(0, pos);
