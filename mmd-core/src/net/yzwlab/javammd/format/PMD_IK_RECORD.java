@@ -3,7 +3,7 @@ package net.yzwlab.javammd.format;
 import java.util.List;
 import java.util.ArrayList;
 
-import net.yzwlab.javammd.ReadBuffer;
+import net.yzwlab.javammd.IReadBuffer;
 import net.yzwlab.javammd.ReadException;
 
 public class PMD_IK_RECORD {
@@ -76,7 +76,7 @@ public class PMD_IK_RECORD {
 		this.link = link;
 	}
 	
-	public PMD_IK_RECORD Read(ReadBuffer buffer) throws ReadException {
+	public PMD_IK_RECORD Read(IReadBuffer buffer) throws ReadException {
 		if(buffer == null) {
 			throw new IllegalArgumentException();
 		}

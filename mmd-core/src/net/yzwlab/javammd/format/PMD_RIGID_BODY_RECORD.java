@@ -3,7 +3,7 @@ package net.yzwlab.javammd.format;
 import java.util.List;
 import java.util.ArrayList;
 
-import net.yzwlab.javammd.ReadBuffer;
+import net.yzwlab.javammd.IReadBuffer;
 import net.yzwlab.javammd.ReadException;
 
 public class PMD_RIGID_BODY_RECORD {
@@ -186,7 +186,7 @@ public class PMD_RIGID_BODY_RECORD {
 		this.cbRigidBodyType = cbRigidBodyType;
 	}
 	
-	public PMD_RIGID_BODY_RECORD Read(ReadBuffer buffer) throws ReadException {
+	public PMD_RIGID_BODY_RECORD Read(IReadBuffer buffer) throws ReadException {
 		if(buffer == null) {
 			throw new IllegalArgumentException();
 		}

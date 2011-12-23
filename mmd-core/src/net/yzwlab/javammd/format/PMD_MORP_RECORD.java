@@ -3,7 +3,7 @@ package net.yzwlab.javammd.format;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.yzwlab.javammd.ReadBuffer;
+import net.yzwlab.javammd.IReadBuffer;
 import net.yzwlab.javammd.ReadException;
 
 public class PMD_MORP_RECORD {
@@ -68,7 +68,7 @@ public class PMD_MORP_RECORD {
 		this.mv = mv;
 	}
 
-	public PMD_MORP_RECORD Read(ReadBuffer buffer) throws ReadException {
+	public PMD_MORP_RECORD Read(IReadBuffer buffer) throws ReadException {
 		if (buffer == null) {
 			throw new IllegalArgumentException();
 		}

@@ -1,6 +1,6 @@
 package net.yzwlab.javammd.format;
 
-import net.yzwlab.javammd.ReadBuffer;
+import net.yzwlab.javammd.IReadBuffer;
 import net.yzwlab.javammd.ReadException;
 
 public class VMD_CAMERA_RECORD {
@@ -20,7 +20,7 @@ public class VMD_CAMERA_RECORD {
 		System.arraycopy(VMDFile.c_hokan_data2, 0, pad, 0, pad.length);
 	}
 
-	public VMD_CAMERA_RECORD Read(ReadBuffer buffer) throws ReadException {
+	public VMD_CAMERA_RECORD Read(IReadBuffer buffer) throws ReadException {
 		frame_no = buffer.readInteger();
 		pos = buffer.readFloatArray(4);
 		angle = buffer.readFloatArray(3);

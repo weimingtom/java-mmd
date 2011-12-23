@@ -3,7 +3,7 @@ package net.yzwlab.javammd;
 /**
  * データ読み込み用バッファの抽象です。
  */
-public interface ReadBuffer {
+public interface IReadBuffer {
 
 	/**
 	 * バイト配列からバッファを生成します。
@@ -14,7 +14,7 @@ public interface ReadBuffer {
 	 * @throws ReadException
 	 *             読み込み関係のエラー。
 	 */
-	public ReadBuffer createFromByteArray(byte[] data) throws ReadException;
+	public IReadBuffer createFromByteArray(byte[] data) throws ReadException;
 
 	public boolean isEOF();
 

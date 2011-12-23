@@ -1,6 +1,6 @@
 package net.yzwlab.javammd.format;
 
-import net.yzwlab.javammd.ReadBuffer;
+import net.yzwlab.javammd.IReadBuffer;
 import net.yzwlab.javammd.ReadException;
 
 public class VMD_HEADER {
@@ -15,7 +15,7 @@ public class VMD_HEADER {
 				Math.min(hdr_string.length, VMDFile.c_hdr_string.length));
 	}
 
-	public VMD_HEADER Read(ReadBuffer buffer) throws ReadException {
+	public VMD_HEADER Read(IReadBuffer buffer) throws ReadException {
 		hdr_string = buffer.readByteArray(0x1A);
 		unknown = buffer.readByteArray(0x04);
 		return this;

@@ -1,6 +1,6 @@
 package net.yzwlab.javammd.format;
 
-import net.yzwlab.javammd.ReadBuffer;
+import net.yzwlab.javammd.IReadBuffer;
 import net.yzwlab.javammd.ReadException;
 
 public class VMD_V3_HEADER {
@@ -12,7 +12,7 @@ public class VMD_V3_HEADER {
 				Math.min(actor.length, VMDFile.c_actor_v3.length));
 	}
 
-	public VMD_V3_HEADER Read(ReadBuffer buffer) throws ReadException {
+	public VMD_V3_HEADER Read(IReadBuffer buffer) throws ReadException {
 		actor = buffer.readByteArray(20);
 		return this;
 	}

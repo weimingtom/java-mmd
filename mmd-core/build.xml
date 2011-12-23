@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- WARNING: Eclipse auto-generated file.
+              Any modifications will be overwritten.
+              To include a user specific buildfile here, simply create one in the same
+              directory with the processing instruction <?eclipse.ant.import?>
+              as the first entry and export the buildfile again. -->
+<project basedir="." default="build" name="mmd-core">
+	<property environment="env" />
+	<property name="ECLIPSE_HOME" value="../../../Program Files/eclipse" />
+	<property name="debuglevel" value="source,lines,vars" />
+	<property name="target" value="1.6" />
+	<property name="source" value="1.6" />
+	<path id="mmd-core.classpath">
+		<pathelement location="bin/core" />
+		<pathelement location="bin/test" />
+	</path>
+	<target name="init">
+		<mkdir dir="dist" />
+		<mkdir dir="bin/core" />
+		<mkdir dir="bin/test" />
+		<copy includeemptydirs="false" todir="bin/core">
+			<fileset dir="src">
+				<exclude name="**/*.launch" />
+				<exclude name="**/*.java" />
+			</fileset>
+		</copy>
+		<copy includeemptydirs="false" todir="bin/test">
+			<fileset dir="test">
+				<exclude name="**/*.launch" />
+				<exclude name="**/*.java" />
+			</fileset>
+		</copy>
+	</target>
+	<target name="clean">
+		<delete dir="bin/core" />
+		<delete dir="bin/test" />
+	</target>
+	<target depends="clean" name="cleanall" />
+	<target depends="build-subprojects,build-project" name="build">
+		<jar jarfile="dist/${ant.project.name}.jar">
+			<fileset dir="bin/core">
+				<include name="**" />
+				<exclude name="**/*.bak" />
+				<exclude name="*.bak" />
+			</fileset>
+			<fileset dir="src">
+				<include name="**" />
+				<exclude name="**/*.bak" />
+				<exclude name="*.bak" />
+			</fileset>
+		</jar>
+	</target>
+	<target name="build-subprojects" />
+	<target depends="init" name="build-project">
+		<echo message="${ant.project.name}: ${ant.file}" />
+		<javac debug="true" debuglevel="${debuglevel}" destdir="bin/core" source="${source}" target="${target}">
+			<src path="src" />
+			<classpath refid="mmd-core.classpath" />
+		</javac>
+		<javac debug="true" debuglevel="${debuglevel}" destdir="bin/test" source="${source}" target="${target}">
+			<src path="test" />
+			<classpath refid="mmd-core.classpath" />
+		</javac>
+	</target>
+	<target description="Build all projects which reference this project. Useful to propagate changes." name="build-refprojects" />
+	<target description="copy Eclipse compiler jars to ant lib directory" name="init-eclipse-compiler">
+		<copy todir="${ant.library.dir}">
+			<fileset dir="${ECLIPSE_HOME}/plugins" includes="org.eclipse.jdt.core_*.jar" />
+		</copy>
+		<unzip dest="${ant.library.dir}">
+			<patternset includes="jdtCompilerAdapter.jar" />
+			<fileset dir="${ECLIPSE_HOME}/plugins" includes="org.eclipse.jdt.core_*.jar" />
+		</unzip>
+	</target>
+	<target description="compile project with Eclipse compiler" name="build-eclipse-compiler">
+		<property name="build.compiler" value="org.eclipse.jdt.core.JDTCompilerAdapter" />
+		<antcall target="build" />
+	</target>
+	<target name="PMDFileTest (1)">
+		<java classname="net.yzwlab.javammd.PMDFileTest" failonerror="true" fork="yes">
+			<arg line="C:/home/dev/arbrowser-core/arbrowser/data/release/mmd/DIVA_miku/normal.pmd" />
+			<classpath refid="mmd-core.classpath" />
+		</java>
+	</target>
+</project>

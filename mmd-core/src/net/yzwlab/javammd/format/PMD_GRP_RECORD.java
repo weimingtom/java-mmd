@@ -3,7 +3,7 @@ package net.yzwlab.javammd.format;
 import java.util.List;
 import java.util.ArrayList;
 
-import net.yzwlab.javammd.ReadBuffer;
+import net.yzwlab.javammd.IReadBuffer;
 import net.yzwlab.javammd.ReadException;
 
 public class PMD_GRP_RECORD {
@@ -32,7 +32,7 @@ public class PMD_GRP_RECORD {
 		this.grp = grp;
 	}
 	
-	public PMD_GRP_RECORD Read(ReadBuffer buffer) throws ReadException {
+	public PMD_GRP_RECORD Read(IReadBuffer buffer) throws ReadException {
 		if(buffer == null) {
 			throw new IllegalArgumentException();
 		}

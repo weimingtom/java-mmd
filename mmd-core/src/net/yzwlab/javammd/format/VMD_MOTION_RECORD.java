@@ -1,6 +1,6 @@
 package net.yzwlab.javammd.format;
 
-import net.yzwlab.javammd.ReadBuffer;
+import net.yzwlab.javammd.IReadBuffer;
 import net.yzwlab.javammd.ReadException;
 
 public class VMD_MOTION_RECORD {
@@ -23,7 +23,7 @@ public class VMD_MOTION_RECORD {
 		System.arraycopy(VMDFile.c_hokan_data, 0, pad, 0, pad.length);
 	}
 
-	public VMD_MOTION_RECORD Read(ReadBuffer buffer) throws ReadException {
+	public VMD_MOTION_RECORD Read(IReadBuffer buffer) throws ReadException {
 		name = buffer.readByteArray(15);
 		frame_no = buffer.readInteger();
 		pos = buffer.readFloatArray(3);

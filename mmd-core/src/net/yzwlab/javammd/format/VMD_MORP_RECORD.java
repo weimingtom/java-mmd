@@ -1,6 +1,6 @@
 package net.yzwlab.javammd.format;
 
-import net.yzwlab.javammd.ReadBuffer;
+import net.yzwlab.javammd.IReadBuffer;
 import net.yzwlab.javammd.ReadException;
 
 public class VMD_MORP_RECORD {
@@ -16,7 +16,7 @@ public class VMD_MORP_RECORD {
 		this.name = new byte[15];
 	}
 
-	public VMD_MORP_RECORD Read(ReadBuffer buffer) throws ReadException {
+	public VMD_MORP_RECORD Read(IReadBuffer buffer) throws ReadException {
 		name = buffer.readByteArray(15);
 		frame_no = buffer.readInteger();
 		factor = buffer.readFloat();

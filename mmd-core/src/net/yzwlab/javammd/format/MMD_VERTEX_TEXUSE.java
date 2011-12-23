@@ -1,6 +1,6 @@
 package net.yzwlab.javammd.format;
 
-import net.yzwlab.javammd.ReadBuffer;
+import net.yzwlab.javammd.IReadBuffer;
 import net.yzwlab.javammd.ReadException;
 
 public class MMD_VERTEX_TEXUSE {
@@ -46,7 +46,7 @@ public class MMD_VERTEX_TEXUSE {
 		this.uv = uv;
 	}
 
-	public MMD_VERTEX_TEXUSE Read(ReadBuffer buffer) throws ReadException {
+	public MMD_VERTEX_TEXUSE Read(IReadBuffer buffer) throws ReadException {
 		if (buffer == null) {
 			throw new IllegalArgumentException();
 		}
