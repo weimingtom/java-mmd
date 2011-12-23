@@ -25,6 +25,20 @@
     <!-- be added before this line.                -->
     <!--                                           -->
     <script type="text/javascript" language="javascript" src="mmd_gwt/mmd_gwt.nocache.js"></script>
+    
+    <script id="shader-fs" type="x-shader/x-fragment">
+      void main(void) {
+        gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+      }
+    </script>
+    <script id="shader-vs" type="x-shader/x-vertex">
+      attribute vec3 pos;
+      
+      void main(void) {
+        gl_Position = vec4(pos, 1.0);
+      }
+    </script>
+    
   </head>
 
   <!--                                           -->
@@ -53,6 +67,12 @@
       </tr>
       <tr>
         <td id="dropFieldContainer"></td>
+      </tr>
+      <tr>
+        <td>3D View:</td>
+      </tr>
+      <tr>
+        <td id="canvas3d"></td>
       </tr>
     </table>
   </body>

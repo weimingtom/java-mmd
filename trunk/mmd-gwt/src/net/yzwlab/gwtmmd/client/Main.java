@@ -3,6 +3,7 @@ package net.yzwlab.gwtmmd.client;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.yzwlab.gwtmmd.client.gl.GLCanvas;
 import net.yzwlab.gwtmmd.client.io.FileReadBuffer;
 import net.yzwlab.javammd.ReadException;
 import net.yzwlab.javammd.model.MMDModel;
@@ -146,6 +147,8 @@ public class Main implements EntryPoint {
 				}
 			}
 		});
+
+		RootPanel.get("canvas3d").add(new GLCanvas(640, 480));
 	}
 
 	private void processFiles(FileList files) {
