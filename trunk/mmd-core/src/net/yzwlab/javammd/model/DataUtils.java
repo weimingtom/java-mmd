@@ -1,5 +1,7 @@
 package net.yzwlab.javammd.model;
 
+import java.util.Arrays;
+
 /**
  * データ関係のユーティリティクラスです。
  */
@@ -32,7 +34,7 @@ public class DataUtils {
 	 *            バイト列。nullは不可。
 	 * @return 文字列。
 	 */
-	public static String getString(byte[] data) {
+	public static byte[] getStringData(byte[] data) {
 		if (data == null) {
 			throw new IllegalArgumentException();
 		}
@@ -43,7 +45,11 @@ public class DataUtils {
 				break;
 			}
 		}
-		return new String(data, 0, len);
+		byte[] ret = new byte[len];
+		for (int i = 0; i < len; i++) {
+			ret[i] = data[i];
+		}
+		return ret;
 	}
 
 	/**
@@ -55,7 +61,7 @@ public class DataUtils {
 	 *            最大長。
 	 * @return 文字列。
 	 */
-	public static String getString(byte[] data, int maxLen) {
+	public static byte[] getStringData(byte[] data, int maxLen) {
 		if (data == null) {
 			throw new IllegalArgumentException();
 		}
@@ -66,7 +72,11 @@ public class DataUtils {
 				break;
 			}
 		}
-		return new String(data, 0, len);
+		byte[] ret = new byte[len];
+		for (int i = 0; i < len; i++) {
+			ret[i] = data[i];
+		}
+		return ret;
 	}
 
 	/**
@@ -84,7 +94,43 @@ public class DataUtils {
 		if (data1 == null || data2 == null) {
 			throw new IllegalArgumentException();
 		}
-		return getString(data1, maxLen).compareTo(getString(data2, maxLen));
+		return compare(getStringData(data1, maxLen),
+				getStringData(data2, maxLen));
+	}
+
+	/**
+	 * 文字列を比較します。
+	 * 
+	 * @param data1
+	 *            バイト列。nullは不可。
+	 * @param data2
+	 *            バイト列。nullは不可。
+	 * @return 文字列。
+	 */
+	public static int compare(byte[] data1, byte[] data2) {
+		if (data1 == null || data2 == null) {
+			throw new IllegalArgumentException();
+		}
+		if (Arrays.equals(data1, data2)) {
+			return 0;
+		}
+		for (int i = 0; i < data1.length && i < data2.length; i++) {
+			byte d1 = data1[i];
+			byte d2 = data2[i];
+			if (d1 < d2) {
+				return -1;
+			}
+			if (d1 > d2) {
+				return +1;
+			}
+		}
+		if (data1.length < data2.length) {
+			return -1;
+		}
+		if (data1.length > data2.length) {
+			return +1;
+		}
+		return 0;
 	}
 
 	/**

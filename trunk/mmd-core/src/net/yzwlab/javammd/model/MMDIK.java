@@ -76,7 +76,7 @@ public class MMDIK {
 		}
 	}
 
-	public String GetTargetName() {
+	public byte[] GetTargetName() {
 		if (m_pTarget == null) {
 			throw new IllegalArgumentException("E_UNEXPECTED");
 		}

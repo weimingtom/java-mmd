@@ -1,6 +1,7 @@
 package net.yzwlab.javammd.model;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -123,8 +124,6 @@ public class MMDModel {
 		VMD_MORP_RECORD morp = null;
 		List<VMD_MORP_RECORD> morps = new ArrayList<VMD_MORP_RECORD>();
 		VMD_MOTION_RECORD motion = null;
-		String motionName = null;
-		List<String> motionNames = new ArrayList<String>();
 		List<VMD_MOTION_RECORD> motions = new ArrayList<VMD_MOTION_RECORD>();
 		MMDBone pBone = null;
 		MMDMorp pMorp = null;
@@ -139,8 +138,6 @@ public class MMDModel {
 		motions = vmdFile.GetMotionChunk();
 		for (int j = 0; j < motions.size(); j++) {
 			motion = motions.get(j);
-			motionName = DataUtils.getString(motion.getName());
-			motionNames.add(motionName);
 			added = false;
 			for (int i = 0; i < m_bones.size(); i++) {
 				pBone = m_bones.get(i);
@@ -244,9 +241,9 @@ public class MMDModel {
 		return pMutex;
 	}
 
-	public void SetFace(String faceName) {
-		String elemName = null;
-		String name = null;
+	public void SetFace(byte[] faceName) {
+		byte[] elemName = null;
+		byte[] name = null;
 		MMDMorp pElem = null;
 		MMDMorp pSelectedElem = null;
 		MMD_VERTEX_DESC[] ppOriginalDescs = null;
@@ -258,7 +255,7 @@ public class MMDModel {
 		for (int i = 0; i < m_morps.size(); i++) {
 			pElem = m_morps.get(i);
 			elemName = pElem.GetName();
-			if (elemName.equals(name)) {
+			if (Arrays.equals(elemName, name)) {
 				pSelectedElem = pElem;
 				break;
 			}
@@ -274,7 +271,7 @@ public class MMDModel {
 		return m_morps.size();
 	}
 
-	public String GetFaceName(int index) {
+	public byte[] GetFaceName(int index) {
 		if (index >= m_morps.size()) {
 			throw new IllegalArgumentException("E_INVALIDARG");
 		}
@@ -287,7 +284,7 @@ public class MMDModel {
 		return pCount;
 	}
 
-	public String GetBoneName(int index) {
+	public byte[] GetBoneName(int index) {
 		if (index >= m_bones.size()) {
 			throw new IllegalArgumentException("E_INVALIDARG");
 		}
@@ -298,7 +295,7 @@ public class MMDModel {
 		return m_iks.size();
 	}
 
-	public String GetIKTargetName(int index) {
+	public byte[] GetIKTargetName(int index) {
 		if (index >= m_iks.size()) {
 			throw new IllegalArgumentException("E_INVALIDARG");
 		}
