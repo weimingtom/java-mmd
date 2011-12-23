@@ -85,8 +85,8 @@ public class MMDMorp {
 		return;
 	}
 
-	public String GetName() {
-		return DataUtils.getString(m_morp.getName(), 20);
+	public byte[] GetName() {
+		return DataUtils.getStringData(m_morp.getName(), 20);
 	}
 
 	public Integer GetMaxFrame() {

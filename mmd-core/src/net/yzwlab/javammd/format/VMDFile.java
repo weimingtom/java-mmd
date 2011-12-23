@@ -1,6 +1,7 @@
 package net.yzwlab.javammd.format;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -58,12 +59,12 @@ public class VMDFile {
 	public boolean Open(IReadBuffer fs) throws ReadException {
 		int size = 0;
 		;
-		if (false || false)
-			return false;
 		m_vmd_header = (new VMD_HEADER()).Read(fs);
-		if (DataUtils.getString(GetVersion()).equals("file")) {
+		if (Arrays.equals(DataUtils.getStringData(GetVersion()), new byte[] {
+				(byte) 102, (byte) 105, (byte) 108, (byte) 101 })) {
 			m_vmd_v2_header = (new VMD_V2_HEADER()).Read(fs);
-		} else if (DataUtils.getString(GetVersion()).equals("0002")) {
+		} else if (Arrays.equals(DataUtils.getStringData(GetVersion()),
+				new byte[] { (byte) 48, (byte) 48, (byte) 48, (byte) 50 })) {
 			m_vmd_v3_header = (new VMD_V3_HEADER()).Read(fs);
 		} else {
 			;
@@ -211,9 +212,7 @@ public class VMDFile {
 
 	public int SortByBoneNameAndFrameNo(VMD_MOTION_RECORD rec1,
 			VMD_MOTION_RECORD rec2) {
-		String rec1Name = DataUtils.getString(rec1.name);
-		String rec2Name = DataUtils.getString(rec2.name);
-		return rec1Name.compareTo(rec2Name);
+		return DataUtils.compare(rec1.name, rec2.name);
 	}
 
 	public int SortByMorpNameAndFrameNo(VMD_MORP_RECORD rec1,

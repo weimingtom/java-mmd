@@ -1,6 +1,7 @@
 package net.yzwlab.javammd.model;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -150,8 +151,8 @@ public class MMDBone {
 		return;
 	}
 
-	public String GetName() {
-		return DataUtils.getString(m_bone.getName());
+	public byte[] GetName() {
+		return DataUtils.getStringData(m_bone.getName());
 	}
 
 	public boolean IsTarget(VMD_MOTION_RECORD pMotion) {
@@ -283,8 +284,12 @@ public class MMDBone {
 	}
 
 	public void UpdateIKLimitAngle() {
-		if (DataUtils.getString(m_bone.getName(), 20).equals("ç∂Ç–Ç¥")
-				|| DataUtils.getString(m_bone.getName(), 20).equals("âEÇ–Ç¥")) {
+		if (Arrays.equals(DataUtils.getStringData(m_bone.getName(), 20),
+				new byte[] { (byte) -115, (byte) -74, (byte) -126, (byte) -48,
+						(byte) -126, (byte) -76 }/* ç∂Ç–Ç¥ */)
+				|| Arrays.equals(DataUtils.getStringData(m_bone.getName(), 20),
+						new byte[] { (byte) -119, (byte) 69, (byte) -126,
+								(byte) -48, (byte) -126, (byte) -76 } /* âEÇ–Ç¥ */)) {
 			m_bIKLimitAngle = true;
 		}
 		return;

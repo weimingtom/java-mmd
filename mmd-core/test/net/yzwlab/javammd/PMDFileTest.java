@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import net.yzwlab.javammd.format.TEXTURE_DESC;
-import net.yzwlab.javammd.model.DataUtils;
 import net.yzwlab.javammd.model.MMDModel;
 
 public class PMDFileTest implements IDataMutex, IMMDTextureProvider, IGL {
@@ -69,8 +68,6 @@ public class PMDFileTest implements IDataMutex, IMMDTextureProvider, IGL {
 		if (filename == null) {
 			throw new IllegalArgumentException();
 		}
-		String sfilename = DataUtils.getString(filename);
-		System.out.println("File: " + sfilename);
 		TEXTURE_DESC ret = new TEXTURE_DESC();
 		ret.setTexMemWidth(100);
 		ret.setTexMemHeight(100);
