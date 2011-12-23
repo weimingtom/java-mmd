@@ -1,0 +1,61 @@
+package net.yzwlab.javammd.format;
+
+import net.yzwlab.javammd.ReadBuffer;
+import net.yzwlab.javammd.ReadException;
+
+public class MMD_VECTOR3 {
+	protected float x;
+
+	protected float y;
+
+	protected float z;
+
+	public MMD_VECTOR3() {
+		this.x = 0.0f;
+		this.y = 0.0f;
+		this.z = 0.0f;
+	}
+
+	public MMD_VECTOR3(MMD_VECTOR3 source) {
+		if (source == null) {
+			throw new IllegalArgumentException();
+		}
+		this.x = source.x;
+		this.y = source.y;
+		this.z = source.z;
+	}
+
+	public float getX() {
+		return x;
+	}
+
+	public void setX(float x) {
+		this.x = x;
+	}
+
+	public float getY() {
+		return y;
+	}
+
+	public void setY(float y) {
+		this.y = y;
+	}
+
+	public float getZ() {
+		return z;
+	}
+
+	public void setZ(float z) {
+		this.z = z;
+	}
+
+	public MMD_VECTOR3 Read(ReadBuffer buffer) throws ReadException {
+		if (buffer == null) {
+			throw new IllegalArgumentException();
+		}
+		this.x = buffer.readFloat();
+		this.y = buffer.readFloat();
+		this.z = buffer.readFloat();
+		return this;
+	}
+}
