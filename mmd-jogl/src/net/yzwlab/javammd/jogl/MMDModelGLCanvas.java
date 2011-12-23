@@ -41,7 +41,7 @@ public class MMDModelGLCanvas {
 		File f = new File(args[0]);
 		try {
 			model.OpenPMD(new FileBuffer(f.getPath()));
-			model.OpenVMD(new FileBuffer("resources/mmd/azunyan207.vmd"));
+			model.OpenVMD(new FileBuffer(new File(args[1])));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -57,7 +57,7 @@ public class MMDModelGLCanvas {
 		}
 
 		for (int j = 0; j < model.GetIKCount(); j++) {
-			String name = model.GetIKTargetName(j);
+			String name = new String(model.GetIKTargetName(j));
 			System.out.println("IK #" + String.valueOf(j + 1) + ": " + name);
 			if (name.indexOf("˜r") > 0) {
 				model.SetIKEnabled(j, false);
