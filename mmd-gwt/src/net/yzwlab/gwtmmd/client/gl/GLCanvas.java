@@ -1,5 +1,12 @@
 package net.yzwlab.gwtmmd.client.gl;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import net.yzwlab.javammd.IDataMutex;
+import net.yzwlab.javammd.IGL;
+import net.yzwlab.javammd.model.MMDModel;
+
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
@@ -34,7 +41,12 @@ public class GLCanvas extends Widget {
 	/**
 	 * バッファを保持します。
 	 */
-	private JavaScriptObject buffer;
+	private List<JavaScriptObject> buffers;
+
+	/**
+	 * モデルを保持します。
+	 */
+	private List<MMDModel> models;
 
 	/**
 	 * 構築します。
@@ -49,12 +61,26 @@ public class GLCanvas extends Widget {
 		this.timer = null;
 		this.gl = null;
 		this.program = null;
-		this.buffer = null;
+		this.buffers = new ArrayList<JavaScriptObject>();
+		this.models = new ArrayList<MMDModel>();
 
 		canvasElement.setAttribute("width", String.valueOf(width));
 		canvasElement.setAttribute("height", String.valueOf(height));
 
 		setElement(canvasElement);
+	}
+
+	/**
+	 * モデルを追加します。
+	 * 
+	 * @param model
+	 *            モデル。nullは不可。
+	 */
+	public void addModel(MMDModel model) {
+		if (model == null) {
+			throw new IllegalArgumentException();
+		}
+		models.add(model);
 	}
 
 	@Override
@@ -68,9 +94,6 @@ public class GLCanvas extends Widget {
 		JavaScriptObject fs = getFragmentShader(gl,
 				doc.getElementById("shader-fs").getInnerText());
 		program = initShaders(gl, vs, fs);
-
-		buffer = createBuffer(gl);
-		initBuffer(gl, buffer, createTestVertexArray());
 
 		if (timer != null) {
 			timer.cancel();
@@ -91,6 +114,32 @@ public class GLCanvas extends Widget {
 
 		super.onUnload();
 	}
+
+	/**
+	 * Perspective行列を生成します。
+	 * 
+	 * @return Perspective行列。
+	 */
+	private native JavaScriptObject createPMatrix() /*-{
+		var persp = $wnd.mat4.create();
+		$wnd.mat4.perspective(45, 4 / 3, 1, 100, persp);
+		return persp;
+	}-*/;
+
+	/**
+	 * ModelView行列を生成します。
+	 * 
+	 * @return ModelView行列。
+	 */
+	private native JavaScriptObject createMVMatrix() /*-{
+		var modelView = $wnd.mat4.create();
+
+		$wnd.mat4.identity(modelView); // Set to identity
+		$wnd.mat4.translate(modelView, [ 0, -5, -15 ]); // Translate back 10 units
+		$wnd.mat4.rotate(modelView, Math.PI / 4, [ 0, 0, 0 ]); // Rotate 90 degrees around the Y axis
+		$wnd.mat4.scale(modelView, [ 0.5, 0.5, 0.5 ]); // Scale by 200%
+		return modelView;
+	}-*/;
 
 	/**
 	 * 初期化します。
@@ -185,16 +234,19 @@ public class GLCanvas extends Widget {
 
 		var attr = gl.getAttribLocation(program, "pos");
 		gl.enableVertexAttribArray(attr);
+		program.mvMatrixUniform = gl.getUniformLocation(program, "uMVMatrix");
+		program.pMatrixUniform = gl.getUniformLocation(program, "uPMatrix");
+
 		return program;
 	}-*/;
 
 	/**
-	 * シーンを描画します。
+	 * シーンを消去します。
 	 * 
 	 * @param gl
 	 *            WebGLオブジェクト。nullは不可。
 	 */
-	private native void drawScene(JavaScriptObject gl) /*-{
+	private native void clearScene(JavaScriptObject gl) /*-{
 		gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 	}-*/;
@@ -229,6 +281,36 @@ public class GLCanvas extends Widget {
 	}-*/;
 
 	/**
+	 * MVMatrixを設定します。
+	 * 
+	 * @param gl
+	 *            WebGLオブジェクト。nullは不可。
+	 * @param program
+	 *            シェーダ。nullは不可。
+	 * @param mat
+	 *            行列。nullは不可。
+	 */
+	private native void setMVMatrix(JavaScriptObject gl,
+			JavaScriptObject program, JavaScriptObject mat) /*-{
+		gl.uniformMatrix4fv(program.mvMatrixUniform, false, mat);
+	}-*/;
+
+	/**
+	 * PMatrixを設定します。
+	 * 
+	 * @param gl
+	 *            WebGLオブジェクト。nullは不可。
+	 * @param program
+	 *            シェーダ。nullは不可。
+	 * @param mat
+	 *            行列。nullは不可。
+	 */
+	private native void setPMatrix(JavaScriptObject gl,
+			JavaScriptObject program, JavaScriptObject mat) /*-{
+		gl.uniformMatrix4fv(program.pMatrixUniform, false, mat);
+	}-*/;
+
+	/**
 	 * バッファの内容を描画します。
 	 * 
 	 * @param gl
@@ -246,29 +328,278 @@ public class GLCanvas extends Widget {
 		gl.drawArrays(gl.TRIANGLES, 0, buffer.vertexNum);
 	}-*/;
 
-	private native JavaScriptObject createTestVertexArray() /*-{
-		return [ 0.0, 0.25, 0.0, -0.25, -0.25, 0.0, 0.25, -0.25, 0.0, -0.5,
-				0.25, 0.0, -0.75, -0.25, 0.0, -0.25, -0.25, 0.0, 0.5, 0.25,
-				0.0, 0.25, -0.25, 0.0, 0.75, -0.25, 0.0 ];
-	}-*/;
-
 	/**
 	 * シーン描画用のタイマーです。
 	 */
-	private class DrawSceneTimer extends Timer {
+	private class DrawSceneTimer extends Timer implements IDataMutex {
+
+		/**
+		 * Perspective行列を保持します。
+		 */
+		private JavaScriptObject pMatrix;
 
 		/**
 		 * 構築します。
 		 */
 		public DrawSceneTimer() {
-			;
+			this.pMatrix = createPMatrix();
 		}
 
 		@Override
 		public void run() {
-			drawScene(gl);
+			clearScene(gl);
+			setPMatrix(gl, program, pMatrix);
 
-			drawArrays(gl, program, buffer);
+			for (MMDModel model : models) {
+				GL glctx = new GL(model);
+				model.DrawAsync(this, glctx);
+				glctx.flush();
+			}
+		}
+
+		@Override
+		public void Begin() {
+			;
+		}
+
+		@Override
+		public void End() {
+			;
+		}
+
+		/**
+		 * GLオブジェクトの抽象です。
+		 */
+		private class GL implements IGL {
+
+			/**
+			 * バッファインデックスを保持します。
+			 */
+			private int bufferIndex;
+
+			/**
+			 * 頂点リストを保持します。
+			 */
+			private JavaScriptObject vertexes;
+
+			/**
+			 * 変換行列を保持します。
+			 */
+			private JavaScriptObject mvMatrix;
+
+			/**
+			 * 構築します。
+			 * 
+			 * @param model
+			 *            モデル。nullは不可。
+			 */
+			public GL(MMDModel model) {
+				if (model == null) {
+					throw new IllegalArgumentException();
+				}
+				this.bufferIndex = 0;
+				this.vertexes = createVertexes();
+				this.mvMatrix = createMVMatrix();
+			}
+
+			/**
+			 * 出力します。
+			 */
+			public void flush() {
+				setMVMatrix(gl, program, mvMatrix);
+				for (int i = 0; i < bufferIndex; i++) {
+					drawArrays(gl, program, buffers.get(i));
+				}
+			}
+
+			@Override
+			public C getGlFontFaceCode(int target) {
+				return C.GL_FRONT_AND_BACK;
+			}
+
+			@Override
+			public void glFrontFace(C mode) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void glBegin(C mode) {
+				if (mode == null) {
+					throw new IllegalArgumentException();
+				}
+			}
+
+			@Override
+			public void glEnd() {
+				JavaScriptObject buffer = null;
+				if (bufferIndex >= buffers.size()) {
+					buffer = createBuffer(gl);
+					buffers.add(buffer);
+				} else {
+					buffer = buffers.get(bufferIndex);
+				}
+				initBuffer(gl, buffer, vertexes);
+
+				bufferIndex++;
+
+				vertexes = createVertexes();
+			}
+
+			@Override
+			public void glVertex3f(float x, float y, float z) {
+				pushVertexes(vertexes, x, y, z);
+			}
+
+			@Override
+			public void glTexCoord2f(float x, float y) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void glNormal3f(float x, float y, float z) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void glBindTexture(C target, long texture) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void glBlendFunc(C c1, C c2) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void glPushMatrix() {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void glPopMatrix() {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void glScalef(float a1, float a2, float a3) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void glColor4f(float a1, float a2, float a3, float a4) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void glDrawArrays(C mode, int offset, int length) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void glEnable(C target) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void glDisable(C target) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public boolean glIsEnabled(C target) {
+				// TODO Auto-generated method stub
+				return false;
+			}
+
+			@Override
+			public void glMaterialfv(C c1, C c2, float[] fv) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void glMaterialf(C c1, C c2, float f) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public int glGetIntegerv(C target) {
+				// TODO Auto-generated method stub
+				return 0;
+			}
+
+			@Override
+			public void glEnableClientState(C target) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void glDisableClientState(C target) {
+				// TODO Auto-generated method stub
+
+			}
+
+			/**
+			 * 頂点の最大数を取得します。
+			 * 
+			 * @param model
+			 *            モデル。nullは不可。
+			 * @return 頂点の最大数。
+			 */
+			private int getMaxVertexesSize(MMDModel model) {
+				if (model == null) {
+					throw new IllegalArgumentException();
+				}
+				int size = 0;
+				for (int i = 0; i < model.getMaterialCount(); i++) {
+					size = Math
+							.max(size, model.getMaterial(i).getVertexCount());
+				}
+				return size;
+			}
+
+			/**
+			 * 頂点バッファをリセットします。
+			 * 
+			 * @return 頂点バッファ。
+			 */
+			private native JavaScriptObject createVertexes() /*-{
+				return new Array();
+			}-*/;
+
+			/**
+			 * 頂点を追加します。
+			 * 
+			 * @param vertexes
+			 *            頂点リスト。nullは不可。
+			 * @param x
+			 *            座標。
+			 * @param y
+			 *            座標。
+			 * @param z
+			 *            座標。
+			 */
+			private native void pushVertexes(JavaScriptObject vertexes,
+					float x, float y, float z) /*-{
+				vertexes.push(x);
+				vertexes.push(y);
+				vertexes.push(z);
+			}-*/;
+
 		}
 
 	}

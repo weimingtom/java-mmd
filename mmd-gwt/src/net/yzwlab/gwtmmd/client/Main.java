@@ -5,7 +5,9 @@ import java.util.List;
 
 import net.yzwlab.gwtmmd.client.gl.GLCanvas;
 import net.yzwlab.gwtmmd.client.io.FileReadBuffer;
+import net.yzwlab.javammd.IMMDTextureProvider;
 import net.yzwlab.javammd.ReadException;
+import net.yzwlab.javammd.format.TEXTURE_DESC;
 import net.yzwlab.javammd.model.MMDModel;
 
 import org.vectomatic.arrays.ArrayBuffer;
@@ -35,7 +37,7 @@ import com.google.gwt.user.client.ui.RootPanel;
 /**
  * Entry point classes define <code>onModuleLoad()</code>.
  */
-public class Main implements EntryPoint {
+public class Main implements EntryPoint, IMMDTextureProvider {
 	/**
 	 * The message displayed to the user when the server cannot be reached or
 	 * returns an error.
@@ -57,6 +59,17 @@ public class Main implements EntryPoint {
 	public Main() {
 		this.reader = new FileReader();
 		this.readQueue = new ArrayList<File>();
+	}
+
+	@Override
+	public TEXTURE_DESC Load(byte[] filename) throws ReadException {
+		TEXTURE_DESC desc = new TEXTURE_DESC();
+		desc.setTexWidth(100);
+		desc.setTexHeight(100);
+		desc.setTexMemWidth(100);
+		desc.setTexMemHeight(100);
+		desc.setTextureId(0L);
+		return desc;
 	}
 
 	/**
@@ -105,6 +118,8 @@ public class Main implements EntryPoint {
 			}
 		});
 
+		final GLCanvas glCanvas = new GLCanvas(640, 480);
+
 		reader.addLoadEndHandler(new LoadEndHandler() {
 			@Override
 			public void onLoadEnd(LoadEndEvent event) {
@@ -116,7 +131,10 @@ public class Main implements EntryPoint {
 							MMDModel model = new MMDModel();
 							ArrayBuffer buf = reader.getArrayBufferResult();
 							model.OpenPMD(new FileReadBuffer(buf));
-							Window.alert("MMD: Bones=" + model.GetBoneCount());
+							Window.alert("MMD: Bones=" + model.getBoneCount());
+
+							model.Prepare(Main.this);
+							glCanvas.addModel(model);
 						} catch (ReadException e) {
 							handleError(
 									file,
@@ -148,7 +166,7 @@ public class Main implements EntryPoint {
 			}
 		});
 
-		RootPanel.get("canvas3d").add(new GLCanvas(640, 480));
+		RootPanel.get("canvas3d").add(glCanvas);
 	}
 
 	private void processFiles(FileList files) {
