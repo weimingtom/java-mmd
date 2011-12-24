@@ -278,17 +278,52 @@ public class MMDModel {
 		return m_morps.get(index).GetName();
 	}
 
-	public int GetBoneCount() {
+	/**
+	 * ボーン数を取得します。
+	 * 
+	 * @return ボーン。
+	 */
+	public int getBoneCount() {
 		Integer pCount = 0;
 		pCount = m_bones.size();
 		return pCount;
 	}
 
-	public byte[] GetBoneName(int index) {
+	/**
+	 * ボーンを取得します。
+	 * 
+	 * @param index
+	 *            インデックス。
+	 * @return ボーン。
+	 */
+	public IMMDBone getBone(int index) {
 		if (index >= m_bones.size()) {
 			throw new IllegalArgumentException("E_INVALIDARG");
 		}
-		return m_bones.get(index).GetName();
+		return new BoneAccessor(m_bones.get(index));
+	}
+
+	/**
+	 * マテリアル数を取得します。
+	 * 
+	 * @return マテリアル数。
+	 */
+	public int getMaterialCount() {
+		return m_materials.size();
+	}
+
+	/**
+	 * マテリアルを取得します。
+	 * 
+	 * @param index
+	 *            インデックス。
+	 * @return マテリアル。
+	 */
+	public IMMDMaterial getMaterial(int index) {
+		if (index >= m_materials.size()) {
+			throw new IllegalArgumentException();
+		}
+		return new MaterialAccessor(m_materials.get(index));
 	}
 
 	public int GetIKCount() {
@@ -423,5 +458,65 @@ public class MMDModel {
 			m_iks.get(i).Update();
 		}
 		return true;
+	}
+
+	/**
+	 * ボーンのアクセサを定義します。
+	 */
+	private class BoneAccessor implements IMMDBone {
+
+		/**
+		 * ボーンを保持します。
+		 */
+		private MMDBone bone;
+
+		/**
+		 * 構築します。
+		 * 
+		 * @param bone
+		 *            ボーン。nullは不可。
+		 */
+		public BoneAccessor(MMDBone bone) {
+			if (bone == null) {
+				throw new IllegalArgumentException();
+			}
+			this.bone = bone;
+		}
+
+		@Override
+		public byte[] getName() {
+			return bone.GetName();
+		}
+
+	}
+
+	/**
+	 * マテリアルを実装します。
+	 */
+	private class MaterialAccessor implements IMMDMaterial {
+
+		/**
+		 * マテリアルを保持します。
+		 */
+		private MMDMaterial material;
+
+		/**
+		 * 構築します。
+		 * 
+		 * @param material
+		 *            マテリアル。nullは不可。
+		 */
+		public MaterialAccessor(MMDMaterial material) {
+			if (material == null) {
+				throw new IllegalArgumentException();
+			}
+			this.material = material;
+		}
+
+		@Override
+		public int getVertexCount() {
+			return material.m_pVertexes.length;
+		}
+
 	}
 }
