@@ -142,13 +142,7 @@ public class MMDBone {
 	}
 
 	public void ClearMotion() {
-		Motion pMotion = null;
-		for (int i = 0; i < m_motions.size(); i++) {
-			pMotion = m_motions.get(i);
-			pMotion.dispose();
-		}
 		m_motions.clear();
-		return;
 	}
 
 	public byte[] GetName() {
@@ -327,8 +321,6 @@ public class MMDBone {
 
 	public MotionSet FindMotion(float elapsedTime) {
 		int fr = 0;
-		int fr1 = 0;
-		int fr2 = 0;
 		Motion pEMotion = null;
 		Motion pSMotion = null;
 		if (m_motions.size() == 0) {
@@ -346,11 +338,9 @@ public class MMDBone {
 		for (int i = 0; i < m_motions.size() - 1; i++) {
 			pSMotion = m_motions.get(i);
 			pEMotion = m_motions.get(i + 1);
-			fr1 = 0;
-			fr2 = 0;
-			fr1 = pSMotion.GetFrameNo();
-			fr2 = pEMotion.GetFrameNo();
-			if (fr1 <= elapsedTime && elapsedTime <= fr2) {
+			int fr1 = pSMotion.GetFrameNo();
+			int fr2 = pEMotion.GetFrameNo();
+			if (fr1 <= elapsedTime && elapsedTime < fr2) {
 				return new MotionSet(pSMotion, pEMotion, (elapsedTime - fr1)
 						/ (fr2 - fr1));
 			}
@@ -424,25 +414,6 @@ public class MMDBone {
 			m_pRotBez = new BezierCurve(p1, p2);
 		}
 
-		public void dispose() {
-			if (m_pXBez != null) {
-				m_pXBez.dispose();
-				m_pXBez = null;
-			}
-			if (m_pYBez != null) {
-				m_pYBez.dispose();
-				m_pYBez = null;
-			}
-			if (m_pZBez != null) {
-				m_pZBez.dispose();
-				m_pZBez = null;
-			}
-			if (m_pRotBez != null) {
-				m_pRotBez.dispose();
-				m_pRotBez = null;
-			}
-		}
-
 		public int GetFrameNo() {
 			return m_motion.getFrameNo();
 		}
@@ -459,13 +430,13 @@ public class MMDBone {
 				throw new IllegalArgumentException("E_POINTER");
 			}
 			posLerp = 0.0f;
-			posLerp = m_pXBez.GetValue(weight);
+			posLerp = m_pXBez.getValue(weight);
 			pDest.setX(pValue1.getX() * (1.0f - posLerp) + pValue2.getX()
 					* posLerp);
-			posLerp = m_pYBez.GetValue(weight);
+			posLerp = m_pYBez.getValue(weight);
 			pDest.setY(pValue1.getY() * (1.0f - posLerp) + pValue2.getY()
 					* posLerp);
-			posLerp = m_pZBez.GetValue(weight);
+			posLerp = m_pZBez.getValue(weight);
 			pDest.setZ(pValue1.getZ() * (1.0f - posLerp) + pValue2.getZ()
 					* posLerp);
 			return pDest;
@@ -479,7 +450,7 @@ public class MMDBone {
 				throw new IllegalArgumentException("E_POINTER");
 			}
 			rotLerp = 0.0f;
-			rotLerp = m_pRotBez.GetValue(weight);
+			rotLerp = m_pRotBez.getValue(weight);
 			return CalcUtil.Lerp(pValue1, pValue2, rotLerp);
 		}
 	}
@@ -517,7 +488,7 @@ public class MMDBone {
 		private float offset;
 
 		public MotionSet(Motion motion1, Motion motion2, float offset) {
-			if (motion1 == null && motion2 == null) {
+			if (motion1 == null && motion2 == null && offset >= 1.0f) {
 				throw new IllegalArgumentException();
 			}
 			this.motion1 = motion1;
