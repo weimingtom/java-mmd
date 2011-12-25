@@ -378,16 +378,20 @@ public class MMDModel {
 		return m_bones.get(index).IsVisible();
 	}
 
-	public Integer GetMaxFrame() {
+	/**
+	 * 最大フレーム数を取得します。
+	 * 
+	 * @return 最大フレーム数。
+	 */
+	public Integer getMaxFrame() {
 		Integer pFrameNo = 0;
-		int f = 0;
 		int ret = 0;
 		int validCount = 0;
 		ret = 0;
 		validCount = 0;
 		for (int i = 0; i < m_morps.size(); i++) {
-			pFrameNo = m_morps.get(i).GetMaxFrame();
-			if (pFrameNo == null) {
+			Integer f = m_morps.get(i).GetMaxFrame();
+			if (f == null) {
 				continue;
 			}
 			validCount++;
@@ -396,8 +400,8 @@ public class MMDModel {
 			}
 		}
 		for (int i = 0; i < m_bones.size(); i++) {
-			pFrameNo = m_bones.get(i).GetMaxFrame();
-			if (pFrameNo == null) {
+			Integer f = m_bones.get(i).GetMaxFrame();
+			if (f == null) {
 				continue;
 			}
 			validCount++;
