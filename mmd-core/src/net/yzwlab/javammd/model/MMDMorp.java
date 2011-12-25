@@ -170,16 +170,9 @@ public class MMDMorp {
 	}
 
 	public MMD_VERTEX_DESC[] Set(MMD_VERTEX_DESC[] pOriginalVertexes) {
-		int jno = 0;
-		PMD_MORP_VERTEX_RECORD v = new PMD_MORP_VERTEX_RECORD();
-		for (int i = 0; i < m_morp.getMv().size(); i++) {
-			v = m_morp.getMv().get(i);
-			jno = v.getNo();
-			MMD_VERTEX_TEXUSE faced = pOriginalVertexes[jno].getFaced();
-			faced.getPoint().setX(v.getVec()[0]);
-			faced.getPoint().setY(v.getVec()[1]);
-			faced.getPoint().setZ(v.getVec()[2]);
-			pOriginalVertexes[jno].setFaced(faced);
+		for (PMD_MORP_VERTEX_RECORD v : m_morp.getMv()) {
+			int jno = v.getNo();
+			pOriginalVertexes[jno].setFaced(v);
 		}
 		return pOriginalVertexes;
 	}
@@ -187,18 +180,18 @@ public class MMDMorp {
 	public MMD_VERTEX_DESC[] Blend(MMD_VERTEX_DESC[] pOriginalVertexes,
 			float weight) {
 		int jno = 0;
-		PMD_MORP_VERTEX_RECORD v = new PMD_MORP_VERTEX_RECORD();
-		MMD_VECTOR3 vec = new MMD_VECTOR3();
 		if (weight == 1.0f) {
 			return Set(pOriginalVertexes);
 		}
-		for (int i = 0; i < m_morp.getMv().size(); i++) {
-			v = m_morp.getMv().get(i);
-			vec.setX(v.getVec()[0]);
-			vec.setY(v.getVec()[1]);
-			vec.setZ(v.getVec()[2]);
+		MMD_VECTOR3 vec = new MMD_VECTOR3();
+		MMD_VERTEX_TEXUSE buffer = new MMD_VERTEX_TEXUSE();
+		for (PMD_MORP_VERTEX_RECORD v : m_morp.getMv()) {
+			float[] values = v.getVec();
+			vec.setX(values[0]);
+			vec.setY(values[1]);
+			vec.setZ(values[2]);
 			jno = v.getNo();
-			MMD_VERTEX_TEXUSE faced = pOriginalVertexes[jno].getFaced();
+			MMD_VERTEX_TEXUSE faced = pOriginalVertexes[jno].getFaced(buffer);
 			faced.setPoint(CalcUtil.Lerp(faced.getPoint(), vec, weight));
 			pOriginalVertexes[jno].setFaced(faced);
 		}

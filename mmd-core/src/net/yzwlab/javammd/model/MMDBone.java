@@ -185,9 +185,9 @@ public class MMDBone {
 		m_effectSkinning = CalcUtil.Multiply(m_invTransform, m_effectLocal);
 	}
 
-	public MMD_VERTEX_TEXUSE ApplySkinning(MMD_VERTEX_TEXUSE pOriginal) {
-		MMD_VERTEX_TEXUSE pDest = new MMD_VERTEX_TEXUSE();
-		if (pDest == null || pOriginal == null) {
+	public MMD_VERTEX_TEXUSE ApplySkinning(MMD_VERTEX_TEXUSE pOriginal,
+			MMD_VERTEX_TEXUSE pDest) {
+		if (pOriginal == null || pDest == null) {
 			throw new IllegalArgumentException("E_POINTER");
 		}
 		pDest.setPoint(CalcUtil.Transform(pOriginal.getPoint(),
@@ -198,15 +198,12 @@ public class MMDBone {
 	}
 
 	public MMD_VERTEX_TEXUSE ApplySkinning(MMD_VERTEX_TEXUSE pOriginal,
-			MMDBone pBone, float bweight) {
-		MMD_VERTEX_TEXUSE pDest = new MMD_VERTEX_TEXUSE();
-		MMD_MATRIX skinning = new MMD_MATRIX();
-		if (pDest == null || pOriginal == null || pBone == null) {
+			MMDBone pBone, float bweight, MMD_VERTEX_TEXUSE pDest) {
+		if (pOriginal == null || pBone == null || pDest == null) {
 			throw new IllegalArgumentException("E_POINTER");
 		}
-		skinning = CalcUtil.ToZeroM();
-		skinning = CalcUtil.Lerp(m_effectSkinning, pBone.m_effectSkinning,
-				bweight);
+		MMD_MATRIX skinning = CalcUtil.Lerp(m_effectSkinning,
+				pBone.m_effectSkinning, bweight);
 		pDest.setPoint(CalcUtil.Transform(pOriginal.getPoint(), skinning));
 		pDest.setNormal(CalcUtil.Rotate(pOriginal.getNormal(), skinning));
 		pDest.setUv(pOriginal.getUv());
@@ -321,9 +318,8 @@ public class MMDBone {
 		if (pPos == null || pQt == null) {
 			throw new IllegalArgumentException("E_POINTER");
 		}
-		m_effectPosition = new MMD_VECTOR3(pPos);
-		m_effectRotation = new MMD_VECTOR4(pQt);
-		return;
+		m_effectPosition.copyFrom(pPos);
+		m_effectRotation.copyFrom(pQt);
 	}
 
 	public MotionSet FindMotion(float elapsedTime) {
@@ -404,7 +400,6 @@ public class MMDBone {
 			this.m_qt = new MMD_VECTOR4();
 			this.m_pos = new MMD_VECTOR3();
 			this.m_motion = null;
-			MMD_VECTOR4 qt = new MMD_VECTOR4();
 			m_pXBez = null;
 			m_pYBez = null;
 			m_pZBez = null;
@@ -413,11 +408,12 @@ public class MMDBone {
 			m_pos.setX(m_motion.getPos()[0]);
 			m_pos.setY(m_motion.getPos()[1]);
 			m_pos.setZ(m_motion.getPos()[2]);
-			qt.setX(m_motion.getQt()[0]);
-			qt.setY(m_motion.getQt()[1]);
-			qt.setZ(m_motion.getQt()[2]);
-			qt.setW(m_motion.getQt()[3]);
-			m_qt = CalcUtil.Normalize(qt);
+			m_qt = new MMD_VECTOR4();
+			m_qt.setX(m_motion.getQt()[0]);
+			m_qt.setY(m_motion.getQt()[1]);
+			m_qt.setZ(m_motion.getQt()[2]);
+			m_qt.setW(m_motion.getQt()[3]);
+			m_qt.Normalize();
 			MMD_MOTION_PAD pad = (new MMD_MOTION_PAD()).Read(buffer
 					.createFromByteArray(m_motion.getPad()));
 			MMD_VECTOR2 p1 = new MMD_VECTOR2(), p2 = new MMD_VECTOR2();
@@ -478,13 +474,10 @@ public class MMDBone {
 
 		public MMD_VECTOR4 Lerp(MMD_VECTOR4 pValue1, MMD_VECTOR4 pValue2,
 				float weight) {
-			MMD_VECTOR4 pDest = new MMD_VECTOR4();
-			float rotLerp = 0.0f;
-			if (pDest == null || pValue1 == null || pValue2 == null) {
+			if (pValue1 == null || pValue2 == null) {
 				throw new IllegalArgumentException("E_POINTER");
 			}
-			rotLerp = 0.0f;
-			rotLerp = m_pRotBez.getValue(weight);
+			float rotLerp = m_pRotBez.getValue(weight);
 			return CalcUtil.Lerp(pValue1, pValue2, rotLerp);
 		}
 	}

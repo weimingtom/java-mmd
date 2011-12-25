@@ -21,6 +21,20 @@ public class MMD_VECTOR2 {
 		this.y = source.y;
 	}
 
+	/**
+	 * ベクトル情報のコピーを行います。
+	 * 
+	 * @param source
+	 *            ソース。nullは不可。
+	 */
+	public void copyFrom(MMD_VECTOR2 source) {
+		if (source == null) {
+			throw new IllegalArgumentException();
+		}
+		this.x = source.x;
+		this.y = source.y;
+	}
+
 	public float getX() {
 		return x;
 	}

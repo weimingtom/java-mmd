@@ -29,6 +29,22 @@ public class MMD_VECTOR4 {
 		this.w = source.w;
 	}
 
+	/**
+	 * ベクトル情報のコピーを行います。
+	 * 
+	 * @param source
+	 *            ソース。nullは不可。
+	 */
+	public void copyFrom(MMD_VECTOR4 source) {
+		if (source == null) {
+			throw new IllegalArgumentException();
+		}
+		this.x = source.x;
+		this.y = source.y;
+		this.z = source.z;
+		this.w = source.w;
+	}
+
 	public float getX() {
 		return x;
 	}
@@ -59,6 +75,18 @@ public class MMD_VECTOR4 {
 
 	public void setW(float w) {
 		this.w = w;
+	}
+
+	/**
+	 * ベクトルを正規化します。
+	 */
+	public void Normalize() {
+		double fSqr = 0.0f;
+		fSqr = 1.0f / Math.sqrt(x * x + y * y + z * z + w * w);
+		x = ((float) (x * fSqr));
+		y = ((float) (y * fSqr));
+		z = ((float) (z * fSqr));
+		w = ((float) (w * fSqr));
 	}
 
 	public MMD_VECTOR4 Read(IReadBuffer buffer) throws ReadException {

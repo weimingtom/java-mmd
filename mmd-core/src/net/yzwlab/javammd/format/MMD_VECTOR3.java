@@ -25,6 +25,21 @@ public class MMD_VECTOR3 {
 		this.z = source.z;
 	}
 
+	/**
+	 * ベクトル情報のコピーを行います。
+	 * 
+	 * @param source
+	 *            ソース。nullは不可。
+	 */
+	public void copyFrom(MMD_VECTOR3 source) {
+		if (source == null) {
+			throw new IllegalArgumentException();
+		}
+		this.x = source.x;
+		this.y = source.y;
+		this.z = source.z;
+	}
+
 	public float getX() {
 		return x;
 	}
@@ -47,6 +62,17 @@ public class MMD_VECTOR3 {
 
 	public void setZ(float z) {
 		this.z = z;
+	}
+
+	/**
+	 * 正規化します。
+	 */
+	public void Normalize() {
+		double fSqr = 0.0f;
+		fSqr = 1.0f / Math.sqrt(x * x + y * y + z * z);
+		x = ((float) (x * fSqr));
+		y = ((float) (y * fSqr));
+		z = ((float) (z * fSqr));
 	}
 
 	public MMD_VECTOR3 Read(IReadBuffer buffer) throws ReadException {
