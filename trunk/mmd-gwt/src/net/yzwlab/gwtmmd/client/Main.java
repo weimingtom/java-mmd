@@ -113,11 +113,13 @@ public class Main implements EntryPoint, IMMDTextureProvider {
 			resultLabel = new Label("(Status)");
 			motionPanel = new VerticalPanel();
 
+			Label perfLabel = new Label("(Performance)");
+
 			final DropPanel dropPanel = new DropPanel();
 			dropPanel.addStyleName("gwtmmd-drop");
 
 			RootPanel.get("dropFieldContainer").add(dropPanel);
-			dropPanel.setSize("200px", "200px");
+			dropPanel.setSize("100px", "100px");
 			dropPanel.addDragEnterHandler(new DragEnterHandler() {
 				@Override
 				public void onDragEnter(DragEnterEvent event) {
@@ -155,7 +157,7 @@ public class Main implements EntryPoint, IMMDTextureProvider {
 				}
 			});
 
-			final GLCanvas glCanvas = new GLCanvas(640, 480);
+			final GLCanvas glCanvas = new GLCanvas(perfLabel, 640, 480);
 			glCanvas.setCurrentRy(-1);
 			glCanvas.setCurrentRx(1);
 
@@ -205,6 +207,7 @@ public class Main implements EntryPoint, IMMDTextureProvider {
 
 			VerticalPanel vpanel = new VerticalPanel();
 			vpanel.add(resultLabel);
+			vpanel.add(perfLabel);
 			HorizontalPanel buttons = new HorizontalPanel();
 			Button button = new Button("Rotate X++");
 			button.addClickHandler(new ClickHandler() {

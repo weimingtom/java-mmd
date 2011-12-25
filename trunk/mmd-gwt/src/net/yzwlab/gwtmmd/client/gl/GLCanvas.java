@@ -12,67 +12,79 @@ import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.user.client.Timer;
+import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
 
 /**
- * WebGLƒLƒƒƒ“ƒoƒX‚ÌÀ‘•‚Å‚·B
+ * WebGLã‚­ãƒ£ãƒ³ãƒã‚¹ã®å®Ÿè£…ã§ã™ã€‚
  */
 public class GLCanvas extends Widget {
 
 	/**
-	 * canvas—v‘f‚ğ•Û‚µ‚Ü‚·B
+	 * æ€§èƒ½è¡¨ç¤ºãƒ©ãƒ™ãƒ«ã‚’ä¿æŒã—ã¾ã™ã€‚
+	 */
+	private Label performanceLabel;
+
+	/**
+	 * canvasè¦ç´ ã‚’ä¿æŒã—ã¾ã™ã€‚
 	 */
 	private Element canvasElement;
 
 	/**
-	 * ƒ^ƒCƒ}[‚ğ•Û‚µ‚Ü‚·B
+	 * ã‚¿ã‚¤ãƒãƒ¼ã‚’ä¿æŒã—ã¾ã™ã€‚
 	 */
 	private Timer timer;
 
 	/**
-	 * WebGLƒIƒuƒWƒFƒNƒg‚ğ•Û‚µ‚Ü‚·B
+	 * WebGLã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã‚’ä¿æŒã—ã¾ã™ã€‚
 	 */
 	private JavaScriptObject gl;
 
 	/**
-	 * ƒVƒF[ƒ_ƒvƒƒOƒ‰ƒ€‚ğ•Û‚µ‚Ü‚·B
+	 * ã‚·ã‚§ãƒ¼ãƒ€ãƒ—ãƒ­ã‚°ãƒ©ãƒ ã‚’ä¿æŒã—ã¾ã™ã€‚
 	 */
 	private JavaScriptObject program;
 
 	/**
-	 * ƒoƒbƒtƒ@‚ğ•Û‚µ‚Ü‚·B
+	 * ãƒãƒƒãƒ•ã‚¡ã‚’ä¿æŒã—ã¾ã™ã€‚
 	 */
 	private List<BufferGroup> buffers;
 
 	/**
-	 * ƒ‚ƒfƒ‹‚ğ•Û‚µ‚Ü‚·B
+	 * ãƒ¢ãƒ‡ãƒ«ã‚’ä¿æŒã—ã¾ã™ã€‚
 	 */
 	private List<DynamicModel> models;
 
 	/**
-	 * ‰ñ“]‚ğ•Û‚µ‚Ü‚·B
+	 * å›è»¢ã‚’ä¿æŒã—ã¾ã™ã€‚
 	 */
 	private int currentRx;
 
 	/**
-	 * ‰ñ“]‚ğ•Û‚µ‚Ü‚·B
+	 * å›è»¢ã‚’ä¿æŒã—ã¾ã™ã€‚
 	 */
 	private int currentRy;
 
 	/**
-	 * ‰ñ“]‚ğ•Û‚µ‚Ü‚·B
+	 * å›è»¢ã‚’ä¿æŒã—ã¾ã™ã€‚
 	 */
 	private int currentRz;
 
 	/**
-	 * \’z‚µ‚Ü‚·B
+	 * æ§‹ç¯‰ã—ã¾ã™ã€‚
 	 * 
+	 * @param performanceLabel
+	 *            æ€§èƒ½è¡¨ç¤ºãƒ©ãƒ™ãƒ«ã€‚nullã¯ä¸å¯ã€‚
 	 * @param width
-	 *            •B
+	 *            å¹…ã€‚
 	 * @param height
-	 *            ‚‚³B
+	 *            é«˜ã•ã€‚
 	 */
-	public GLCanvas(int width, int height) {
+	public GLCanvas(Label performanceLabel, int width, int height) {
+		if (performanceLabel == null) {
+			throw new IllegalArgumentException();
+		}
+		this.performanceLabel = performanceLabel;
 		this.canvasElement = Document.get().createElement("canvas");
 		this.timer = null;
 		this.gl = null;
@@ -114,10 +126,10 @@ public class GLCanvas extends Widget {
 	}
 
 	/**
-	 * ƒ‚ƒfƒ‹‚ğ’Ç‰Á‚µ‚Ü‚·B
+	 * ãƒ¢ãƒ‡ãƒ«ã‚’è¿½åŠ ã—ã¾ã™ã€‚
 	 * 
 	 * @param model
-	 *            ƒ‚ƒfƒ‹Bnull‚Í•s‰ÂB
+	 *            ãƒ¢ãƒ‡ãƒ«ã€‚nullã¯ä¸å¯ã€‚
 	 */
 	public void addModel(MMDModel model) {
 		if (model == null) {
@@ -127,14 +139,14 @@ public class GLCanvas extends Widget {
 	}
 
 	/**
-	 * ƒ‚[ƒVƒ‡ƒ“‚ğİ’è‚µ‚Ü‚·B
+	 * ãƒ¢ãƒ¼ã‚·ãƒ§ãƒ³ã‚’è¨­å®šã—ã¾ã™ã€‚
 	 * 
 	 * @param model
-	 *            ƒ‚ƒfƒ‹Bnull‚Í•s‰ÂB
+	 *            ãƒ¢ãƒ‡ãƒ«ã€‚nullã¯ä¸å¯ã€‚
 	 * @param frameRate
-	 *            ƒtƒŒ[ƒ€ƒŒ[ƒgB
+	 *            ãƒ•ãƒ¬ãƒ¼ãƒ ãƒ¬ãƒ¼ãƒˆã€‚
 	 * @param motionSeg
-	 *            ƒ‚[ƒVƒ‡ƒ“‹æ•ªBnull‰ÂB
+	 *            ãƒ¢ãƒ¼ã‚·ãƒ§ãƒ³åŒºåˆ†ã€‚nullå¯ã€‚
 	 */
 	public void setMotion(MMDModel model, float frameRate,
 			IMotionSegment motionSeg) {
@@ -151,7 +163,7 @@ public class GLCanvas extends Widget {
 	}
 
 	/**
-	 * ƒ‚ƒfƒ‹‚ğ‚·‚×‚Äíœ‚µ‚Ü‚·B
+	 * ãƒ¢ãƒ‡ãƒ«ã‚’ã™ã¹ã¦å‰Šé™¤ã—ã¾ã™ã€‚
 	 */
 	public void removeAllModels() {
 		models.clear();
@@ -193,9 +205,9 @@ public class GLCanvas extends Widget {
 	}
 
 	/**
-	 * Perspectives—ñ‚ğ¶¬‚µ‚Ü‚·B
+	 * Perspectiveè¡Œåˆ—ã‚’ç”Ÿæˆã—ã¾ã™ã€‚
 	 * 
-	 * @return Perspectives—ñB
+	 * @return Perspectiveè¡Œåˆ—ã€‚
 	 */
 	private native JavaScriptObject createPMatrix() /*-{
 		var persp = $wnd.mat4.create();
@@ -204,15 +216,15 @@ public class GLCanvas extends Widget {
 	}-*/;
 
 	/**
-	 * ModelViews—ñ‚ğ¶¬‚µ‚Ü‚·B
+	 * ModelViewè¡Œåˆ—ã‚’ç”Ÿæˆã—ã¾ã™ã€‚
 	 * 
 	 * @param rx
-	 *            ‰ñ“]B
+	 *            å›è»¢ã€‚
 	 * @param ry
-	 *            ‰ñ“]B
+	 *            å›è»¢ã€‚
 	 * @param rz
-	 *            ‰ñ“]B
-	 * @return ModelViews—ñB
+	 *            å›è»¢ã€‚
+	 * @return ModelViewè¡Œåˆ—ã€‚
 	 */
 	private native JavaScriptObject createMVMatrix(int rx, int ry, int rz) /*-{
 		var modelView = $wnd.mat4.create();
@@ -227,11 +239,11 @@ public class GLCanvas extends Widget {
 	}-*/;
 
 	/**
-	 * ‰Šú‰»‚µ‚Ü‚·B
+	 * åˆæœŸåŒ–ã—ã¾ã™ã€‚
 	 * 
 	 * @param elem
-	 *            —v‘fBnull‚Í•s‰ÂB
-	 * @return WebGLƒIƒuƒWƒFƒNƒgB
+	 *            è¦ç´ ã€‚nullã¯ä¸å¯ã€‚
+	 * @return WebGLã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã€‚
 	 */
 	private native JavaScriptObject attach(Element elem) /*-{
 		var gl = elem.getContext("experimental-webgl");
@@ -251,13 +263,13 @@ public class GLCanvas extends Widget {
 	}-*/;
 
 	/**
-	 * ƒVƒF[ƒ_‚ğæ“¾‚µ‚Ü‚·B
+	 * ã‚·ã‚§ãƒ¼ãƒ€ã‚’å–å¾—ã—ã¾ã™ã€‚
 	 * 
 	 * @param gl
-	 *            WebGLƒIƒuƒWƒFƒNƒgBnull‚Í•s‰ÂB
+	 *            WebGLã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã€‚nullã¯ä¸å¯ã€‚
 	 * @param source
-	 *            ƒ\[ƒXBnull‚Í•s‰ÂB
-	 * @return ƒVƒF[ƒ_B
+	 *            ã‚½ãƒ¼ã‚¹ã€‚nullã¯ä¸å¯ã€‚
+	 * @return ã‚·ã‚§ãƒ¼ãƒ€ã€‚
 	 */
 	private native JavaScriptObject getFragmentShader(JavaScriptObject gl,
 			String source) /*-{
@@ -272,13 +284,13 @@ public class GLCanvas extends Widget {
 	}-*/;
 
 	/**
-	 * ƒVƒF[ƒ_‚ğæ“¾‚µ‚Ü‚·B
+	 * ã‚·ã‚§ãƒ¼ãƒ€ã‚’å–å¾—ã—ã¾ã™ã€‚
 	 * 
 	 * @param gl
-	 *            WebGLƒIƒuƒWƒFƒNƒgBnull‚Í•s‰ÂB
+	 *            WebGLã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã€‚nullã¯ä¸å¯ã€‚
 	 * @param source
-	 *            ƒ\[ƒXBnull‚Í•s‰ÂB
-	 * @return ƒVƒF[ƒ_B
+	 *            ã‚½ãƒ¼ã‚¹ã€‚nullã¯ä¸å¯ã€‚
+	 * @return ã‚·ã‚§ãƒ¼ãƒ€ã€‚
 	 */
 	private native JavaScriptObject getVertexShader(JavaScriptObject gl,
 			String source) /*-{
@@ -293,14 +305,14 @@ public class GLCanvas extends Widget {
 	}-*/;
 
 	/**
-	 * ƒVƒF[ƒ_‚ğ‰Šú‰»‚µ‚Ü‚·B
+	 * ã‚·ã‚§ãƒ¼ãƒ€ã‚’åˆæœŸåŒ–ã—ã¾ã™ã€‚
 	 * 
 	 * @param gl
-	 *            WebGLƒIƒuƒWƒFƒNƒgBnull‚Í•s‰ÂB
+	 *            WebGLã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã€‚nullã¯ä¸å¯ã€‚
 	 * @param vertexShader
-	 *            VertexƒVƒF[ƒ_Bnull‚Í•s‰ÂB
+	 *            Vertexã‚·ã‚§ãƒ¼ãƒ€ã€‚nullã¯ä¸å¯ã€‚
 	 * @param fragmentShader
-	 *            FragmentƒVƒF[ƒ_Bnull‚Í•s‰ÂB
+	 *            Fragmentã‚·ã‚§ãƒ¼ãƒ€ã€‚nullã¯ä¸å¯ã€‚
 	 * @return
 	 */
 	private native JavaScriptObject initShaders(JavaScriptObject gl,
@@ -335,10 +347,10 @@ public class GLCanvas extends Widget {
 	}-*/;
 
 	/**
-	 * ƒV[ƒ“‚ğÁ‹‚µ‚Ü‚·B
+	 * ã‚·ãƒ¼ãƒ³ã‚’æ¶ˆå»ã—ã¾ã™ã€‚
 	 * 
 	 * @param gl
-	 *            WebGLƒIƒuƒWƒFƒNƒgBnull‚Í•s‰ÂB
+	 *            WebGLã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã€‚nullã¯ä¸å¯ã€‚
 	 */
 	private native void clearScene(JavaScriptObject gl) /*-{
 		gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
@@ -346,25 +358,25 @@ public class GLCanvas extends Widget {
 	}-*/;
 
 	/**
-	 * ƒoƒbƒtƒ@‚ğ¶¬‚µ‚Ü‚·B
+	 * ãƒãƒƒãƒ•ã‚¡ã‚’ç”Ÿæˆã—ã¾ã™ã€‚
 	 * 
 	 * @param gl
-	 *            WebGLƒIƒuƒWƒFƒNƒgBnull‚Í•s‰ÂB
-	 * @return ƒoƒbƒtƒ@B
+	 *            WebGLã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã€‚nullã¯ä¸å¯ã€‚
+	 * @return ãƒãƒƒãƒ•ã‚¡ã€‚
 	 */
 	private native JavaScriptObject createBuffer(JavaScriptObject gl) /*-{
 		return gl.createBuffer();
 	}-*/;
 
 	/**
-	 * ƒoƒbƒtƒ@‚ğ‰Šú‰»‚µ‚Ü‚·B
+	 * ãƒãƒƒãƒ•ã‚¡ã‚’åˆæœŸåŒ–ã—ã¾ã™ã€‚
 	 * 
 	 * @param gl
-	 *            WebGLƒIƒuƒWƒFƒNƒgBnull‚Í•s‰ÂB
+	 *            WebGLã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã€‚nullã¯ä¸å¯ã€‚
 	 * @param buffer
-	 *            ƒoƒbƒtƒ@Bnull‚Í•s‰ÂB
+	 *            ãƒãƒƒãƒ•ã‚¡ã€‚nullã¯ä¸å¯ã€‚
 	 * @param vertices
-	 *            ’¸“_Bnull‚Í•s‰ÂB
+	 *            é ‚ç‚¹ã€‚nullã¯ä¸å¯ã€‚
 	 */
 	private native void initBuffer(JavaScriptObject gl,
 			JavaScriptObject buffer, JavaScriptObject vertices) /*-{
@@ -375,14 +387,14 @@ public class GLCanvas extends Widget {
 	}-*/;
 
 	/**
-	 * MVMatrix‚ğİ’è‚µ‚Ü‚·B
+	 * MVMatrixã‚’è¨­å®šã—ã¾ã™ã€‚
 	 * 
 	 * @param gl
-	 *            WebGLƒIƒuƒWƒFƒNƒgBnull‚Í•s‰ÂB
+	 *            WebGLã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã€‚nullã¯ä¸å¯ã€‚
 	 * @param program
-	 *            ƒVƒF[ƒ_Bnull‚Í•s‰ÂB
+	 *            ã‚·ã‚§ãƒ¼ãƒ€ã€‚nullã¯ä¸å¯ã€‚
 	 * @param mat
-	 *            s—ñBnull‚Í•s‰ÂB
+	 *            è¡Œåˆ—ã€‚nullã¯ä¸å¯ã€‚
 	 */
 	private native void setMVMatrix(JavaScriptObject gl,
 			JavaScriptObject program, JavaScriptObject mat) /*-{
@@ -396,14 +408,14 @@ public class GLCanvas extends Widget {
 	}-*/;
 
 	/**
-	 * PMatrix‚ğİ’è‚µ‚Ü‚·B
+	 * PMatrixã‚’è¨­å®šã—ã¾ã™ã€‚
 	 * 
 	 * @param gl
-	 *            WebGLƒIƒuƒWƒFƒNƒgBnull‚Í•s‰ÂB
+	 *            WebGLã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã€‚nullã¯ä¸å¯ã€‚
 	 * @param program
-	 *            ƒVƒF[ƒ_Bnull‚Í•s‰ÂB
+	 *            ã‚·ã‚§ãƒ¼ãƒ€ã€‚nullã¯ä¸å¯ã€‚
 	 * @param mat
-	 *            s—ñBnull‚Í•s‰ÂB
+	 *            è¡Œåˆ—ã€‚nullã¯ä¸å¯ã€‚
 	 */
 	private native void setPMatrix(JavaScriptObject gl,
 			JavaScriptObject program, JavaScriptObject mat) /*-{
@@ -411,16 +423,16 @@ public class GLCanvas extends Widget {
 	}-*/;
 
 	/**
-	 * ƒoƒbƒtƒ@‚Ì“à—e‚ğ•`‰æ‚µ‚Ü‚·B
+	 * ãƒãƒƒãƒ•ã‚¡ã®å†…å®¹ã‚’æç”»ã—ã¾ã™ã€‚
 	 * 
 	 * @param gl
-	 *            WebGLƒIƒuƒWƒFƒNƒgBnull‚Í•s‰ÂB
+	 *            WebGLã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã€‚nullã¯ä¸å¯ã€‚
 	 * @param program
-	 *            ƒVƒF[ƒ_Bnull‚Í•s‰ÂB
+	 *            ã‚·ã‚§ãƒ¼ãƒ€ã€‚nullã¯ä¸å¯ã€‚
 	 * @param vbuffer
-	 *            ƒoƒbƒtƒ@Bnull‚Í•s‰ÂB
+	 *            ãƒãƒƒãƒ•ã‚¡ã€‚nullã¯ä¸å¯ã€‚
 	 * @param nbuffer
-	 *            ƒoƒbƒtƒ@Bnull‚Í•s‰ÂB
+	 *            ãƒãƒƒãƒ•ã‚¡ã€‚nullã¯ä¸å¯ã€‚
 	 */
 	private native void drawArrays(JavaScriptObject gl,
 			JavaScriptObject program, JavaScriptObject vbuffer,
@@ -435,35 +447,35 @@ public class GLCanvas extends Widget {
 	}-*/;
 
 	/**
-	 * “®“Iƒ‚ƒfƒ‹‚ğÀ‘•‚µ‚Ü‚·B
+	 * å‹•çš„ãƒ¢ãƒ‡ãƒ«ã‚’å®Ÿè£…ã—ã¾ã™ã€‚
 	 */
 	private class DynamicModel {
 
 		/**
-		 * ƒ‚ƒfƒ‹‚ğ•Û‚µ‚Ü‚·B
+		 * ãƒ¢ãƒ‡ãƒ«ã‚’ä¿æŒã—ã¾ã™ã€‚
 		 */
 		private MMDModel model;
 
 		/**
-		 * ƒ‚[ƒVƒ‡ƒ“ƒZƒOƒƒ“ƒg‚ğ•Û‚µ‚Ü‚·B
+		 * ãƒ¢ãƒ¼ã‚·ãƒ§ãƒ³ã‚»ã‚°ãƒ¡ãƒ³ãƒˆã‚’ä¿æŒã—ã¾ã™ã€‚
 		 */
 		private IMotionSegment motionSeg;
 
 		/**
-		 * ŠÔ‚ÌƒIƒtƒZƒbƒg‚ğ•Û‚µ‚Ü‚·B
+		 * æ™‚é–“ã®ã‚ªãƒ•ã‚»ãƒƒãƒˆã‚’ä¿æŒã—ã¾ã™ã€‚
 		 */
 		private Long offsetTime;
 
 		/**
-		 * ƒtƒŒ[ƒ€ƒŒ[ƒg‚ğ•Û‚µ‚Ü‚·B
+		 * ãƒ•ãƒ¬ãƒ¼ãƒ ãƒ¬ãƒ¼ãƒˆã‚’ä¿æŒã—ã¾ã™ã€‚
 		 */
 		private float frameRate;
 
 		/**
-		 * \’z‚µ‚Ü‚·B
+		 * æ§‹ç¯‰ã—ã¾ã™ã€‚
 		 * 
 		 * @param model
-		 *            ƒ‚ƒfƒ‹Bnull‚Í•s‰ÂB
+		 *            ãƒ¢ãƒ‡ãƒ«ã€‚nullã¯ä¸å¯ã€‚
 		 */
 		public DynamicModel(MMDModel model) {
 			if (model == null) {
@@ -476,12 +488,12 @@ public class GLCanvas extends Widget {
 		}
 
 		/**
-		 * ƒ‚[ƒVƒ‡ƒ“‚ğİ’è‚µ‚Ü‚·B
+		 * ãƒ¢ãƒ¼ã‚·ãƒ§ãƒ³ã‚’è¨­å®šã—ã¾ã™ã€‚
 		 * 
 		 * @param frameRate
-		 *            ƒtƒŒ[ƒ€ƒŒ[ƒgB
+		 *            ãƒ•ãƒ¬ãƒ¼ãƒ ãƒ¬ãƒ¼ãƒˆã€‚
 		 * @param motionSeg
-		 *            ƒ‚[ƒVƒ‡ƒ“Bnull‚ğw’è‰Â”\B
+		 *            ãƒ¢ãƒ¼ã‚·ãƒ§ãƒ³ã€‚nullã‚’æŒ‡å®šå¯èƒ½ã€‚
 		 */
 		public void setMotion(float frameRate, IMotionSegment motionSeg) {
 			this.frameRate = frameRate;
@@ -490,11 +502,11 @@ public class GLCanvas extends Widget {
 		}
 
 		/**
-		 * Œ»İ‚ÌƒtƒŒ[ƒ€‚ğæ“¾‚µ‚Ü‚·B
+		 * ç¾åœ¨ã®ãƒ•ãƒ¬ãƒ¼ãƒ ã‚’å–å¾—ã—ã¾ã™ã€‚
 		 * 
 		 * @param currentTime
-		 *            Œ»İB
-		 * @return Œ»İ‚ÌƒtƒŒ[ƒ€B
+		 *            ç¾åœ¨æ™‚åˆ»ã€‚
+		 * @return ç¾åœ¨ã®ãƒ•ãƒ¬ãƒ¼ãƒ ã€‚
 		 */
 		public float getCurrentFrame(long currentTime) {
 			if (motionSeg == null) {
@@ -509,17 +521,17 @@ public class GLCanvas extends Widget {
 	}
 
 	/**
-	 * ƒV[ƒ“•`‰æ—p‚Ìƒ^ƒCƒ}[‚Å‚·B
+	 * ã‚·ãƒ¼ãƒ³æç”»ç”¨ã®ã‚¿ã‚¤ãƒãƒ¼ã§ã™ã€‚
 	 */
 	private class DrawSceneTimer extends Timer implements IDataMutex {
 
 		/**
-		 * Perspectives—ñ‚ğ•Û‚µ‚Ü‚·B
+		 * Perspectiveè¡Œåˆ—ã‚’ä¿æŒã—ã¾ã™ã€‚
 		 */
 		private JavaScriptObject pMatrix;
 
 		/**
-		 * \’z‚µ‚Ü‚·B
+		 * æ§‹ç¯‰ã—ã¾ã™ã€‚
 		 */
 		public DrawSceneTimer() {
 			this.pMatrix = createPMatrix();
@@ -527,19 +539,26 @@ public class GLCanvas extends Widget {
 
 		@Override
 		public void run() {
-			clearScene(gl);
-			setPMatrix(gl, program, pMatrix);
+			long beginTime = System.currentTimeMillis();
+			try {
+				clearScene(gl);
+				setPMatrix(gl, program, pMatrix);
 
-			long currentTime = System.currentTimeMillis();
-			for (DynamicModel model : models) {
-				model.model.UpdateAsync(this,
-						model.getCurrentFrame(currentTime));
-			}
+				long currentTime = System.currentTimeMillis();
+				for (DynamicModel model : models) {
+					model.model.UpdateAsync(this,
+							model.getCurrentFrame(currentTime));
+				}
 
-			for (DynamicModel model : models) {
-				GL glctx = new GL(model.model, currentRx, currentRy, currentRz);
-				model.model.DrawAsync(this, glctx);
-				glctx.flush();
+				for (DynamicModel model : models) {
+					GL glctx = new GL(model.model, currentRx, currentRy,
+							currentRz);
+					model.model.DrawAsync(this, glctx);
+					glctx.flush();
+				}
+			} finally {
+				long dur = System.currentTimeMillis() - beginTime;
+				performanceLabel.setText("ãƒ¢ãƒ‡ãƒ«æ›´æ–°+ãƒ¬ãƒ³ãƒ€ãƒªãƒ³ã‚°æ™‚é–“: " + dur + "msec.");
 			}
 		}
 
@@ -554,41 +573,41 @@ public class GLCanvas extends Widget {
 		}
 
 		/**
-		 * GLƒIƒuƒWƒFƒNƒg‚Ì’ŠÛ‚Å‚·B
+		 * GLã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®æŠ½è±¡ã§ã™ã€‚
 		 */
 		private class GL implements IGL {
 
 			/**
-			 * ƒoƒbƒtƒ@ƒCƒ“ƒfƒbƒNƒX‚ğ•Û‚µ‚Ü‚·B
+			 * ãƒãƒƒãƒ•ã‚¡ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ã‚’ä¿æŒã—ã¾ã™ã€‚
 			 */
 			private int bufferIndex;
 
 			/**
-			 * ’¸“_ƒŠƒXƒg‚ğ•Û‚µ‚Ü‚·B
+			 * é ‚ç‚¹ãƒªã‚¹ãƒˆã‚’ä¿æŒã—ã¾ã™ã€‚
 			 */
 			private JavaScriptObject vertexes;
 
 			/**
-			 * –@üƒxƒNƒgƒ‹ƒŠƒXƒg‚ğ•Û‚µ‚Ü‚·B
+			 * æ³•ç·šãƒ™ã‚¯ãƒˆãƒ«ãƒªã‚¹ãƒˆã‚’ä¿æŒã—ã¾ã™ã€‚
 			 */
 			private JavaScriptObject normals;
 
 			/**
-			 * •ÏŠ·s—ñ‚ğ•Û‚µ‚Ü‚·B
+			 * å¤‰æ›è¡Œåˆ—ã‚’ä¿æŒã—ã¾ã™ã€‚
 			 */
 			private JavaScriptObject mvMatrix;
 
 			/**
-			 * \’z‚µ‚Ü‚·B
+			 * æ§‹ç¯‰ã—ã¾ã™ã€‚
 			 * 
 			 * @param model
-			 *            ƒ‚ƒfƒ‹Bnull‚Í•s‰ÂB
+			 *            ãƒ¢ãƒ‡ãƒ«ã€‚nullã¯ä¸å¯ã€‚
 			 * @param rx
-			 *            ‰ñ“]B
+			 *            å›è»¢ã€‚
 			 * @param ry
-			 *            ‰ñ“]B
+			 *            å›è»¢ã€‚
 			 * @param rz
-			 *            ‰ñ“]B
+			 *            å›è»¢ã€‚
 			 */
 			public GL(MMDModel model, int rx, int ry, int rz) {
 				if (model == null) {
@@ -601,7 +620,7 @@ public class GLCanvas extends Widget {
 			}
 
 			/**
-			 * o—Í‚µ‚Ü‚·B
+			 * å‡ºåŠ›ã—ã¾ã™ã€‚
 			 */
 			public void flush() {
 				setMVMatrix(gl, program, mvMatrix);
@@ -754,11 +773,11 @@ public class GLCanvas extends Widget {
 			}
 
 			/**
-			 * ’¸“_‚ÌÅ‘å”‚ğæ“¾‚µ‚Ü‚·B
+			 * é ‚ç‚¹ã®æœ€å¤§æ•°ã‚’å–å¾—ã—ã¾ã™ã€‚
 			 * 
 			 * @param model
-			 *            ƒ‚ƒfƒ‹Bnull‚Í•s‰ÂB
-			 * @return ’¸“_‚ÌÅ‘å”B
+			 *            ãƒ¢ãƒ‡ãƒ«ã€‚nullã¯ä¸å¯ã€‚
+			 * @return é ‚ç‚¹ã®æœ€å¤§æ•°ã€‚
 			 */
 			private int getMaxVertexesSize(MMDModel model) {
 				if (model == null) {
@@ -773,25 +792,25 @@ public class GLCanvas extends Widget {
 			}
 
 			/**
-			 * ’¸“_ƒoƒbƒtƒ@‚ğƒŠƒZƒbƒg‚µ‚Ü‚·B
+			 * é ‚ç‚¹ãƒãƒƒãƒ•ã‚¡ã‚’ãƒªã‚»ãƒƒãƒˆã—ã¾ã™ã€‚
 			 * 
-			 * @return ’¸“_ƒoƒbƒtƒ@B
+			 * @return é ‚ç‚¹ãƒãƒƒãƒ•ã‚¡ã€‚
 			 */
 			private native JavaScriptObject createVertexes() /*-{
 				return new Array();
 			}-*/;
 
 			/**
-			 * ’¸“_‚ğ’Ç‰Á‚µ‚Ü‚·B
+			 * é ‚ç‚¹ã‚’è¿½åŠ ã—ã¾ã™ã€‚
 			 * 
 			 * @param vertexes
-			 *            ’¸“_ƒŠƒXƒgBnull‚Í•s‰ÂB
+			 *            é ‚ç‚¹ãƒªã‚¹ãƒˆã€‚nullã¯ä¸å¯ã€‚
 			 * @param x
-			 *            À•WB
+			 *            åº§æ¨™ã€‚
 			 * @param y
-			 *            À•WB
+			 *            åº§æ¨™ã€‚
 			 * @param z
-			 *            À•WB
+			 *            åº§æ¨™ã€‚
 			 */
 			private native void pushVertexes(JavaScriptObject vertexes,
 					float x, float y, float z) /*-{

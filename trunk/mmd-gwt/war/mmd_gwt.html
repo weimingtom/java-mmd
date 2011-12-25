@@ -79,24 +79,23 @@
       </div>
     </noscript>
 
-    <h1>MMD on GWT</h1>
+    <h1>MikuMikuDance on GWT実験場</h1>
 
     <table align="center">
       <tr>
-        <td>Drag and drop a .pmd file below:</td>
+        <td colspan="2">MMD 3D View(WebGL対応環境で見れる・・・はず。テクスチャ未対応):</td>
       </tr>
       <tr>
-        <td id="dropFieldContainer"></td>
+        <td id="canvas3d" colspan="2" align="center"></td>
       </tr>
       <tr>
-        <td>3D View:</td>
+        <td id="canvas3d_ctrl" rowspan="2"></td>
+        <td>下のエリアにPMDファイル(モデル)かVMDファイル(モーション)を<br/>ドラッグ＆ドロップするとその内容が反映されます: </td>
       </tr>
       <tr>
-        <td id="canvas3d"></td>
-      </tr>
-      <tr>
-        <td id="canvas3d_ctrl"></td>
+        <td id="dropFieldContainer" align="center"></td>
       </tr>
     </table>
+    <p>コード(すげー適当): <a href="http://code.google.com/p/java-mmd">java-mmd</a></p>
   </body>
 </html>
