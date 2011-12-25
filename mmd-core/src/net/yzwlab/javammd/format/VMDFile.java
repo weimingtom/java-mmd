@@ -115,21 +115,22 @@ public class VMDFile {
 				}
 			});
 		}
-		size = fs.readInteger();
-		if (size != 0) {
-			SetLightChunkSize(size);
-			List<VMD_LIGHT_RECORD> buff = GetLightChunk();
-			for (int ai = 0; ai < size; ai++) {
-				buff.get(ai).Read(fs);
-			}
-			;
-			Collections.sort(buff, new Comparator<VMD_LIGHT_RECORD>() {
-				@Override
-				public int compare(VMD_LIGHT_RECORD o1, VMD_LIGHT_RECORD o2) {
-					return SortByLightFrameNo(o1, o2);
-				}
-			});
-		}
+		// TODO
+		// size = fs.readInteger();
+		// if (size != 0) {
+		// SetLightChunkSize(size);
+		// List<VMD_LIGHT_RECORD> buff = GetLightChunk();
+		// for (int ai = 0; ai < size; ai++) {
+		// buff.get(ai).Read(fs);
+		// }
+		// ;
+		// Collections.sort(buff, new Comparator<VMD_LIGHT_RECORD>() {
+		// @Override
+		// public int compare(VMD_LIGHT_RECORD o1, VMD_LIGHT_RECORD o2) {
+		// return SortByLightFrameNo(o1, o2);
+		// }
+		// });
+		// }
 		;
 		return true;
 	}

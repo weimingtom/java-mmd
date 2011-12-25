@@ -77,7 +77,7 @@ public class BezierCurve {
 			np1.setX((p1.getX() / 127.0f) * 3.0f);
 			np1.setY((p1.getY() / 127.0f) * 3.0f);
 			np2.setX((p2.getX() / 127.0f) * 3.0f);
-			np2.setY((p2.getX() / 127.0f) * 3.0f); // TODO p2.y?
+			np2.setY((p2.getY() / 127.0f) * 3.0f);
 			m_values[0] = 0.0f;
 			m_values[16] = 1.0f;
 			addX = 1.0f / 16;
