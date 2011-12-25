@@ -5,6 +5,7 @@ import java.util.List;
 
 import net.yzwlab.javammd.IDataMutex;
 import net.yzwlab.javammd.IGL;
+import net.yzwlab.javammd.model.IMotionSegment;
 import net.yzwlab.javammd.model.MMDModel;
 
 import com.google.gwt.core.client.JavaScriptObject;
@@ -46,7 +47,7 @@ public class GLCanvas extends Widget {
 	/**
 	 * モデルを保持します。
 	 */
-	private List<MMDModel> models;
+	private List<DynamicModel> models;
 
 	/**
 	 * 回転を保持します。
@@ -77,7 +78,7 @@ public class GLCanvas extends Widget {
 		this.gl = null;
 		this.program = null;
 		this.buffers = new ArrayList<BufferGroup>();
-		this.models = new ArrayList<MMDModel>();
+		this.models = new ArrayList<DynamicModel>();
 		this.currentRx = 0;
 		this.currentRy = 0;
 		this.currentRz = 0;
@@ -122,7 +123,31 @@ public class GLCanvas extends Widget {
 		if (model == null) {
 			throw new IllegalArgumentException();
 		}
-		models.add(model);
+		models.add(new DynamicModel(model));
+	}
+
+	/**
+	 * モーションを設定します。
+	 * 
+	 * @param model
+	 *            モデル。nullは不可。
+	 * @param frameRate
+	 *            フレームレート。
+	 * @param motionSeg
+	 *            モーション区分。null可。
+	 */
+	public void setMotion(MMDModel model, float frameRate,
+			IMotionSegment motionSeg) {
+		if (model == null) {
+			throw new IllegalArgumentException();
+		}
+		for (DynamicModel targetModel : models) {
+			if (targetModel.model == model) {
+				targetModel.setMotion(frameRate, motionSeg);
+				return;
+			}
+		}
+		throw new IllegalArgumentException();
 	}
 
 	/**
@@ -410,6 +435,80 @@ public class GLCanvas extends Widget {
 	}-*/;
 
 	/**
+	 * 動的モデルを実装します。
+	 */
+	private class DynamicModel {
+
+		/**
+		 * モデルを保持します。
+		 */
+		private MMDModel model;
+
+		/**
+		 * モーションセグメントを保持します。
+		 */
+		private IMotionSegment motionSeg;
+
+		/**
+		 * 時間のオフセットを保持します。
+		 */
+		private Long offsetTime;
+
+		/**
+		 * フレームレートを保持します。
+		 */
+		private float frameRate;
+
+		/**
+		 * 構築します。
+		 * 
+		 * @param model
+		 *            モデル。nullは不可。
+		 */
+		public DynamicModel(MMDModel model) {
+			if (model == null) {
+				throw new IllegalArgumentException();
+			}
+			this.model = model;
+			this.motionSeg = null;
+			this.offsetTime = null;
+			this.frameRate = 0.0f;
+		}
+
+		/**
+		 * モーションを設定します。
+		 * 
+		 * @param frameRate
+		 *            フレームレート。
+		 * @param motionSeg
+		 *            モーション。nullを指定可能。
+		 */
+		public void setMotion(float frameRate, IMotionSegment motionSeg) {
+			this.frameRate = frameRate;
+			this.motionSeg = motionSeg;
+			this.offsetTime = null;
+		}
+
+		/**
+		 * 現在のフレームを取得します。
+		 * 
+		 * @param currentTime
+		 *            現在時刻。
+		 * @return 現在のフレーム。
+		 */
+		public float getCurrentFrame(long currentTime) {
+			if (motionSeg == null) {
+				return 0.0f;
+			}
+			if (offsetTime == null) {
+				offsetTime = currentTime;
+			}
+			return motionSeg.getFrame(frameRate, currentTime - offsetTime);
+		}
+
+	}
+
+	/**
 	 * シーン描画用のタイマーです。
 	 */
 	private class DrawSceneTimer extends Timer implements IDataMutex {
@@ -431,9 +530,15 @@ public class GLCanvas extends Widget {
 			clearScene(gl);
 			setPMatrix(gl, program, pMatrix);
 
-			for (MMDModel model : models) {
-				GL glctx = new GL(model, currentRx, currentRy, currentRz);
-				model.DrawAsync(this, glctx);
+			long currentTime = System.currentTimeMillis();
+			for (DynamicModel model : models) {
+				model.model.UpdateAsync(this,
+						model.getCurrentFrame(currentTime));
+			}
+
+			for (DynamicModel model : models) {
+				GL glctx = new GL(model.model, currentRx, currentRy, currentRz);
+				model.model.DrawAsync(this, glctx);
 				glctx.flush();
 			}
 		}

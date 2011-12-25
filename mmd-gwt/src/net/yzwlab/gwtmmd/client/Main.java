@@ -8,6 +8,7 @@ import net.yzwlab.gwtmmd.client.io.FileReadBuffer;
 import net.yzwlab.javammd.IMMDTextureProvider;
 import net.yzwlab.javammd.ReadException;
 import net.yzwlab.javammd.format.TEXTURE_DESC;
+import net.yzwlab.javammd.model.IMotionSegment;
 import net.yzwlab.javammd.model.MMDModel;
 
 import org.vectomatic.arrays.ArrayBuffer;
@@ -64,10 +65,31 @@ public class Main implements EntryPoint, IMMDTextureProvider {
 	private final GreetingServiceAsync greetingService = GWT
 			.create(GreetingService.class);
 
+	/**
+	 * 結果ラベルを保持します。
+	 */
+	private Label resultLabel;
+
+	/**
+	 * モーションパネルを保持します。
+	 */
+	private VerticalPanel motionPanel;
+
+	/**
+	 * 現在のモデルを保持します。
+	 */
+	private MMDModel currentModel;
+
 	protected FileReader reader;
 	protected List<File> readQueue;
 
+	/**
+	 * 構築します。
+	 */
 	public Main() {
+		this.resultLabel = null;
+		this.currentModel = null;
+		this.motionPanel = null;
 		this.reader = new FileReader();
 		this.readQueue = new ArrayList<File>();
 	}
@@ -88,6 +110,9 @@ public class Main implements EntryPoint, IMMDTextureProvider {
 	 */
 	public void onModuleLoad() {
 		try {
+			resultLabel = new Label("(Status)");
+			motionPanel = new VerticalPanel();
+
 			final DropPanel dropPanel = new DropPanel();
 			dropPanel.addStyleName("gwtmmd-drop");
 
@@ -142,7 +167,16 @@ public class Main implements EntryPoint, IMMDTextureProvider {
 							File file = readQueue.get(0);
 							try {
 								ArrayBuffer buf = reader.getArrayBufferResult();
-								loadMMD(glCanvas, buf, null);
+								if (isModel(file)) {
+									loadPMD(glCanvas, buf, null);
+								} else if (isMotion(file)) {
+									if (currentModel == null) {
+										Window.alert("モデルがロードされていません");
+										return;
+									}
+									loadVMD(glCanvas, currentModel,
+											file.getName(), buf, null);
+								}
 							} catch (Throwable e) {
 								handleError(file, e.getClass().getName() + ": "
 										+ e.getMessage());
@@ -169,6 +203,8 @@ public class Main implements EntryPoint, IMMDTextureProvider {
 
 			RootPanel.get("canvas3d").add(glCanvas);
 
+			VerticalPanel vpanel = new VerticalPanel();
+			vpanel.add(resultLabel);
 			HorizontalPanel buttons = new HorizontalPanel();
 			Button button = new Button("Rotate X++");
 			button.addClickHandler(new ClickHandler() {
@@ -218,7 +254,10 @@ public class Main implements EntryPoint, IMMDTextureProvider {
 				}
 			});
 			buttons.add(button);
-			RootPanel.get("canvas3d_ctrl").add(buttons);
+			vpanel.add(motionPanel);
+			vpanel.add(buttons);
+
+			RootPanel.get("canvas3d_ctrl").add(vpanel);
 
 			final DialogBox dlg = new LoadingDialogBox();
 			dlg.center();
@@ -233,7 +272,7 @@ public class Main implements EntryPoint, IMMDTextureProvider {
 
 				@Override
 				public void onSuccess(byte[] result) {
-					loadMMD(glCanvas, result, dlg);
+					loadPMD(glCanvas, result, dlg);
 				}
 			});
 		} catch (IllegalStateException e) {
@@ -251,9 +290,8 @@ public class Main implements EntryPoint, IMMDTextureProvider {
 	private void readNext() {
 		if (readQueue.size() > 0) {
 			File file = readQueue.get(0);
-			String type = file.getType();
 			try {
-				if (file.getName().toLowerCase().endsWith(".pmd")) {
+				if (isModel(file) || isMotion(file)) {
 					reader.readAsArrayBuffer(file);
 				} else {
 					readQueue.remove(0);
@@ -276,7 +314,7 @@ public class Main implements EntryPoint, IMMDTextureProvider {
 		Window.alert("Error: " + f.getName() + ": " + message);
 	}
 
-	private void loadMMD(final GLCanvas glCanvas, final byte[] buf,
+	private void loadPMD(final GLCanvas glCanvas, final byte[] buf,
 			final DialogBox dlg) {
 		Scheduler.get().scheduleDeferred(new ScheduledCommand() {
 			@Override
@@ -288,12 +326,12 @@ public class Main implements EntryPoint, IMMDTextureProvider {
 					dataView.setUint8(pos, dt);
 					pos++;
 				}
-				loadMMD(glCanvas, arr, dlg);
+				loadPMD(glCanvas, arr, dlg);
 			}
 		});
 	}
 
-	private void loadMMD(final GLCanvas glCanvas, final ArrayBuffer buf,
+	private void loadPMD(final GLCanvas glCanvas, final ArrayBuffer buf,
 			DialogBox dlg) {
 		if (dlg == null) {
 			dlg = new LoadingDialogBox();
@@ -305,14 +343,17 @@ public class Main implements EntryPoint, IMMDTextureProvider {
 			public void execute() {
 				try {
 					MMDModel model = new MMDModel();
-					model.OpenPMD(new FileReadBuffer(buf));
+					model.openPMD(new FileReadBuffer(buf));
 
 					model.Prepare(Main.this);
 					glCanvas.removeAllModels();
 					glCanvas.addModel(model);
 
-					// Window.alert("Loaded: Bones=" + model.getBoneCount()
-					// + ", IKs=" + model.GetIKCount());
+					String msg = "モデル読み込み完了: Bones=" + model.getBoneCount()
+							+ ", IKs=" + model.GetIKCount();
+					resultLabel.setText(msg);
+					currentModel = model;
+					motionPanel.clear();
 				} catch (ReadException e) {
 					Window.alert(e.getClass().getName() + ": " + e.getMessage());
 				} finally {
@@ -320,6 +361,77 @@ public class Main implements EntryPoint, IMMDTextureProvider {
 				}
 			}
 		});
+	}
+
+	/**
+	 * VMDファイルを読み込みます。
+	 * 
+	 * @param canvas
+	 *            キャンバス。nullは不可。
+	 * @param model
+	 *            モデル。nullは不可。
+	 * @param name
+	 *            名前。nullは不可。
+	 * @param buf
+	 *            バッファ。nullは不可。
+	 * @param dlg
+	 *            ダイアログ。nullを指定可能。
+	 */
+	private void loadVMD(final GLCanvas canvas, final MMDModel model,
+			final String name, final ArrayBuffer buf, DialogBox dlg) {
+		if (canvas == null || model == null || name == null || buf == null) {
+			throw new IllegalArgumentException();
+		}
+		if (dlg == null) {
+			dlg = new LoadingDialogBox();
+			dlg.center();
+		}
+		final DialogBox tdlg = dlg;
+		Scheduler.get().scheduleDeferred(new ScheduledCommand() {
+			@Override
+			public void execute() {
+				try {
+					IMotionSegment segment = model.openVMD(new FileReadBuffer(
+							buf));
+					motionPanel.add(new MotionStartButton(canvas, resultLabel,
+							24.0f, currentModel, name, segment));
+
+					resultLabel.setText("モーション読み込み完了");
+				} catch (Throwable e) {
+					Window.alert(e.getClass().getName() + ": " + e.getMessage());
+				} finally {
+					tdlg.hide();
+				}
+			}
+		});
+	}
+
+	/**
+	 * モデルファイルかどうかを判定します。
+	 * 
+	 * @param file
+	 *            ファイル。nullは不可。
+	 * @return モデルファイルであればtrue。
+	 */
+	private boolean isModel(File file) {
+		if (file == null) {
+			throw new IllegalArgumentException();
+		}
+		return file.getName().toLowerCase().endsWith(".pmd");
+	}
+
+	/**
+	 * モーションファイルかどうかを判定します。
+	 * 
+	 * @param file
+	 *            ファイル。nullは不可。
+	 * @return モーションファイルであればtrue。
+	 */
+	private boolean isMotion(File file) {
+		if (file == null) {
+			throw new IllegalArgumentException();
+		}
+		return file.getName().toLowerCase().endsWith(".vmd");
 	}
 
 	private class LoadingDialogBox extends DialogBox {

@@ -30,11 +30,14 @@ public class FileReadBuffer extends AbstractReadBuffer {
 		if (data == null) {
 			throw new IllegalArgumentException();
 		}
-		Uint8Array array = Uint8Array.createUint8Array(data.length);
-		for (int i = 0; i < data.length; i++) {
-			array.set(i, data[i]);
+		ArrayBuffer arr = ArrayBuffer.create(data.length);
+		DataView dataView = DataView.createDataView(arr);
+		int pos = 0;
+		for (byte dt : data) {
+			dataView.setUint8(pos, dt);
+			pos++;
 		}
-		return new FileReadBuffer(array.getBuffer());
+		return new FileReadBuffer(arr);
 	}
 
 	@Override
