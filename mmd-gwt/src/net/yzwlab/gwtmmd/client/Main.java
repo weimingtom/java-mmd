@@ -11,6 +11,7 @@ import net.yzwlab.javammd.format.TEXTURE_DESC;
 import net.yzwlab.javammd.model.MMDModel;
 
 import org.vectomatic.arrays.ArrayBuffer;
+import org.vectomatic.arrays.DataView;
 import org.vectomatic.dnd.DataTransferExt;
 import org.vectomatic.dnd.DropPanel;
 import org.vectomatic.file.File;
@@ -23,6 +24,10 @@ import org.vectomatic.file.events.LoadEndHandler;
 
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.core.client.Scheduler.ScheduledCommand;
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.DragEnterEvent;
 import com.google.gwt.event.dom.client.DragEnterHandler;
 import com.google.gwt.event.dom.client.DragLeaveEvent;
@@ -32,7 +37,13 @@ import com.google.gwt.event.dom.client.DragOverHandler;
 import com.google.gwt.event.dom.client.DropEvent;
 import com.google.gwt.event.dom.client.DropHandler;
 import com.google.gwt.user.client.Window;
+import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.DialogBox;
+import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootPanel;
+import com.google.gwt.user.client.ui.VerticalPanel;
 
 /**
  * Entry point classes define <code>onModuleLoad()</code>.
@@ -76,97 +87,158 @@ public class Main implements EntryPoint, IMMDTextureProvider {
 	 * This is the entry point method.
 	 */
 	public void onModuleLoad() {
-		final DropPanel dropPanel = new DropPanel();
-		dropPanel.addStyleName("gwtmmd-drop");
+		try {
+			final DropPanel dropPanel = new DropPanel();
+			dropPanel.addStyleName("gwtmmd-drop");
 
-		RootPanel.get("dropFieldContainer").add(dropPanel);
-		dropPanel.setSize("200px", "200px");
-		dropPanel.addDragEnterHandler(new DragEnterHandler() {
-			@Override
-			public void onDragEnter(DragEnterEvent event) {
-				dropPanel.addStyleName("gwtmmd-drop-active");
-				event.stopPropagation();
-				event.preventDefault();
-			}
-		});
-		dropPanel.addDragOverHandler(new DragOverHandler() {
-			@Override
-			public void onDragOver(DragOverEvent event) {
-				// Mandatory handler, otherwise the default
-				// behavior will kick in and onDrop will never
-				// be called
-				event.stopPropagation();
-				event.preventDefault();
-			}
-		});
-		dropPanel.addDragLeaveHandler(new DragLeaveHandler() {
-			@Override
-			public void onDragLeave(DragLeaveEvent event) {
-				dropPanel.removeStyleName("gwtmmd-drop-active");
-				event.stopPropagation();
-				event.preventDefault();
-			}
-		});
-		dropPanel.addDropHandler(new DropHandler() {
-			@Override
-			public void onDrop(DropEvent event) {
-				dropPanel.removeStyleName("gwtmmd-drop-active");
-				processFiles(event.getDataTransfer().<DataTransferExt> cast()
-						.getFiles());
-				event.stopPropagation();
-				event.preventDefault();
-			}
-		});
+			RootPanel.get("dropFieldContainer").add(dropPanel);
+			dropPanel.setSize("200px", "200px");
+			dropPanel.addDragEnterHandler(new DragEnterHandler() {
+				@Override
+				public void onDragEnter(DragEnterEvent event) {
+					dropPanel.addStyleName("gwtmmd-drop-active");
+					event.stopPropagation();
+					event.preventDefault();
+				}
+			});
+			dropPanel.addDragOverHandler(new DragOverHandler() {
+				@Override
+				public void onDragOver(DragOverEvent event) {
+					// Mandatory handler, otherwise the default
+					// behavior will kick in and onDrop will never
+					// be called
+					event.stopPropagation();
+					event.preventDefault();
+				}
+			});
+			dropPanel.addDragLeaveHandler(new DragLeaveHandler() {
+				@Override
+				public void onDragLeave(DragLeaveEvent event) {
+					dropPanel.removeStyleName("gwtmmd-drop-active");
+					event.stopPropagation();
+					event.preventDefault();
+				}
+			});
+			dropPanel.addDropHandler(new DropHandler() {
+				@Override
+				public void onDrop(DropEvent event) {
+					dropPanel.removeStyleName("gwtmmd-drop-active");
+					processFiles(event.getDataTransfer()
+							.<DataTransferExt> cast().getFiles());
+					event.stopPropagation();
+					event.preventDefault();
+				}
+			});
 
-		final GLCanvas glCanvas = new GLCanvas(640, 480);
+			final GLCanvas glCanvas = new GLCanvas(640, 480);
+			glCanvas.setCurrentRy(-1);
+			glCanvas.setCurrentRx(1);
 
-		reader.addLoadEndHandler(new LoadEndHandler() {
-			@Override
-			public void onLoadEnd(LoadEndEvent event) {
-				if (reader.getError() == null) {
-					if (readQueue.size() > 0) {
-						File file = readQueue.get(0);
-						try {
-							Window.alert("Loaded: " + file.getName());
-							MMDModel model = new MMDModel();
-							ArrayBuffer buf = reader.getArrayBufferResult();
-							model.OpenPMD(new FileReadBuffer(buf));
-							Window.alert("MMD: Bones=" + model.getBoneCount());
-
-							model.Prepare(Main.this);
-							glCanvas.addModel(model);
-						} catch (ReadException e) {
-							handleError(
-									file,
-									e.getClass().getName() + ": "
-											+ e.getMessage());
-						} catch (Throwable e) {
-							handleError(
-									file,
-									e.getClass().getName() + ": "
-											+ e.getMessage());
-						} finally {
-							readQueue.remove(0);
-							readNext();
+			reader.addLoadEndHandler(new LoadEndHandler() {
+				@Override
+				public void onLoadEnd(LoadEndEvent event) {
+					if (reader.getError() == null) {
+						if (readQueue.size() > 0) {
+							File file = readQueue.get(0);
+							try {
+								ArrayBuffer buf = reader.getArrayBufferResult();
+								loadMMD(glCanvas, buf, null);
+							} catch (Throwable e) {
+								handleError(file, e.getClass().getName() + ": "
+										+ e.getMessage());
+							} finally {
+								readQueue.remove(0);
+								readNext();
+							}
 						}
 					}
 				}
-			}
-		});
+			});
 
-		reader.addErrorHandler(new ErrorHandler() {
-			@Override
-			public void onError(ErrorEvent event) {
-				if (readQueue.size() > 0) {
-					File file = readQueue.get(0);
-					handleError(file, "");
-					readQueue.remove(0);
-					readNext();
+			reader.addErrorHandler(new ErrorHandler() {
+				@Override
+				public void onError(ErrorEvent event) {
+					if (readQueue.size() > 0) {
+						File file = readQueue.get(0);
+						handleError(file, "");
+						readQueue.remove(0);
+						readNext();
+					}
 				}
-			}
-		});
+			});
 
-		RootPanel.get("canvas3d").add(glCanvas);
+			RootPanel.get("canvas3d").add(glCanvas);
+
+			HorizontalPanel buttons = new HorizontalPanel();
+			Button button = new Button("Rotate X++");
+			button.addClickHandler(new ClickHandler() {
+				@Override
+				public void onClick(ClickEvent event) {
+					glCanvas.setCurrentRx(glCanvas.getCurrentRx() + 1);
+				}
+			});
+			buttons.add(button);
+			button = new Button("Rotate X--");
+			button.addClickHandler(new ClickHandler() {
+				@Override
+				public void onClick(ClickEvent event) {
+					glCanvas.setCurrentRx(glCanvas.getCurrentRx() - 1);
+				}
+			});
+			buttons.add(button);
+			button = new Button("Rotate Y++");
+			button.addClickHandler(new ClickHandler() {
+				@Override
+				public void onClick(ClickEvent event) {
+					glCanvas.setCurrentRy(glCanvas.getCurrentRy() + 1);
+				}
+			});
+			buttons.add(button);
+			button = new Button("Rotate Y--");
+			button.addClickHandler(new ClickHandler() {
+				@Override
+				public void onClick(ClickEvent event) {
+					glCanvas.setCurrentRy(glCanvas.getCurrentRy() - 1);
+				}
+			});
+			buttons.add(button);
+			button = new Button("Rotate Z++");
+			button.addClickHandler(new ClickHandler() {
+				@Override
+				public void onClick(ClickEvent event) {
+					glCanvas.setCurrentRz(glCanvas.getCurrentRz() + 1);
+				}
+			});
+			buttons.add(button);
+			button = new Button("Rotate Z--");
+			button.addClickHandler(new ClickHandler() {
+				@Override
+				public void onClick(ClickEvent event) {
+					glCanvas.setCurrentRz(glCanvas.getCurrentRz() - 1);
+				}
+			});
+			buttons.add(button);
+			RootPanel.get("canvas3d_ctrl").add(buttons);
+
+			final DialogBox dlg = new LoadingDialogBox();
+			dlg.center();
+
+			greetingService.getDefaultModel(new AsyncCallback<byte[]>() {
+				@Override
+				public void onFailure(Throwable caught) {
+					dlg.hide();
+					Window.alert("Error: " + caught.getClass().getName() + ": "
+							+ caught.getMessage());
+				}
+
+				@Override
+				public void onSuccess(byte[] result) {
+					loadMMD(glCanvas, result, dlg);
+				}
+			});
+		} catch (IllegalStateException e) {
+			Window.alert("初期化に失敗。WebGLをサポートしていない環境かも・・・？");
+		}
 	}
 
 	private void processFiles(FileList files) {
@@ -203,4 +275,63 @@ public class Main implements EntryPoint, IMMDTextureProvider {
 	private void handleError(File f, String message) {
 		Window.alert("Error: " + f.getName() + ": " + message);
 	}
+
+	private void loadMMD(final GLCanvas glCanvas, final byte[] buf,
+			final DialogBox dlg) {
+		Scheduler.get().scheduleDeferred(new ScheduledCommand() {
+			@Override
+			public void execute() {
+				ArrayBuffer arr = ArrayBuffer.create(buf.length);
+				DataView dataView = DataView.createDataView(arr);
+				int pos = 0;
+				for (byte dt : buf) {
+					dataView.setUint8(pos, dt);
+					pos++;
+				}
+				loadMMD(glCanvas, arr, dlg);
+			}
+		});
+	}
+
+	private void loadMMD(final GLCanvas glCanvas, final ArrayBuffer buf,
+			DialogBox dlg) {
+		if (dlg == null) {
+			dlg = new LoadingDialogBox();
+			dlg.center();
+		}
+		final DialogBox tdlg = dlg;
+		Scheduler.get().scheduleDeferred(new ScheduledCommand() {
+			@Override
+			public void execute() {
+				try {
+					MMDModel model = new MMDModel();
+					model.OpenPMD(new FileReadBuffer(buf));
+
+					model.Prepare(Main.this);
+					glCanvas.removeAllModels();
+					glCanvas.addModel(model);
+
+					// Window.alert("Loaded: Bones=" + model.getBoneCount()
+					// + ", IKs=" + model.GetIKCount());
+				} catch (ReadException e) {
+					Window.alert(e.getClass().getName() + ": " + e.getMessage());
+				} finally {
+					tdlg.hide();
+				}
+			}
+		});
+	}
+
+	private class LoadingDialogBox extends DialogBox {
+
+		public LoadingDialogBox() {
+			setText("Loading...");
+
+			VerticalPanel vpanel = new VerticalPanel();
+			vpanel.add(new Label("Loading PMD file. Please wait..."));
+			setWidget(vpanel);
+		}
+
+	}
+
 }
