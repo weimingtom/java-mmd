@@ -41,6 +41,7 @@ import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.DialogBox;
+import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootPanel;
@@ -116,9 +117,14 @@ public class Main implements EntryPoint, IMMDTextureProvider {
 			Label perfLabel = new Label("(Performance)");
 
 			final DropPanel dropPanel = new DropPanel();
+			VerticalPanel dropPanelContainer = new VerticalPanel();
 			dropPanel.addStyleName("gwtmmd-drop");
 
-			RootPanel.get("dropFieldContainer").add(dropPanel);
+			dropPanelContainer
+					.add(new HTML(
+							"下のエリアにPMDファイル(モデル)かVMDファイル(モーション)を<br/>ドラッグ＆ドロップするとその内容が反映されます:"));
+			dropPanelContainer.setHorizontalAlignment(VerticalPanel.ALIGN_CENTER);
+			dropPanelContainer.add(dropPanel);
 			dropPanel.setSize("100px", "100px");
 			dropPanel.addDragEnterHandler(new DragEnterHandler() {
 				@Override
@@ -261,8 +267,9 @@ public class Main implements EntryPoint, IMMDTextureProvider {
 			vpanel.add(buttons);
 
 			RootPanel.get("canvas3d_ctrl").add(vpanel);
+			RootPanel.get("dropFieldContainer").add(dropPanelContainer);
 
-			final DialogBox dlg = new LoadingDialogBox();
+			final DialogBox dlg = new LoadingDialogBox("PMD");
 			dlg.center();
 
 			greetingService.getDefaultModel(new AsyncCallback<byte[]>() {
@@ -337,7 +344,7 @@ public class Main implements EntryPoint, IMMDTextureProvider {
 	private void loadPMD(final GLCanvas glCanvas, final ArrayBuffer buf,
 			DialogBox dlg) {
 		if (dlg == null) {
-			dlg = new LoadingDialogBox();
+			dlg = new LoadingDialogBox("PMD");
 			dlg.center();
 		}
 		final DialogBox tdlg = dlg;
@@ -386,7 +393,7 @@ public class Main implements EntryPoint, IMMDTextureProvider {
 			throw new IllegalArgumentException();
 		}
 		if (dlg == null) {
-			dlg = new LoadingDialogBox();
+			dlg = new LoadingDialogBox("VMD");
 			dlg.center();
 		}
 		final DialogBox tdlg = dlg;
@@ -439,11 +446,11 @@ public class Main implements EntryPoint, IMMDTextureProvider {
 
 	private class LoadingDialogBox extends DialogBox {
 
-		public LoadingDialogBox() {
+		public LoadingDialogBox(String file) {
 			setText("Loading...");
 
 			VerticalPanel vpanel = new VerticalPanel();
-			vpanel.add(new Label("Loading PMD file. Please wait..."));
+			vpanel.add(new Label(file + "ファイルを読み込んでいます。ちょっと待ってね・・・"));
 			setWidget(vpanel);
 		}
 

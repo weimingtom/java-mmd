@@ -1,5 +1,8 @@
 /** Add css rules here for your application. */
-
+body,table,td,select,button {
+	font-family: 'ƒƒCƒŠƒI', Arial, sans-serif !important;
+	font-size: small !important;
+}
 
 /** Example rules used by the template application (remove for your app) */
 h1 {
