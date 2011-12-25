@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.yzwlab.javammd.format.MMD_VERTEX_DESC;
+import net.yzwlab.javammd.format.MMD_VERTEX_TEXUSE;
 import net.yzwlab.javammd.format.PMD_VERTEX_RECORD;
 
 public class MMDVertexList {
@@ -63,6 +64,8 @@ public class MMDVertexList {
 		MMDBone pBone0 = null;
 		MMDBone pBone1 = null;
 		MMD_VERTEX_DESC pVert = null;
+		MMD_VERTEX_TEXUSE buffer = new MMD_VERTEX_TEXUSE();
+		MMD_VERTEX_TEXUSE destBuffer = new MMD_VERTEX_TEXUSE();
 		for (int i = 0; i < m_vertexes.size(); i++) {
 			pVert = m_pVertexes[i];
 			if (pVert.getBweight() == 0.0f) {
@@ -70,13 +73,15 @@ public class MMDVertexList {
 				if (pBone == null) {
 					throw new IllegalArgumentException("E_POINTER");
 				}
-				pVert.setCurrent(pBone.ApplySkinning(pVert.getFaced()));
+				pVert.setCurrent(pBone.ApplySkinning(pVert.getFaced(buffer),
+						destBuffer));
 			} else if (pVert.getBweight() >= 0.9999f) {
 				pBone = pVert.getPBones()[0];
 				if (pBone == null) {
 					throw new IllegalArgumentException("E_POINTER");
 				}
-				pVert.setCurrent(pBone.ApplySkinning(pVert.getFaced()));
+				pVert.setCurrent(pBone.ApplySkinning(pVert.getFaced(buffer),
+						destBuffer));
 			} else {
 				pBone0 = pVert.getPBones()[0];
 				if (pBone0 == null) {
@@ -86,8 +91,8 @@ public class MMDVertexList {
 				if (pBone1 == null) {
 					throw new IllegalArgumentException("E_POINTER");
 				}
-				pVert.setCurrent(pBone0.ApplySkinning(pVert.getFaced(), pBone1,
-						pVert.getBweight()));
+				pVert.setCurrent(pBone0.ApplySkinning(pVert.getFaced(buffer),
+						pBone1, pVert.getBweight(), destBuffer));
 			}
 		}
 		return;
@@ -95,21 +100,23 @@ public class MMDVertexList {
 
 	public void ResetVertexes() {
 		MMD_VERTEX_DESC pDesc = null;
+		MMD_VERTEX_TEXUSE buffer = new MMD_VERTEX_TEXUSE();
 		for (int i = 0; i < m_vertexes.size(); i++) {
 			pDesc = m_pVertexes[i];
 			pDesc.setFaced(pDesc.getOriginal());
-			pDesc.setCurrent(pDesc.getFaced());
+			pDesc.setCurrent(pDesc.getFaced(buffer));
 		}
 		return;
 	}
 
 	private void CreateVertexDesc() {
 		m_pVertexes = new MMD_VERTEX_DESC[m_vertexes.size()];
+		MMD_VERTEX_TEXUSE buffer = new MMD_VERTEX_TEXUSE();
 		for (int i = 0; i < m_vertexes.size(); i++) {
 			PMD_VERTEX_RECORD vert = m_vertexes.get(i);
 			MMD_VERTEX_DESC pTargetVert = new MMD_VERTEX_DESC(vert);
 			pTargetVert.setFaced(pTargetVert.getOriginal());
-			pTargetVert.setCurrent(pTargetVert.getFaced());
+			pTargetVert.setCurrent(pTargetVert.getFaced(buffer));
 			m_pVertexes[i] = pTargetVert;
 		}
 	}

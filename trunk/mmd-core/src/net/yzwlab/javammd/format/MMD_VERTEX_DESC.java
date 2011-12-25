@@ -53,10 +53,12 @@ public class MMD_VERTEX_DESC {
 		return r;
 	}
 
-	public MMD_VERTEX_TEXUSE getFaced() {
-		MMD_VERTEX_TEXUSE r = new MMD_VERTEX_TEXUSE();
-		r.copyFrom(faced);
-		return r;
+	public MMD_VERTEX_TEXUSE getFaced(MMD_VERTEX_TEXUSE buffer) {
+		if (buffer == null) {
+			throw new IllegalArgumentException();
+		}
+		buffer.copyFrom(faced);
+		return buffer;
 	}
 
 	public void setFaced(MMD_VERTEX_TEXUSE current) {
@@ -64,6 +66,24 @@ public class MMD_VERTEX_DESC {
 			throw new IllegalArgumentException();
 		}
 		this.faced.copyFrom(current);
+	}
+
+	public void setFaced(PMD_MORP_VERTEX_RECORD v) {
+		if (v == null) {
+			throw new IllegalArgumentException();
+		}
+		float[] values = v.getVec();
+		MMD_VECTOR3 point = faced.getPoint();
+		point.x = (values[0]);
+		point.y = (values[1]);
+		point.z = (values[2]);
+	}
+
+	public void setFaced(MMD_VECTOR3 v) {
+		if (v == null) {
+			throw new IllegalArgumentException();
+		}
+		faced.getPoint().copyFrom(v);
 	}
 
 	public MMDBone[] getPBones() {
