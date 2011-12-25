@@ -35,7 +35,6 @@ public class MMDModelGLCanvas {
 		GLProfile glprofile = GLProfile.getDefault();
 		GLCapabilities glcapabilities = new GLCapabilities(glprofile);
 		JPanel panel = new JPanel(new FlowLayout());
-		final float[] offset = new float[] { 0.2f, -0.2f };
 		long baseTime = System.currentTimeMillis();
 		MMDModel model = new MMDModel();
 		File f = new File(args[0]);
@@ -51,9 +50,9 @@ public class MMDModelGLCanvas {
 					+ model.GetFaceName(j));
 		}
 
-		for (int j = 0; j < model.GetBoneCount(); j++) {
+		for (int j = 0; j < model.getBoneCount(); j++) {
 			System.out.println("Bone #" + String.valueOf(j + 1) + ": "
-					+ model.GetBoneName(j));
+					+ new String(model.getBone(j).getName()));
 		}
 
 		for (int j = 0; j < model.GetIKCount(); j++) {
@@ -64,13 +63,11 @@ public class MMDModelGLCanvas {
 			}
 		}
 
-		for (int i = 0; i < offset.length; i++) {
-			final GLCanvas glcanvas = new GLCanvas(glcapabilities);
-			glcanvas.addGLEventListener(new MMDDrawer(f.getParentFile(),
-					glcanvas, offset, i, model, baseTime));
-			glcanvas.setSize(new Dimension((int) (320 * 1.5), (int) (240 * 1.5)));
-			panel.add(glcanvas);
-		}
+		GLCanvas glcanvas = new GLCanvas(glcapabilities);
+		glcanvas.addGLEventListener(new MMDDrawer(f.getParentFile(), glcanvas,
+				model, baseTime));
+		glcanvas.setSize(new Dimension((int) (320 * 1.5), (int) (240 * 1.5)));
+		panel.add(glcanvas);
 		final JFrame jframe = new JFrame("MMD on JOGL");
 		jframe.addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent windowevent) {
