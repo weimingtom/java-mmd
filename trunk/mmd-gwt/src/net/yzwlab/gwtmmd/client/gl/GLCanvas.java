@@ -41,12 +41,27 @@ public class GLCanvas extends Widget {
 	/**
 	 * バッファを保持します。
 	 */
-	private List<JavaScriptObject> buffers;
+	private List<BufferGroup> buffers;
 
 	/**
 	 * モデルを保持します。
 	 */
 	private List<MMDModel> models;
+
+	/**
+	 * 回転を保持します。
+	 */
+	private int currentRx;
+
+	/**
+	 * 回転を保持します。
+	 */
+	private int currentRy;
+
+	/**
+	 * 回転を保持します。
+	 */
+	private int currentRz;
 
 	/**
 	 * 構築します。
@@ -61,13 +76,40 @@ public class GLCanvas extends Widget {
 		this.timer = null;
 		this.gl = null;
 		this.program = null;
-		this.buffers = new ArrayList<JavaScriptObject>();
+		this.buffers = new ArrayList<BufferGroup>();
 		this.models = new ArrayList<MMDModel>();
+		this.currentRx = 0;
+		this.currentRy = 0;
+		this.currentRz = 0;
 
 		canvasElement.setAttribute("width", String.valueOf(width));
 		canvasElement.setAttribute("height", String.valueOf(height));
 
 		setElement(canvasElement);
+	}
+
+	public int getCurrentRx() {
+		return currentRx;
+	}
+
+	public void setCurrentRx(int currentRx) {
+		this.currentRx = currentRx;
+	}
+
+	public int getCurrentRy() {
+		return currentRy;
+	}
+
+	public void setCurrentRy(int currentRy) {
+		this.currentRy = currentRy;
+	}
+
+	public int getCurrentRz() {
+		return currentRz;
+	}
+
+	public void setCurrentRz(int currentRz) {
+		this.currentRz = currentRz;
 	}
 
 	/**
@@ -83,11 +125,21 @@ public class GLCanvas extends Widget {
 		models.add(model);
 	}
 
+	/**
+	 * モデルをすべて削除します。
+	 */
+	public void removeAllModels() {
+		models.clear();
+	}
+
 	@Override
 	protected void onLoad() {
 		super.onLoad();
 
 		gl = attach(canvasElement);
+		if (gl == null) {
+			throw new IllegalStateException();
+		}
 		Document doc = Document.get();
 		JavaScriptObject vs = getVertexShader(gl,
 				doc.getElementById("shader-vs").getInnerText());
@@ -129,14 +181,22 @@ public class GLCanvas extends Widget {
 	/**
 	 * ModelView行列を生成します。
 	 * 
+	 * @param rx
+	 *            回転。
+	 * @param ry
+	 *            回転。
+	 * @param rz
+	 *            回転。
 	 * @return ModelView行列。
 	 */
-	private native JavaScriptObject createMVMatrix() /*-{
+	private native JavaScriptObject createMVMatrix(int rx, int ry, int rz) /*-{
 		var modelView = $wnd.mat4.create();
 
 		$wnd.mat4.identity(modelView); // Set to identity
 		$wnd.mat4.translate(modelView, [ 0, -5, -15 ]); // Translate back 10 units
-		$wnd.mat4.rotate(modelView, Math.PI / 4, [ 0, 0, 0 ]); // Rotate 90 degrees around the Y axis
+		$wnd.mat4.rotate(modelView, Math.PI / 8 * rx, [ 1, 0, 0 ]); // Rotate 90 degrees around the Y axis
+		$wnd.mat4.rotate(modelView, Math.PI / 8 * ry, [ 0, 1, 0 ]); // Rotate 90 degrees around the Y axis
+		$wnd.mat4.rotate(modelView, Math.PI / 8 * rz, [ 0, 0, 1 ]); // Rotate 90 degrees around the Y axis
 		$wnd.mat4.scale(modelView, [ 0.5, 0.5, 0.5 ]); // Scale by 200%
 		return modelView;
 	}-*/;
@@ -151,7 +211,8 @@ public class GLCanvas extends Widget {
 	private native JavaScriptObject attach(Element elem) /*-{
 		var gl = elem.getContext("experimental-webgl");
 		if (!gl) {
-			throw "Failed to initialize WebGL";
+			//throw "Failed to initialize WebGL";
+			return null;
 		}
 		gl.viewportWidth = elem.width;
 		gl.viewportHeight = elem.height;
@@ -180,7 +241,7 @@ public class GLCanvas extends Widget {
 		gl.compileShader(shader);
 
 		if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-			throw "Failed to compile";
+			throw "Failed to compile: " + gl.getShaderInfoLog(shader);
 		}
 		return shader;
 	}-*/;
@@ -201,7 +262,7 @@ public class GLCanvas extends Widget {
 		gl.compileShader(shader);
 
 		if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-			throw "Failed to compile";
+			throw "Failed to compile: " + gl.getShaderInfoLog(shader);
 		}
 		return shader;
 	}-*/;
@@ -234,8 +295,16 @@ public class GLCanvas extends Widget {
 
 		var attr = gl.getAttribLocation(program, "pos");
 		gl.enableVertexAttribArray(attr);
+		program.vertexPositionAttribute = attr;
+
+		attr = gl.getAttribLocation(program, "norm");
+		gl.enableVertexAttribArray(attr);
+		program.vertexNormalAttribute = attr;
+
 		program.mvMatrixUniform = gl.getUniformLocation(program, "uMVMatrix");
 		program.pMatrixUniform = gl.getUniformLocation(program, "uPMatrix");
+		program.normalMatrixUniform = gl.getUniformLocation(program,
+				"uNormalMatrix");
 
 		return program;
 	}-*/;
@@ -293,6 +362,12 @@ public class GLCanvas extends Widget {
 	private native void setMVMatrix(JavaScriptObject gl,
 			JavaScriptObject program, JavaScriptObject mat) /*-{
 		gl.uniformMatrix4fv(program.mvMatrixUniform, false, mat);
+
+		var nmat = $wnd.mat4.create();
+		;
+		$wnd.mat4.inverse(mat, nmat);
+		$wnd.mat4.transpose(nmat);
+		gl.uniformMatrix4fv(program.normalMatrixUniform, false, nmat);
 	}-*/;
 
 	/**
@@ -317,15 +392,21 @@ public class GLCanvas extends Widget {
 	 *            WebGLオブジェクト。nullは不可。
 	 * @param program
 	 *            シェーダ。nullは不可。
-	 * @param buffer
+	 * @param vbuffer
+	 *            バッファ。nullは不可。
+	 * @param nbuffer
 	 *            バッファ。nullは不可。
 	 */
 	private native void drawArrays(JavaScriptObject gl,
-			JavaScriptObject program, JavaScriptObject buffer)/*-{
-		gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+			JavaScriptObject program, JavaScriptObject vbuffer,
+			JavaScriptObject nbuffer)/*-{
+		gl.bindBuffer(gl.ARRAY_BUFFER, vbuffer);
 		gl.vertexAttribPointer(program.vertexPositionAttribute, 3, gl.FLOAT,
 				false, 0, 0);
-		gl.drawArrays(gl.TRIANGLES, 0, buffer.vertexNum);
+		gl.bindBuffer(gl.ARRAY_BUFFER, nbuffer);
+		gl.vertexAttribPointer(program.vertexNormalAttribute, 3, gl.FLOAT,
+				false, 0, 0);
+		gl.drawArrays(gl.TRIANGLES, 0, vbuffer.vertexNum);
 	}-*/;
 
 	/**
@@ -351,7 +432,7 @@ public class GLCanvas extends Widget {
 			setPMatrix(gl, program, pMatrix);
 
 			for (MMDModel model : models) {
-				GL glctx = new GL(model);
+				GL glctx = new GL(model, currentRx, currentRy, currentRz);
 				model.DrawAsync(this, glctx);
 				glctx.flush();
 			}
@@ -383,6 +464,11 @@ public class GLCanvas extends Widget {
 			private JavaScriptObject vertexes;
 
 			/**
+			 * 法線ベクトルリストを保持します。
+			 */
+			private JavaScriptObject normals;
+
+			/**
 			 * 変換行列を保持します。
 			 */
 			private JavaScriptObject mvMatrix;
@@ -392,14 +478,21 @@ public class GLCanvas extends Widget {
 			 * 
 			 * @param model
 			 *            モデル。nullは不可。
+			 * @param rx
+			 *            回転。
+			 * @param ry
+			 *            回転。
+			 * @param rz
+			 *            回転。
 			 */
-			public GL(MMDModel model) {
+			public GL(MMDModel model, int rx, int ry, int rz) {
 				if (model == null) {
 					throw new IllegalArgumentException();
 				}
 				this.bufferIndex = 0;
 				this.vertexes = createVertexes();
-				this.mvMatrix = createMVMatrix();
+				this.normals = createVertexes();
+				this.mvMatrix = createMVMatrix(rx, ry, rz);
 			}
 
 			/**
@@ -408,7 +501,8 @@ public class GLCanvas extends Widget {
 			public void flush() {
 				setMVMatrix(gl, program, mvMatrix);
 				for (int i = 0; i < bufferIndex; i++) {
-					drawArrays(gl, program, buffers.get(i));
+					BufferGroup g = buffers.get(i);
+					drawArrays(gl, program, g.vbuffer, g.nbuffer);
 				}
 			}
 
@@ -432,18 +526,20 @@ public class GLCanvas extends Widget {
 
 			@Override
 			public void glEnd() {
-				JavaScriptObject buffer = null;
+				BufferGroup buffer = null;
 				if (bufferIndex >= buffers.size()) {
-					buffer = createBuffer(gl);
+					buffer = new BufferGroup(createBuffer(gl), createBuffer(gl));
 					buffers.add(buffer);
 				} else {
 					buffer = buffers.get(bufferIndex);
 				}
-				initBuffer(gl, buffer, vertexes);
+				initBuffer(gl, buffer.vbuffer, vertexes);
+				initBuffer(gl, buffer.nbuffer, normals);
 
 				bufferIndex++;
 
 				vertexes = createVertexes();
+				normals = createVertexes();
 			}
 
 			@Override
@@ -459,8 +555,7 @@ public class GLCanvas extends Widget {
 
 			@Override
 			public void glNormal3f(float x, float y, float z) {
-				// TODO Auto-generated method stub
-
+				pushVertexes(normals, x, y, z);
 			}
 
 			@Override
@@ -597,9 +692,23 @@ public class GLCanvas extends Widget {
 					float x, float y, float z) /*-{
 				vertexes.push(x);
 				vertexes.push(y);
-				vertexes.push(z);
+				vertexes.push(-z);
 			}-*/;
 
+		}
+
+	}
+
+	private class BufferGroup {
+
+		private JavaScriptObject vbuffer;
+
+		private JavaScriptObject nbuffer;
+
+		public BufferGroup(JavaScriptObject vbuffer, JavaScriptObject nbuffer) {
+			super();
+			this.vbuffer = vbuffer;
+			this.nbuffer = nbuffer;
 		}
 
 	}
