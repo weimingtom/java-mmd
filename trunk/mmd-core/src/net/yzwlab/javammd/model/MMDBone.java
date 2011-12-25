@@ -50,8 +50,8 @@ public class MMDBone {
 		}
 		f1 = 0;
 		f2 = 0;
-		f1 = pLeft.GetFrameNo();
-		f2 = pRight.GetFrameNo();
+		f1 = pLeft.getFrameNo();
+		f2 = pRight.getFrameNo();
 		if (f1 < f2) {
 			return -1;
 		}
@@ -164,17 +164,19 @@ public class MMDBone {
 	 * 
 	 * @param buffer
 	 *            バッファ。nullは不可。
+	 * @param offset
+	 *            オフセット。
 	 * @param pMotion
 	 *            モーション。nullは不可。
 	 * @throws ReadException
 	 *             読み込み関係のエラー。
 	 */
-	public void AddMotion(IReadBuffer buffer, VMD_MOTION_RECORD pMotion)
-			throws ReadException {
+	public void addMotion(IReadBuffer buffer, int offset,
+			VMD_MOTION_RECORD pMotion) throws ReadException {
 		if (buffer == null || pMotion == null) {
 			throw new IllegalArgumentException("E_POINTER");
 		}
-		Motion pMot = new Motion(buffer, pMotion);
+		Motion pMot = new Motion(buffer, offset, pMotion);
 		m_motions.add(pMot);
 		return;
 	}
@@ -270,11 +272,16 @@ public class MMDBone {
 		}
 	}
 
-	public Integer GetMaxFrame() {
+	/**
+	 * 最大フレーム番号を取得します。
+	 * 
+	 * @return 最大フレーム番号。未定義の場合はnull。
+	 */
+	public Integer getMaxFrame() {
 		if (m_motions.size() == 0) {
 			return null;
 		}
-		return m_motions.get(m_motions.size() - 1).GetFrameNo();
+		return m_motions.get(m_motions.size() - 1).getFrameNo();
 	}
 
 	public void UpdateIKLimitAngle() {
@@ -326,11 +333,11 @@ public class MMDBone {
 		if (m_motions.size() == 0) {
 			return null;
 		}
-		fr = m_motions.get(0).GetFrameNo();
+		fr = m_motions.get(0).getFrameNo();
 		if (elapsedTime <= fr) {
 			return new MotionSet(m_motions.get(0), null, 0.0f);
 		}
-		fr = m_motions.get(m_motions.size() - 1).GetFrameNo();
+		fr = m_motions.get(m_motions.size() - 1).getFrameNo();
 		if (elapsedTime >= fr) {
 			return new MotionSet(m_motions.get(m_motions.size() - 1), null,
 					0.0f);
@@ -338,8 +345,8 @@ public class MMDBone {
 		for (int i = 0; i < m_motions.size() - 1; i++) {
 			pSMotion = m_motions.get(i);
 			pEMotion = m_motions.get(i + 1);
-			int fr1 = pSMotion.GetFrameNo();
-			int fr2 = pEMotion.GetFrameNo();
+			int fr1 = pSMotion.getFrameNo();
+			int fr2 = pEMotion.getFrameNo();
 			if (fr1 <= elapsedTime && elapsedTime < fr2) {
 				return new MotionSet(pSMotion, pEMotion, (elapsedTime - fr1)
 						/ (fr2 - fr1));
@@ -348,7 +355,16 @@ public class MMDBone {
 		return null;
 	}
 
+	/**
+	 * モーションを定義します。
+	 */
 	public class Motion {
+
+		/**
+		 * オフセットを保持します。
+		 */
+		private int offset;
+
 		protected VMD_MOTION_RECORD m_motion;
 
 		protected MMD_VECTOR3 m_pos;
@@ -363,8 +379,24 @@ public class MMDBone {
 
 		protected BezierCurve m_pRotBez;
 
-		public Motion(IReadBuffer buffer, VMD_MOTION_RECORD pMotion)
+		/**
+		 * 構築します。
+		 * 
+		 * @param buffer
+		 *            バッファ。nullは不可。
+		 * @param offset
+		 *            オフセット。　
+		 * @param pMotion
+		 *            　モーション情報。nullは不可。
+		 * @throws ReadException
+		 *             読み込み時のエラー。
+		 */
+		public Motion(IReadBuffer buffer, int offset, VMD_MOTION_RECORD pMotion)
 				throws ReadException {
+			if (buffer == null || pMotion == null) {
+				throw new IllegalArgumentException();
+			}
+			this.offset = offset;
 			this.m_pRotBez = null;
 			this.m_pZBez = null;
 			this.m_pYBez = null;
@@ -377,9 +409,6 @@ public class MMDBone {
 			m_pYBez = null;
 			m_pZBez = null;
 			m_pRotBez = null;
-			if (pMotion == null) {
-				throw new IllegalArgumentException();
-			}
 			m_motion = pMotion;
 			m_pos.setX(m_motion.getPos()[0]);
 			m_pos.setY(m_motion.getPos()[1]);
@@ -414,8 +443,13 @@ public class MMDBone {
 			m_pRotBez = new BezierCurve(p1, p2);
 		}
 
-		public int GetFrameNo() {
-			return m_motion.getFrameNo();
+		/**
+		 * このモーションのフレーム番号を取得します。
+		 * 
+		 * @return このモーションのフレーム番号。
+		 */
+		public int getFrameNo() {
+			return m_motion.getFrameNo() + offset;
 		}
 
 		public PositionAndQT GetVectors() {
