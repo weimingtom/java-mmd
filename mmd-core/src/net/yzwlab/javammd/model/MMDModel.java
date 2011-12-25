@@ -46,7 +46,15 @@ public class MMDModel {
 		m_scale = 1.0f;
 	}
 
-	public void OpenPMD(IReadBuffer buffer) throws ReadException {
+	/**
+	 * PMDファイルを読み出します。
+	 * 
+	 * @param buffer
+	 *            バッファ。nullは不可。
+	 * @throws ReadException
+	 *             読み込み関係のエラー。
+	 */
+	public void openPMD(IReadBuffer buffer) throws ReadException {
 		PMD_MORP_RECORD baseMorp = new PMD_MORP_RECORD();
 		PMD_BONE_RECORD bone = new PMD_BONE_RECORD();
 		List<PMD_BONE_RECORD> bones = new ArrayList<PMD_BONE_RECORD>();
@@ -118,7 +126,16 @@ public class MMDModel {
 		return;
 	}
 
-	public void OpenVMD(IReadBuffer buffer) throws ReadException {
+	/**
+	 * VMDファイルを読み出します。
+	 * 
+	 * @param buffer
+	 *            バッファ。nullは不可。
+	 * @return モーションが登録された時間区分。
+	 * @throws ReadException
+	 *             読み込み関係のエラー。
+	 */
+	public IMotionSegment openVMD(IReadBuffer buffer) throws ReadException {
 		boolean added = false;
 		boolean br = false;
 		VMD_MORP_RECORD morp = null;
@@ -135,6 +152,14 @@ public class MMDModel {
 		if (br == false) {
 			throw new IllegalArgumentException("E_UNEXPECTED");
 		}
+
+		// モーションを追加するオフセット値
+		int offset = 0;
+		Integer maxFrameNum = getMaxFrame();
+		if (maxFrameNum != null) {
+			offset = maxFrameNum.intValue() + 1;
+		}
+
 		motions = vmdFile.GetMotionChunk();
 		for (int j = 0; j < motions.size(); j++) {
 			motion = motions.get(j);
@@ -143,7 +168,7 @@ public class MMDModel {
 				pBone = m_bones.get(i);
 				br = pBone.IsTarget(motion);
 				if (br) {
-					pBone.AddMotion(buffer, motion);
+					pBone.addMotion(buffer, offset, motion);
 					added = true;
 					break;
 				}
@@ -163,7 +188,7 @@ public class MMDModel {
 				pMorp = m_morps.get(i);
 				br = pMorp.IsTarget(morp);
 				if (br) {
-					pMorp.AddMotion(morp);
+					pMorp.addMotion(offset, morp);
 					added = true;
 					break;
 				}
@@ -175,7 +200,7 @@ public class MMDModel {
 			pMorp = m_morps.get(i);
 			pMorp.PrepareMotion();
 		}
-		return;
+		return new MotionSegment(offset);
 	}
 
 	public void Prepare(IMMDTextureProvider pTextureProvider)
@@ -384,7 +409,6 @@ public class MMDModel {
 	 * @return 最大フレーム数。
 	 */
 	public Integer getMaxFrame() {
-		Integer pFrameNo = 0;
 		int ret = 0;
 		int validCount = 0;
 		ret = 0;
@@ -400,7 +424,7 @@ public class MMDModel {
 			}
 		}
 		for (int i = 0; i < m_bones.size(); i++) {
-			Integer f = m_bones.get(i).GetMaxFrame();
+			Integer f = m_bones.get(i).getMaxFrame();
 			if (f == null) {
 				continue;
 			}
@@ -412,7 +436,6 @@ public class MMDModel {
 		if (validCount == 0) {
 			return null;
 		}
-		pFrameNo = ret;
 		return ret;
 	}
 
@@ -523,4 +546,58 @@ public class MMDModel {
 		}
 
 	}
+
+	/**
+	 * モーションの区分情報を定義します。
+	 */
+	private class MotionSegment implements IMotionSegment {
+
+		/**
+		 * オフセットを保持します。
+		 */
+		private int offset;
+
+		/**
+		 * 終了点を保持します。
+		 */
+		private int end;
+
+		/**
+		 * 構築します。
+		 * 
+		 * @param offset
+		 *            オフセット。
+		 */
+		public MotionSegment(int offset) {
+			this.offset = offset;
+			this.end = 0;
+
+			Integer maxFrame = getMaxFrame();
+			if (maxFrame != null) {
+				this.end = maxFrame.intValue();
+			}
+		}
+
+		@Override
+		public int getStart() {
+			return offset;
+		}
+
+		@Override
+		public int getStop() {
+			return end;
+		}
+
+		@Override
+		public float getFrame(float frameRate, long currentTime) {
+			float fcurrentTime = ((float) currentTime) / 1000.0f;
+
+			int len = end - offset + 1;
+			int currentFrame = ((int) (fcurrentTime * frameRate));
+			int relativeFrame = currentFrame % len;
+			return relativeFrame + offset;
+		}
+
+	}
+
 }

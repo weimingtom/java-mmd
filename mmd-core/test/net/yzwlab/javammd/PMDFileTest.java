@@ -20,7 +20,7 @@ public class PMDFileTest implements IDataMutex, IMMDTextureProvider, IGL {
 			try {
 				in = new FileInputStream(f);
 				MMDModel model = new MMDModel();
-				model.OpenPMD(new FileBuffer(new DataInputStream(
+				model.openPMD(new FileBuffer(new DataInputStream(
 						new BufferedInputStream(in)), f.length()));
 				model.UpdateMotion(0.0f);
 				for (int i = 0; i < model.GetFaceCount(); i++) {

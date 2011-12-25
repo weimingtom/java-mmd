@@ -25,8 +25,8 @@ public class MMDMorp {
 		}
 		f1 = 0;
 		f2 = 0;
-		f1 = pLeft.GetFrameNo();
-		f2 = pRight.GetFrameNo();
+		f1 = pLeft.getFrameNo();
+		f2 = pRight.getFrameNo();
 		if (f1 < f2) {
 			return -1;
 		}
@@ -93,7 +93,7 @@ public class MMDMorp {
 		if (m_motions.size() == 0) {
 			return null;
 		}
-		return m_motions.get(m_motions.size() - 1).GetFrameNo();
+		return m_motions.get(m_motions.size() - 1).getFrameNo();
 	}
 
 	public boolean IsTarget(VMD_MORP_RECORD pMotion) {
@@ -106,13 +106,21 @@ public class MMDMorp {
 		return false;
 	}
 
-	public void AddMotion(VMD_MORP_RECORD pMotion) {
+	/**
+	 * モーションを追加します。
+	 * 
+	 * @param offset
+	 *            オフセット。
+	 * @param pMotion
+	 *            モーション。nullは不可。
+	 */
+	public void addMotion(int offset, VMD_MORP_RECORD pMotion) {
 		Motion pMot = null;
 		if (pMotion == null) {
 			throw new IllegalArgumentException("E_POINTER");
 		}
 		try {
-			pMot = new Motion(pMotion);
+			pMot = new Motion(offset, pMotion);
 		} catch (Throwable t) {
 			pMot.dispose();
 			pMot = null;
@@ -207,11 +215,11 @@ public class MMDMorp {
 		if (m_motions.size() == 0) {
 			return null;
 		}
-		fr = m_motions.get(0).GetFrameNo();
+		fr = m_motions.get(0).getFrameNo();
 		if (elapsedTime <= fr) {
 			return new MotionSet(m_motions.get(0), null, 0.0f);
 		}
-		fr = m_motions.get(m_motions.size() - 1).GetFrameNo();
+		fr = m_motions.get(m_motions.size() - 1).getFrameNo();
 		if (elapsedTime >= fr) {
 			return new MotionSet(m_motions.get(m_motions.size() - 1), null,
 					0.0f);
@@ -221,8 +229,8 @@ public class MMDMorp {
 			pEMotion = m_motions.get(i + 1);
 			fr1 = 0;
 			fr2 = 0;
-			fr1 = pSMotion.GetFrameNo();
-			fr2 = pEMotion.GetFrameNo();
+			fr1 = pSMotion.getFrameNo();
+			fr2 = pEMotion.getFrameNo();
 			if (fr1 <= elapsedTime && elapsedTime <= fr2) {
 				pOffset = (elapsedTime - fr1) / (fr2 - fr1);
 				return new MotionSet(pSMotion, pEMotion, pOffset);
@@ -231,10 +239,28 @@ public class MMDMorp {
 		return null;
 	}
 
+	/**
+	 * モーションを定義します。
+	 */
 	public class Motion {
+
+		/**
+		 * オフセットを定義します。
+		 */
+		private int offset;
+
 		protected VMD_MORP_RECORD m_motion;
 
-		public Motion(VMD_MORP_RECORD pMotion) {
+		/**
+		 * 構築します。
+		 * 
+		 * @param offset
+		 *            オフセット。
+		 * @param pMotion
+		 *            モーション。nullは不可。
+		 */
+		public Motion(int offset, VMD_MORP_RECORD pMotion) {
+			this.offset = offset;
 			this.m_motion = null;
 			if (pMotion == null) {
 				throw new IllegalArgumentException();
@@ -246,10 +272,13 @@ public class MMDMorp {
 			;
 		}
 
-		public int GetFrameNo() {
-			Integer pFrameNo = 0;
-			pFrameNo = m_motion.getFrameNo();
-			return pFrameNo;
+		/**
+		 * フレーム番号を取得します。
+		 * 
+		 * @return フレーム番号。
+		 */
+		public int getFrameNo() {
+			return m_motion.getFrameNo() + offset;
 		}
 
 		public float GetRate() {
