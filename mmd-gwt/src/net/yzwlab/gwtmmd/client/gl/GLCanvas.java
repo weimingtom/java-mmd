@@ -553,7 +553,7 @@ public class GLCanvas extends Widget {
 				for (DynamicModel model : models) {
 					GL glctx = new GL(model.model, currentRx, currentRy,
 							currentRz);
-					model.model.DrawAsync(this, glctx);
+					model.model.draw(glctx);
 					glctx.flush();
 				}
 			} finally {

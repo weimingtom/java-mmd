@@ -96,14 +96,16 @@ public class Main implements EntryPoint, IMMDTextureProvider {
 	}
 
 	@Override
-	public TEXTURE_DESC Load(byte[] filename) throws ReadException {
+	public void load(byte[] filename, IMMDTextureProvider.Handler handler)
+			throws ReadException {
 		TEXTURE_DESC desc = new TEXTURE_DESC();
 		desc.setTexWidth(100);
 		desc.setTexHeight(100);
 		desc.setTexMemWidth(100);
 		desc.setTexMemHeight(100);
 		desc.setTextureId(0L);
-		return desc;
+		// TODO
+		// return desc;
 	}
 
 	/**
@@ -123,7 +125,8 @@ public class Main implements EntryPoint, IMMDTextureProvider {
 			dropPanelContainer
 					.add(new HTML(
 							"下のエリアにPMDファイル(モデル)かVMDファイル(モーション)を<br/>ドラッグ＆ドロップするとその内容が反映されます:"));
-			dropPanelContainer.setHorizontalAlignment(VerticalPanel.ALIGN_CENTER);
+			dropPanelContainer
+					.setHorizontalAlignment(VerticalPanel.ALIGN_CENTER);
 			dropPanelContainer.add(dropPanel);
 			dropPanel.setSize("100px", "100px");
 			dropPanel.addDragEnterHandler(new DragEnterHandler() {
@@ -355,7 +358,18 @@ public class Main implements EntryPoint, IMMDTextureProvider {
 					MMDModel model = new MMDModel();
 					model.openPMD(new FileReadBuffer(buf));
 
-					model.Prepare(Main.this);
+					model.prepare(Main.this, new IMMDTextureProvider.Handler() {
+						@Override
+						public void onSuccess(byte[] filename, TEXTURE_DESC desc) {
+							// TODO Auto-generated method stub
+
+						}
+
+						@Override
+						public void onError(byte[] filename, Throwable error) {
+							error.printStackTrace();
+						}
+					});
 					glCanvas.removeAllModels();
 					glCanvas.addModel(model);
 
