@@ -192,7 +192,7 @@ public class MMDMorp {
 			vec.setZ(values[2]);
 			jno = v.getNo();
 			MMD_VERTEX_TEXUSE faced = pOriginalVertexes[jno].getFaced(buffer);
-			faced.setPoint(CalcUtil.Lerp(faced.getPoint(), vec, weight));
+			faced.getPoint().lerp(faced.getPoint(), vec, weight);
 			pOriginalVertexes[jno].setFaced(faced);
 		}
 		return pOriginalVertexes;

@@ -42,10 +42,6 @@ public class MMD_VERTEX_TEXUSE {
 		return uv;
 	}
 
-	public void setUv(MMD_VECTOR2 uv) {
-		this.uv.copyFrom(uv);
-	}
-
 	public MMD_VERTEX_TEXUSE Read(IReadBuffer buffer) throws ReadException {
 		if (buffer == null) {
 			throw new IllegalArgumentException();

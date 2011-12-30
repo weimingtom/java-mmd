@@ -5,52 +5,6 @@ import net.yzwlab.javammd.format.MMD_VECTOR3;
 import net.yzwlab.javammd.format.MMD_VECTOR4;
 
 public class CalcUtil {
-	public static MMD_MATRIX ToZeroM() {
-		MMD_MATRIX pMatrix = new MMD_MATRIX();
-		for (int j = 0; j < 4; j++) {
-			for (int i = 0; i < 4; i++) {
-				pMatrix.getValues()[j][i] = 0.0f;
-			}
-		}
-		return pMatrix;
-	}
-
-	public static MMD_VECTOR3 ToZeroV3() {
-		MMD_VECTOR3 pVector = new MMD_VECTOR3();
-		pVector.setX(0.0f);
-		pVector.setY(0.0f);
-		pVector.setZ(0.0f);
-		return pVector;
-	}
-
-	public static MMD_VECTOR4 ToZeroV4() {
-		MMD_VECTOR4 pVector = new MMD_VECTOR4();
-		pVector.setX(0.0f);
-		pVector.setY(0.0f);
-		pVector.setZ(0.0f);
-		pVector.setW(0.0f);
-		return pVector;
-	}
-
-	public static MMD_MATRIX GenerateIdentity() {
-		MMD_MATRIX pMatrix = ToZeroM();
-		pMatrix.getValues()[0][0] = 1.0f;
-		pMatrix.getValues()[1][1] = 1.0f;
-		pMatrix.getValues()[2][2] = 1.0f;
-		pMatrix.getValues()[3][3] = 1.0f;
-		return pMatrix;
-	}
-
-	public static MMD_VECTOR3 Subtract(MMD_VECTOR3 pValue1, MMD_VECTOR3 pValue2) {
-		if (pValue1 == null || pValue2 == null) {
-			throw new IllegalArgumentException("E_POINTER");
-		}
-		MMD_VECTOR3 temp = new MMD_VECTOR3();
-		temp.setX(pValue1.getX() - pValue2.getX());
-		temp.setY(pValue1.getY() - pValue2.getY());
-		temp.setZ(pValue1.getZ() - pValue2.getZ());
-		return temp;
-	}
 
 	public static MMD_VECTOR3 Add(MMD_VECTOR3 pValue1, MMD_VECTOR3 pValue2) {
 		if (pValue1 == null || pValue2 == null) {
@@ -111,47 +65,6 @@ public class CalcUtil {
 		return pDest;
 	}
 
-	public static MMD_VECTOR3 Lerp(MMD_VECTOR3 pValue1, MMD_VECTOR3 pValue2,
-			float weight) {
-		MMD_VECTOR3 pDest = new MMD_VECTOR3();
-		float t0 = 0.0f;
-		if (pDest == null || pValue1 == null || pValue2 == null) {
-			throw new IllegalArgumentException("E_POINTER");
-		}
-		t0 = 1.0f - weight;
-		pDest.setX(pValue1.getX() * t0 + pValue2.getX() * weight);
-		pDest.setY(pValue1.getY() * t0 + pValue2.getY() * weight);
-		pDest.setZ(pValue1.getZ() * t0 + pValue2.getZ() * weight);
-		return pDest;
-	}
-
-	public static MMD_VECTOR4 Lerp(MMD_VECTOR4 pValue1, MMD_VECTOR4 pValue2,
-			float weight) {
-		float qr = 0.0f;
-		float t0 = 0.0f;
-		MMD_VECTOR4 temp = new MMD_VECTOR4();
-		if (pValue1 == null || pValue2 == null) {
-			throw new IllegalArgumentException("E_POINTER");
-		}
-		qr = pValue1.getX() * pValue2.getX() + pValue1.getY() * pValue2.getY()
-				+ pValue1.getZ() * pValue2.getZ() + pValue1.getW()
-				* pValue2.getW();
-		t0 = 1.0f - weight;
-		if (qr < 0) {
-			temp.setX(pValue1.getX() * t0 - pValue2.getX() * weight);
-			temp.setY(pValue1.getY() * t0 - pValue2.getY() * weight);
-			temp.setZ(pValue1.getZ() * t0 - pValue2.getZ() * weight);
-			temp.setW(pValue1.getW() * t0 - pValue2.getW() * weight);
-		} else {
-			temp.setX(pValue1.getX() * t0 + pValue2.getX() * weight);
-			temp.setY(pValue1.getY() * t0 + pValue2.getY() * weight);
-			temp.setZ(pValue1.getZ() * t0 + pValue2.getZ() * weight);
-			temp.setW(pValue1.getW() * t0 + pValue2.getW() * weight);
-		}
-		temp.Normalize();
-		return temp;
-	}
-
 	public static MMD_MATRIX Lerp(MMD_MATRIX pValue1, MMD_MATRIX pValue2,
 			float weight) {
 		if (pValue1 == null || pValue2 == null) {
@@ -171,41 +84,6 @@ public class CalcUtil {
 			}
 		}
 		return pDest;
-	}
-
-	public static MMD_MATRIX Inverse(MMD_MATRIX pSource) {
-		if (pSource == null) {
-			throw new IllegalArgumentException("E_POINTER");
-		}
-		MMD_MATRIX pDest = GenerateIdentity();
-		MMD_MATRIX matTemp = new MMD_MATRIX();
-		for (int i = 0; i < 4; i++) {
-			float buf = 1 / matTemp.getValues()[i][i];
-			for (int j = 0; j < 4; j++) {
-				matTemp.getValues()[i][j] *= buf;
-				pDest.getValues()[i][j] *= buf;
-			}
-			for (int j = 0; j < 4; j++) {
-				if (i != j) {
-					buf = matTemp.getValues()[j][i];
-					for (int k = 0; k < 4; k++) {
-						matTemp.getValues()[j][k] -= matTemp.getValues()[i][k]
-								* buf;
-						pDest.getValues()[j][k] -= pDest.getValues()[i][k]
-								* buf;
-					}
-				}
-			}
-		}
-		return pDest;
-	}
-
-	public static float DotProduct(MMD_VECTOR3 pValue1, MMD_VECTOR3 pValue2) {
-		if (pValue1 == null || pValue2 == null) {
-			throw new IllegalArgumentException("E_POINTER");
-		}
-		return (pValue1.getX() * pValue2.getX() + pValue1.getY()
-				* pValue2.getY() + pValue1.getZ() * pValue2.getZ());
 	}
 
 	public static MMD_VECTOR3 CrossProduct(MMD_VECTOR3 pValue1,
@@ -266,29 +144,12 @@ public class CalcUtil {
 		if (pSource == null || pMatrix == null) {
 			throw new IllegalArgumentException("E_POINTER");
 		}
-		MMD_VECTOR3 temp = Rotate(pSource, pMatrix);
+		MMD_VECTOR3 temp = new MMD_VECTOR3(pSource).rotate(pMatrix);
 		MMD_VECTOR3 pDest = new MMD_VECTOR3();
 		pDest.setX(temp.getX() + pMatrix.getValues()[3][0]);
 		pDest.setY(temp.getY() + pMatrix.getValues()[3][1]);
 		pDest.setZ(temp.getZ() + pMatrix.getValues()[3][2]);
 		return pDest;
-	}
-
-	public static MMD_VECTOR3 Rotate(MMD_VECTOR3 pSource, MMD_MATRIX pMatrix) {
-		if (pSource == null || pMatrix == null) {
-			throw new IllegalArgumentException("E_POINTER");
-		}
-		MMD_VECTOR3 temp = new MMD_VECTOR3();
-		temp.setX(pSource.getX() * pMatrix.getValues()[0][0] + pSource.getY()
-				* pMatrix.getValues()[1][0] + pSource.getZ()
-				* pMatrix.getValues()[2][0]);
-		temp.setY(pSource.getX() * pMatrix.getValues()[0][1] + pSource.getY()
-				* pMatrix.getValues()[1][1] + pSource.getZ()
-				* pMatrix.getValues()[2][1]);
-		temp.setZ(pSource.getX() * pMatrix.getValues()[0][2] + pSource.getY()
-				* pMatrix.getValues()[1][2] + pSource.getZ()
-				* pMatrix.getValues()[2][2]);
-		return temp;
 	}
 
 	public static MMD_VECTOR4 CreateAxis(MMD_VECTOR3 pAxis, float rotAngle) {
