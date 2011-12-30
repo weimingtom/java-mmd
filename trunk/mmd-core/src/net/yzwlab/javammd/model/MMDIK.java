@@ -112,26 +112,31 @@ public class MMDIK {
 			return;
 		}
 		for (int i = m_bones.size() - 1; i >= 0; i--) {
-			m_bones.get(i).UpdateMatrix();
+			m_bones.get(i).updateMatrix();
 		}
-		m_pEffect.UpdateMatrix();
+		m_pEffect.updateMatrix();
 
 		// オブジェクトはあらかじめ準備しておく(パフォーマンス対策)
 		MMD_VECTOR3 diff = new MMD_VECTOR3();
 		MMD_MATRIX matBoneBuf = new MMD_MATRIX();
 		MMD_MATRIX matInvBoneBuf = new MMD_MATRIX();
+		MMD_VECTOR3 effectPositionBuf = new MMD_VECTOR3();
+		MMD_VECTOR3 targetPositionBuf = new MMD_VECTOR3();
 
-		MMD_VECTOR3 targetOriginalPosition = m_pTarget.GetPositionFromLocal();
+		MMD_VECTOR3 targetOriginalPosition = m_pTarget
+				.GetPositionFromLocal(new MMD_VECTOR3());
 		for (int it = 0; it < m_ik.getCount(); it++) {
 			index = 0;
 			for (Iterator<MMDBone> bit = m_bones.iterator(); bit.hasNext(); index++) {
 				pBone = bit.next();
-				MMD_VECTOR3 effectPosition = m_pEffect.GetPositionFromLocal();
+				MMD_VECTOR3 effectPosition = m_pEffect
+						.GetPositionFromLocal(effectPositionBuf);
 				MMD_MATRIX matBone = pBone.getLocal(matBoneBuf);
 				MMD_MATRIX matInvBone = matBone.inverse(matInvBoneBuf);
-				effectPosition = CalcUtil.Transform(effectPosition, matInvBone);
-				MMD_VECTOR3 targetPosition = CalcUtil.Transform(
-						targetOriginalPosition, matInvBone);
+				effectPosition = effectPosition.transform(matInvBone);
+				targetPositionBuf.copyFrom(targetOriginalPosition);
+				MMD_VECTOR3 targetPosition = targetPositionBuf
+						.transform(matInvBone);
 				diff.subtract(effectPosition, targetPosition);
 				dp = 0.0f;
 				dp = diff.dotProduct(diff);
@@ -170,9 +175,9 @@ public class MMDIK {
 					destRotation.normalize();
 					pBone.SetVectors(destPosition, destRotation);
 					for (int j = index; j >= 0; j--) {
-						m_bones.get(j).UpdateMatrix();
+						m_bones.get(j).updateMatrix();
 					}
-					m_pEffect.UpdateMatrix();
+					m_pEffect.updateMatrix();
 				}
 			}
 		}

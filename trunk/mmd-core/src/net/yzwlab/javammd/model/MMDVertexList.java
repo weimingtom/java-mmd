@@ -59,7 +59,11 @@ public class MMDVertexList {
 		return m_vertexes.get(vindex);
 	}
 
-	public void UpdateSkinning() {
+	/**
+	 * スキニング行列を適用します。<br/>
+	 * 頂点分だけ処理を行うので、パフォーマンスに効いてくる部分。(と、思われる)
+	 */
+	public void updateSkinning() {
 		MMDBone pBone = null;
 		MMDBone pBone0 = null;
 		MMDBone pBone1 = null;
@@ -73,14 +77,14 @@ public class MMDVertexList {
 				if (pBone == null) {
 					throw new IllegalArgumentException("E_POINTER");
 				}
-				pVert.setCurrent(pBone.ApplySkinning(pVert.getFaced(buffer),
+				pVert.setCurrent(pBone.applySkinning(pVert.getFaced(buffer),
 						destBuffer));
 			} else if (pVert.getBweight() >= 0.9999f) {
 				pBone = pVert.getPBones()[0];
 				if (pBone == null) {
 					throw new IllegalArgumentException("E_POINTER");
 				}
-				pVert.setCurrent(pBone.ApplySkinning(pVert.getFaced(buffer),
+				pVert.setCurrent(pBone.applySkinning(pVert.getFaced(buffer),
 						destBuffer));
 			} else {
 				pBone0 = pVert.getPBones()[0];

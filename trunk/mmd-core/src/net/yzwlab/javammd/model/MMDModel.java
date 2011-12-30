@@ -251,7 +251,7 @@ public class MMDModel {
 			m_bones.get(i).UpdateSkinning();
 		}
 		pMutex.Begin();
-		m_pVertexList.UpdateSkinning();
+		m_pVertexList.updateSkinning();
 		pMutex.End();
 	}
 
@@ -466,7 +466,7 @@ public class MMDModel {
 		for (int i = 0; i < m_bones.size(); i++) {
 			m_bones.get(i).UpdateSkinning();
 		}
-		m_pVertexList.UpdateSkinning();
+		m_pVertexList.updateSkinning();
 	}
 
 	public void UpdateVertexBuffer() {
@@ -492,7 +492,7 @@ public class MMDModel {
 			m_bones.get(i).UpdateMotion(elapsedFrame);
 		}
 		for (int i = 0; i < m_bones.size(); i++) {
-			m_bones.get(i).UpdateMatrix();
+			m_bones.get(i).updateMatrix();
 		}
 		for (int i = 0; i < m_iks.size(); i++) {
 			m_iks.get(i).Update();
