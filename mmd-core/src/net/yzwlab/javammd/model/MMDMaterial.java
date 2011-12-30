@@ -11,6 +11,9 @@ import net.yzwlab.javammd.format.PMD_MATERIAL_RECORD;
 import net.yzwlab.javammd.format.PMD_VERTEX_RECORD;
 import net.yzwlab.javammd.format.TEXTURE_DESC;
 
+/**
+ * MMDのマテリアルを管理するクラスです。
+ */
 public class MMDMaterial {
 	protected PMD_MATERIAL_RECORD m_material;
 
@@ -25,7 +28,7 @@ public class MMDMaterial {
 	public MMDMaterial(PMD_MATERIAL_RECORD pMaterial) {
 		this.m_bVisible = false;
 		this.m_pVertexes = null;
-		this.m_texture = new TEXTURE_DESC();
+		this.m_texture = null;
 		this.m_material = new PMD_MATERIAL_RECORD();
 		m_pVertexes = null;
 		m_bVisible = true;
@@ -77,15 +80,45 @@ public class MMDMaterial {
 		return pVisible;
 	}
 
-	public void Prepare(IMMDTextureProvider pTextureProvider)
-			throws ReadException {
-		if (pTextureProvider == null) {
-			throw new IllegalArgumentException("E_POINTER");
+	/**
+	 * テクスチャの準備を行います。
+	 * 
+	 * @param pTextureProvider
+	 *            テクスチャを提供するインタフェース。nullは不可。
+	 * @param handler
+	 *            ハンドラ。nullは不可。
+	 * @throws ReadException
+	 *             読み込み失敗時のエラー。
+	 */
+	public void prepare(IMMDTextureProvider pTextureProvider,
+			final IMMDTextureProvider.Handler handler) throws ReadException {
+		if (pTextureProvider == null || handler == null) {
+			throw new IllegalArgumentException();
 		}
 		if (m_material.getTextureFileName()[0] == '\0') {
 			return;
 		}
-		m_texture = pTextureProvider.Load(m_material.getTextureFileName());
+		pTextureProvider.load(m_material.getTextureFileName(),
+				new IMMDTextureProvider.Handler() {
+
+					@Override
+					public void onSuccess(byte[] filename, TEXTURE_DESC desc) {
+						if (filename == null || desc == null) {
+							throw new IllegalArgumentException();
+						}
+						setTexture(desc);
+						handler.onSuccess(filename, desc);
+					}
+
+					@Override
+					public void onError(byte[] filename, Throwable error) {
+						if (filename == null || error == null) {
+							throw new IllegalArgumentException();
+						}
+						handler.onError(filename, error);
+					}
+
+				});
 	}
 
 	public void UpdateVertexBuffer() {
@@ -102,9 +135,17 @@ public class MMDMaterial {
 		return;
 	}
 
-	public void Draw(IGL gl) {
+	/**
+	 * マテリアルの内容を描画します。
+	 * 
+	 * @param gl
+	 *            描画対象プラットフォーム。nullは不可。
+	 */
+	public synchronized void draw(IGL gl) {
+		if (gl == null) {
+			throw new IllegalArgumentException();
+		}
 		float dalpha = 0.0f;
-		float[] matenv = new float[4];
 		MMD_VERTEX_TEXUSE pVert = null;
 		if (m_bVisible == false) {
 			return;
@@ -117,6 +158,8 @@ public class MMDMaterial {
 		int bindGL_TEXTURE_2D = 0;
 		boolean isGL_TEXTURE_2D = false;
 		boolean isGL_BLEND = false;
+
+		float[] matenv = new float[4];
 		matenv[0] = m_material.getDiffuse().getR();
 		matenv[1] = m_material.getDiffuse().getG();
 		matenv[2] = m_material.getDiffuse().getB();
@@ -141,7 +184,7 @@ public class MMDMaterial {
 				m_material.getShininess());
 		gl.glEnableClientState(IGL.C.GL_VERTEX_ARRAY);
 		gl.glEnableClientState(IGL.C.GL_NORMAL_ARRAY);
-		if (m_texture.getTexMemHeight() > 0 && m_texture.getTexMemWidth() > 0) {
+		if (m_texture != null) {
 			gl.glEnableClientState(IGL.C.GL_TEXTURE_COORD_ARRAY);
 		}
 		isGL_TEXTURE_2D = gl.glIsEnabled(IGL.C.GL_TEXTURE_2D);
@@ -150,7 +193,7 @@ public class MMDMaterial {
 		gl.glEnable(IGL.C.GL_TEXTURE_2D);
 		gl.glEnable(IGL.C.GL_BLEND);
 		gl.glBlendFunc(IGL.C.GL_SRC_ALPHA, IGL.C.GL_ONE_MINUS_SRC_ALPHA);
-		if (m_texture.getTexMemHeight() > 0 && m_texture.getTexMemWidth() > 0) {
+		if (m_texture != null) {
 			gl.glBindTexture(IGL.C.GL_TEXTURE_2D, m_texture.getTextureId());
 		}
 		// pVert = m_pVertexes[0].pCurrentVert;
@@ -182,7 +225,7 @@ public class MMDMaterial {
 			gl.glDisable(IGL.C.GL_TEXTURE_2D);
 		gl.glDisableClientState(IGL.C.GL_VERTEX_ARRAY);
 		gl.glDisableClientState(IGL.C.GL_NORMAL_ARRAY);
-		if (m_texture.getTexMemHeight() > 0 && m_texture.getTexMemWidth() > 0) {
+		if (m_texture != null) {
 			gl.glDisableClientState(IGL.C.GL_TEXTURE_COORD_ARRAY);
 		}
 		gl.glFrontFace(gl.getGlFontFaceCode(intFrontFace));
@@ -215,6 +258,19 @@ public class MMDMaterial {
 		}
 		m_bVisible = vis;
 		return;
+	}
+
+	/**
+	 * テクスチャを設定します。
+	 * 
+	 * @param texture
+	 *            テクスチャ。nullは不可。
+	 */
+	private synchronized void setTexture(TEXTURE_DESC texture) {
+		if (texture == null) {
+			throw new IllegalArgumentException();
+		}
+		m_texture = texture;
 	}
 
 	public class MMD_VERTEX_UNIT {
