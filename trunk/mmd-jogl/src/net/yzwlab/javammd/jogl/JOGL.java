@@ -34,8 +34,9 @@ public class JOGL implements IGL, IMMDTextureProvider {
 	}
 
 	@Override
-	public TEXTURE_DESC Load(byte[] filename) throws ReadException {
-		if (filename == null) {
+	public void load(byte[] filename, IMMDTextureProvider.Handler handler)
+			throws ReadException {
+		if (filename == null || handler == null) {
 			throw new IllegalArgumentException();
 		}
 		String sfilename = new String(DataUtils.getStringData(filename));
@@ -113,7 +114,8 @@ public class JOGL implements IGL, IMMDTextureProvider {
 					GL2.GL_RGBA, GL2.GL_UNSIGNED_BYTE, imageBuffer);
 			gl.glBindTexture(GL2.GL_TEXTURE_2D, 0); // デフォルトテクスチャの割り当て
 			ret.setTextureId(textureId);
-			return ret;
+
+			handler.onSuccess(filename, ret);
 		} catch (IOException e) {
 			throw new ReadException(e);
 		}

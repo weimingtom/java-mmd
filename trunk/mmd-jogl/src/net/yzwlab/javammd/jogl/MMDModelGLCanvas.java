@@ -39,8 +39,8 @@ public class MMDModelGLCanvas {
 		MMDModel model = new MMDModel();
 		File f = new File(args[0]);
 		try {
-			model.OpenPMD(new FileBuffer(f.getPath()));
-			model.OpenVMD(new FileBuffer(new File(args[1])));
+			model.openPMD(new FileBuffer(f.getPath()));
+			model.openVMD(new FileBuffer(new File(args[1])));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
