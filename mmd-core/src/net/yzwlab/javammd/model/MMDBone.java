@@ -190,15 +190,26 @@ public class MMDBone {
 		m_effectSkinning = CalcUtil.Multiply(m_invTransform, m_effectLocal);
 	}
 
-	public MMD_VERTEX_TEXUSE ApplySkinning(MMD_VERTEX_TEXUSE pOriginal,
+	/**
+	 * スキニング行列を適用します。
+	 * 
+	 * @param pOriginal
+	 *            オリジナルの行列。nullは不可。
+	 * @param pDest
+	 *            出力先の行列。nullは不可。
+	 * @return 出力先の行列。
+	 */
+	public MMD_VERTEX_TEXUSE applySkinning(MMD_VERTEX_TEXUSE pOriginal,
 			MMD_VERTEX_TEXUSE pDest) {
 		if (pOriginal == null || pDest == null) {
 			throw new IllegalArgumentException("E_POINTER");
 		}
-		pDest.setPoint(CalcUtil.Transform(pOriginal.getPoint(),
-				m_effectSkinning));
-		pDest.getNormal().copyFrom(pOriginal.getNormal());
-		pDest.getNormal().rotate(m_effectSkinning);
+		MMD_VECTOR3 point = pDest.getPoint();
+		point.copyFrom(pOriginal.getPoint());
+		point.transform(m_effectSkinning);
+		MMD_VECTOR3 normal = pDest.getNormal();
+		normal.copyFrom(pOriginal.getNormal());
+		normal.rotate(m_effectSkinning);
 		pDest.getUv().copyFrom(pOriginal.getUv());
 		return pDest;
 	}
@@ -210,9 +221,12 @@ public class MMDBone {
 		}
 		MMD_MATRIX skinning = CalcUtil.Lerp(m_effectSkinning,
 				pBone.m_effectSkinning, bweight);
-		pDest.setPoint(CalcUtil.Transform(pOriginal.getPoint(), skinning));
-		pDest.getNormal().copyFrom(pOriginal.getNormal());
-		pDest.getNormal().rotate(skinning);
+		MMD_VECTOR3 point = pDest.getPoint();
+		point.copyFrom(pOriginal.getPoint());
+		point.transform(skinning);
+		MMD_VECTOR3 normal = pDest.getNormal();
+		normal.copyFrom(pOriginal.getNormal());
+		normal.rotate(skinning);
 		pDest.getUv().copyFrom(pOriginal.getUv());
 		return pDest;
 	}
@@ -262,8 +276,11 @@ public class MMDBone {
 		}
 	}
 
-	public void UpdateMatrix() {
-		m_effectLocal = CalcUtil.QuaternionToMatrix(m_effectRotation);
+	/**
+	 * 行列を更新します。
+	 */
+	public void updateMatrix() {
+		m_effectLocal.fromQuaternion(m_effectRotation);
 		m_effectLocal.getValues()[3][0] = m_effectPosition.getX()
 				+ m_offset.getX();
 		m_effectLocal.getValues()[3][1] = m_effectPosition.getY()
@@ -304,12 +321,21 @@ public class MMDBone {
 		return m_bIKLimitAngle;
 	}
 
-	public MMD_VECTOR3 GetPositionFromLocal() {
-		MMD_VECTOR3 pVector = new MMD_VECTOR3();
-		pVector.setX(m_effectLocal.getValues()[3][0]);
-		pVector.setY(m_effectLocal.getValues()[3][1]);
-		pVector.setZ(m_effectLocal.getValues()[3][2]);
-		return pVector;
+	/**
+	 * local行列から位置を取得します。
+	 * 
+	 * @param buffer
+	 *            バッファ。nullは不可。
+	 * @return local行列のうち位置。
+	 */
+	public MMD_VECTOR3 GetPositionFromLocal(MMD_VECTOR3 buffer) {
+		if (buffer == null) {
+			throw new IllegalArgumentException();
+		}
+		buffer.setX((m_effectLocal.getValues()[3][0]));
+		buffer.setY(m_effectLocal.getValues()[3][1]);
+		buffer.setZ(m_effectLocal.getValues()[3][2]);
+		return buffer;
 	}
 
 	/**

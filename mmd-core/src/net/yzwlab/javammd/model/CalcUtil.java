@@ -6,17 +6,6 @@ import net.yzwlab.javammd.format.MMD_VECTOR4;
 
 public class CalcUtil {
 
-	public static MMD_VECTOR3 Add(MMD_VECTOR3 pValue1, MMD_VECTOR3 pValue2) {
-		if (pValue1 == null || pValue2 == null) {
-			throw new IllegalArgumentException("E_POINTER");
-		}
-		MMD_VECTOR3 temp = new MMD_VECTOR3();
-		temp.setX(pValue1.getX() + pValue2.getX());
-		temp.setY(pValue1.getY() + pValue2.getY());
-		temp.setZ(pValue1.getZ() + pValue2.getZ());
-		return temp;
-	}
-
 	public static MMD_VECTOR4 Multiply(MMD_VECTOR4 pValue1, MMD_VECTOR4 pValue2) {
 		MMD_VECTOR4 pDest = new MMD_VECTOR4();
 		if (pDest == null || pValue1 == null || pValue2 == null) {
@@ -98,57 +87,6 @@ public class CalcUtil {
 				* pValue2.getZ());
 		pDest.setZ(pValue1.getX() * pValue2.getY() - pValue1.getY()
 				* pValue2.getX());
-		return pDest;
-	}
-
-	public static MMD_MATRIX QuaternionToMatrix(MMD_VECTOR4 pQuat) {
-		MMD_MATRIX pDest = new MMD_MATRIX();
-		float x2 = 0.0f;
-		float xw = 0.0f;
-		float xy = 0.0f;
-		float y2 = 0.0f;
-		float yw = 0.0f;
-		float yz = 0.0f;
-		float z2 = 0.0f;
-		float zw = 0.0f;
-		float zx = 0.0f;
-		if (pDest == null || pQuat == null) {
-			throw new IllegalArgumentException("E_POINTER");
-		}
-		x2 = pQuat.getX() * pQuat.getX() * 2.0f;
-		y2 = pQuat.getY() * pQuat.getY() * 2.0f;
-		z2 = pQuat.getZ() * pQuat.getZ() * 2.0f;
-		xy = pQuat.getX() * pQuat.getY() * 2.0f;
-		yz = pQuat.getY() * pQuat.getZ() * 2.0f;
-		zx = pQuat.getZ() * pQuat.getX() * 2.0f;
-		xw = pQuat.getX() * pQuat.getW() * 2.0f;
-		yw = pQuat.getY() * pQuat.getW() * 2.0f;
-		zw = pQuat.getZ() * pQuat.getW() * 2.0f;
-		pDest.getValues()[0][0] = 1.0f - y2 - z2;
-		pDest.getValues()[0][1] = xy + zw;
-		pDest.getValues()[0][2] = zx - yw;
-		pDest.getValues()[1][0] = xy - zw;
-		pDest.getValues()[1][1] = 1.0f - z2 - x2;
-		pDest.getValues()[1][2] = yz + xw;
-		pDest.getValues()[2][0] = zx + yw;
-		pDest.getValues()[2][1] = yz - xw;
-		pDest.getValues()[2][2] = 1.0f - x2 - y2;
-		pDest.getValues()[0][3] = pDest.getValues()[1][3] = pDest.getValues()[2][3] = pDest
-				.getValues()[3][0] = pDest.getValues()[3][1] = pDest
-				.getValues()[3][2] = 0.0f;
-		pDest.getValues()[3][3] = 1.0f;
-		return pDest;
-	}
-
-	public static MMD_VECTOR3 Transform(MMD_VECTOR3 pSource, MMD_MATRIX pMatrix) {
-		if (pSource == null || pMatrix == null) {
-			throw new IllegalArgumentException("E_POINTER");
-		}
-		MMD_VECTOR3 temp = new MMD_VECTOR3(pSource).rotate(pMatrix);
-		MMD_VECTOR3 pDest = new MMD_VECTOR3();
-		pDest.setX(temp.getX() + pMatrix.getValues()[3][0]);
-		pDest.setY(temp.getY() + pMatrix.getValues()[3][1]);
-		pDest.setZ(temp.getZ() + pMatrix.getValues()[3][2]);
 		return pDest;
 	}
 

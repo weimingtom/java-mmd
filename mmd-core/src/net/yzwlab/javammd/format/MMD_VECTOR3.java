@@ -173,6 +173,24 @@ public class MMD_VECTOR3 {
 		return this;
 	}
 
+	/**
+	 * 変換行列を適用します。
+	 * 
+	 * @param pMatrix
+	 *            変換行列。nullは不可。
+	 * @return 自分自身。
+	 */
+	public MMD_VECTOR3 transform(MMD_MATRIX pMatrix) {
+		if (pMatrix == null) {
+			throw new IllegalArgumentException();
+		}
+		rotate(pMatrix);
+		x += (pMatrix.values[3][0]);
+		y += (pMatrix.values[3][1]);
+		z += (pMatrix.values[3][2]);
+		return this;
+	}
+
 	public MMD_VECTOR3 Read(IReadBuffer buffer) throws ReadException {
 		if (buffer == null) {
 			throw new IllegalArgumentException();
