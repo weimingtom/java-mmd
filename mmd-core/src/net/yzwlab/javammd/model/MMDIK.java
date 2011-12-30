@@ -39,24 +39,29 @@ public class MMDIK {
 		return 0;
 	}
 
+	/**
+	 * 構築します。
+	 * 
+	 * @param pIK
+	 *            IK。nullは不可。
+	 */
 	public MMDIK(PMD_IK_RECORD pIK) {
-		this.m_bones = new ArrayList<MMDBone>();
-		this.m_fact = 0.0f;
-		this.m_pEffect = null;
-		this.m_pTarget = null;
-		this.m_bEnabled = false;
-		this.m_ik = new PMD_IK_RECORD();
-		m_pTarget = null;
-		m_pEffect = null;
-		m_fact = 0.0f;
-		m_bEnabled = true;
 		if (pIK == null) {
 			throw new IllegalArgumentException();
 		}
 		if (pIK.getLink().size() == 0) {
 			throw new IllegalArgumentException();
 		}
-		m_ik = pIK;
+		this.m_bones = new ArrayList<MMDBone>();
+		this.m_fact = 0.0f;
+		this.m_pEffect = null;
+		this.m_pTarget = null;
+		this.m_bEnabled = false;
+		this.m_ik = pIK;
+		m_pTarget = null;
+		m_pEffect = null;
+		m_fact = 0.0f;
+		m_bEnabled = true;
 	}
 
 	public void dispose() {
@@ -110,27 +115,32 @@ public class MMDIK {
 			m_bones.get(i).UpdateMatrix();
 		}
 		m_pEffect.UpdateMatrix();
+
+		// オブジェクトはあらかじめ準備しておく(パフォーマンス対策)
+		MMD_VECTOR3 diff = new MMD_VECTOR3();
+		MMD_MATRIX matBoneBuf = new MMD_MATRIX();
+		MMD_MATRIX matInvBoneBuf = new MMD_MATRIX();
+
 		MMD_VECTOR3 targetOriginalPosition = m_pTarget.GetPositionFromLocal();
 		for (int it = 0; it < m_ik.getCount(); it++) {
 			index = 0;
 			for (Iterator<MMDBone> bit = m_bones.iterator(); bit.hasNext(); index++) {
 				pBone = bit.next();
 				MMD_VECTOR3 effectPosition = m_pEffect.GetPositionFromLocal();
-				MMD_MATRIX matBone = pBone.GetLocal();
-				MMD_MATRIX matInvBone = CalcUtil.Inverse(matBone);
+				MMD_MATRIX matBone = pBone.getLocal(matBoneBuf);
+				MMD_MATRIX matInvBone = matBone.inverse(matInvBoneBuf);
 				effectPosition = CalcUtil.Transform(effectPosition, matInvBone);
 				MMD_VECTOR3 targetPosition = CalcUtil.Transform(
 						targetOriginalPosition, matInvBone);
-				MMD_VECTOR3 diff = CalcUtil.Subtract(effectPosition,
-						targetPosition);
+				diff.subtract(effectPosition, targetPosition);
 				dp = 0.0f;
-				dp = CalcUtil.DotProduct(diff, diff);
+				dp = diff.dotProduct(diff);
 				if (dp < 0.0000001f) {
 					return;
 				}
-				effectPosition.Normalize();
-				targetPosition.Normalize();
-				dp = CalcUtil.DotProduct(effectPosition, targetPosition);
+				effectPosition.normalize();
+				targetPosition.normalize();
+				dp = effectPosition.dotProduct(targetPosition);
 				rotAngle = (float) Math.acos(dp);
 				if (0.00000001f < Math.abs(rotAngle)) {
 					if (rotAngle < -m_fact) {
@@ -140,11 +150,11 @@ public class MMDIK {
 					}
 					MMD_VECTOR3 rotAxis = CalcUtil.CrossProduct(effectPosition,
 							targetPosition);
-					dp = CalcUtil.DotProduct(rotAxis, rotAxis);
+					dp = rotAxis.dotProduct(rotAxis);
 					if (dp < 0.0000001f) {
 						continue;
 					}
-					rotAxis.Normalize();
+					rotAxis.normalize();
 					MMD_VECTOR4 rotQuat = CalcUtil
 							.CreateAxis(rotAxis, rotAngle);
 					limitAngle = false;
@@ -152,12 +162,12 @@ public class MMDIK {
 					if (limitAngle) {
 						rotQuat = CalcUtil.LimitAngle(rotQuat);
 					}
-					rotQuat.Normalize();
+					rotQuat.normalize();
 					MMDBone.PositionAndQT pqt = pBone.GetVectors();
 					MMD_VECTOR3 destPosition = pqt.getPosition();
 					MMD_VECTOR4 destRotation = pqt.getQt();
 					destRotation = CalcUtil.Multiply(destRotation, rotQuat);
-					destRotation.Normalize();
+					destRotation.normalize();
 					pBone.SetVectors(destPosition, destRotation);
 					for (int j = index; j >= 0; j--) {
 						m_bones.get(j).UpdateMatrix();

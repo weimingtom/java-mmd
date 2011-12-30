@@ -10,6 +10,9 @@ public class MMD_VECTOR3 {
 
 	protected float z;
 
+	/**
+	 * 構築します。
+	 */
 	public MMD_VECTOR3() {
 		this.x = 0.0f;
 		this.y = 0.0f;
@@ -66,13 +69,108 @@ public class MMD_VECTOR3 {
 
 	/**
 	 * 正規化します。
+	 * 
+	 * @return 自分自身。
 	 */
-	public void Normalize() {
+	public MMD_VECTOR3 normalize() {
 		double fSqr = 0.0f;
 		fSqr = 1.0f / Math.sqrt(x * x + y * y + z * z);
 		x = ((float) (x * fSqr));
 		y = ((float) (y * fSqr));
 		z = ((float) (z * fSqr));
+		return this;
+	}
+
+	/**
+	 * リセットします。
+	 * 
+	 * @return 自分自身。
+	 */
+	public MMD_VECTOR3 toZero() {
+		x = (0.0f);
+		y = (0.0f);
+		z = (0.0f);
+		return this;
+	}
+
+	/**
+	 * 差分を計算し、自分自身に格納します。
+	 * 
+	 * @param pValue1
+	 *            値1。nullは不可。
+	 * @param pValue2
+	 *            値2。nullは不可。
+	 * @return 自分自身。
+	 */
+	public MMD_VECTOR3 subtract(MMD_VECTOR3 pValue1, MMD_VECTOR3 pValue2) {
+		if (pValue1 == null || pValue2 == null) {
+			throw new IllegalArgumentException("E_POINTER");
+		}
+		x = (pValue1.getX() - pValue2.getX());
+		y = (pValue1.getY() - pValue2.getY());
+		z = (pValue1.getZ() - pValue2.getZ());
+		return this;
+	}
+
+	/**
+	 * 線形補間を行います。
+	 * 
+	 * @param pValue1
+	 *            値1。nullは不可。
+	 * @param pValue2
+	 *            値2。nullは不可。
+	 * @param weight
+	 *            重み。
+	 * @return 自分自身。
+	 */
+	public MMD_VECTOR3 lerp(MMD_VECTOR3 pValue1, MMD_VECTOR3 pValue2,
+			float weight) {
+		if (pValue1 == null || pValue2 == null) {
+			throw new IllegalArgumentException("E_POINTER");
+		}
+		float t0 = 0.0f;
+		t0 = 1.0f - weight;
+		x = (pValue1.getX() * t0 + pValue2.getX() * weight);
+		y = (pValue1.getY() * t0 + pValue2.getY() * weight);
+		z = (pValue1.getZ() * t0 + pValue2.getZ() * weight);
+		return this;
+	}
+
+	/**
+	 * 内積を計算します。
+	 * 
+	 * @param pValue2
+	 *            値。nullは不可。
+	 * @return 内積。
+	 */
+	public float dotProduct(MMD_VECTOR3 pValue2) {
+		if (pValue2 == null) {
+			throw new IllegalArgumentException();
+		}
+		return (x * pValue2.getX() + y * pValue2.getY() + z * pValue2.getZ());
+	}
+
+	/**
+	 * 回転します。
+	 * 
+	 * @param pMatrix
+	 *            回転行列。nullは不可。
+	 * @return 自分自身。
+	 */
+	public MMD_VECTOR3 rotate(MMD_MATRIX pMatrix) {
+		if (pMatrix == null) {
+			throw new IllegalArgumentException("E_POINTER");
+		}
+		float sourceX = x;
+		float sourceY = y;
+		float sourceZ = z;
+		x = (sourceX * pMatrix.values[0][0] + sourceY * pMatrix.values[1][0] + sourceZ
+				* pMatrix.values[2][0]);
+		y = (sourceX * pMatrix.values[0][1] + sourceY * pMatrix.values[1][1] + sourceZ
+				* pMatrix.values[2][1]);
+		z = (sourceX * pMatrix.values[0][2] + sourceY * pMatrix.values[1][2] + sourceZ
+				* pMatrix.values[2][2]);
+		return this;
 	}
 
 	public MMD_VECTOR3 Read(IReadBuffer buffer) throws ReadException {

@@ -61,7 +61,16 @@ public class MMDBone {
 		return 0;
 	}
 
+	/**
+	 * 構築します。
+	 * 
+	 * @param pBone
+	 *            ボーンデータ。nullは不可。
+	 */
 	public MMDBone(PMD_BONE_RECORD pBone) {
+		if (pBone == null) {
+			throw new IllegalArgumentException();
+		}
 		this.m_bVisible = false;
 		this.m_motions = new ArrayList<Motion>();
 		this.m_bIKLimitAngle = false;
@@ -73,21 +82,17 @@ public class MMDBone {
 		this.m_offset = new MMD_VECTOR3();
 		this.m_pChild = null;
 		this.m_pParent = null;
-		this.m_bone = new PMD_BONE_RECORD();
+		this.m_bone = pBone;
 		m_pParent = null;
 		m_pChild = null;
 		m_bIKLimitAngle = false;
 		m_bVisible = true;
-		if (pBone == null) {
-			throw new IllegalArgumentException();
-		}
-		m_bone = pBone;
-		m_offset = CalcUtil.ToZeroV3();
-		m_invTransform = CalcUtil.ToZeroM();
-		m_effectPosition = CalcUtil.ToZeroV3();
-		m_effectLocal = CalcUtil.ToZeroM();
-		m_effectPosition = CalcUtil.ToZeroV3();
-		m_effectSkinning = CalcUtil.ToZeroM();
+		m_offset = new MMD_VECTOR3();
+		m_invTransform = new MMD_MATRIX();
+		m_effectPosition = new MMD_VECTOR3();
+		m_effectLocal = new MMD_MATRIX();
+		m_effectPosition = new MMD_VECTOR3();
+		m_effectSkinning = new MMD_MATRIX();
 	}
 
 	public void dispose() {
@@ -114,7 +119,7 @@ public class MMDBone {
 			}
 			m_pChild = bones.get(m_bone.getTo());
 		}
-		m_invTransform = CalcUtil.GenerateIdentity();
+		m_invTransform.generateIdentity();
 		m_invTransform.getValues()[3][0] = -m_bone.getPos()[0];
 		m_invTransform.getValues()[3][1] = -m_bone.getPos()[1];
 		m_invTransform.getValues()[3][2] = -m_bone.getPos()[2];
@@ -131,10 +136,10 @@ public class MMDBone {
 	}
 
 	public void Reset() {
-		m_effectPosition = CalcUtil.ToZeroV3();
-		m_effectRotation = CalcUtil.ToZeroV4();
+		m_effectPosition.toZero();
+		m_effectRotation.toZero();
 		m_effectRotation.setW(1.0f);
-		m_effectLocal = CalcUtil.GenerateIdentity();
+		m_effectLocal.generateIdentity();
 		m_effectLocal.getValues()[3][0] = m_bone.getPos()[0];
 		m_effectLocal.getValues()[3][1] = m_bone.getPos()[1];
 		m_effectLocal.getValues()[3][2] = m_bone.getPos()[2];
@@ -192,8 +197,9 @@ public class MMDBone {
 		}
 		pDest.setPoint(CalcUtil.Transform(pOriginal.getPoint(),
 				m_effectSkinning));
-		pDest.setNormal(CalcUtil.Rotate(pOriginal.getNormal(), m_effectSkinning));
-		pDest.setUv(pOriginal.getUv());
+		pDest.getNormal().copyFrom(pOriginal.getNormal());
+		pDest.getNormal().rotate(m_effectSkinning);
+		pDest.getUv().copyFrom(pOriginal.getUv());
 		return pDest;
 	}
 
@@ -205,8 +211,9 @@ public class MMDBone {
 		MMD_MATRIX skinning = CalcUtil.Lerp(m_effectSkinning,
 				pBone.m_effectSkinning, bweight);
 		pDest.setPoint(CalcUtil.Transform(pOriginal.getPoint(), skinning));
-		pDest.setNormal(CalcUtil.Rotate(pOriginal.getNormal(), skinning));
-		pDest.setUv(pOriginal.getUv());
+		pDest.getNormal().copyFrom(pOriginal.getNormal());
+		pDest.getNormal().rotate(skinning);
+		pDest.getUv().copyFrom(pOriginal.getUv());
 		return pDest;
 	}
 
@@ -251,7 +258,7 @@ public class MMDBone {
 				endQt = endpqt.qt;
 			}
 			m_effectPosition = pEnd.Lerp(beginPos, endPos, offset);
-			m_effectRotation = pEnd.Lerp(beginQt, endQt, offset);
+			pEnd.lerp(m_effectRotation, beginQt, endQt, offset);
 		}
 	}
 
@@ -305,9 +312,19 @@ public class MMDBone {
 		return pVector;
 	}
 
-	public MMD_MATRIX GetLocal() {
-		MMD_MATRIX pMatrix = new MMD_MATRIX(m_effectLocal);
-		return pMatrix;
+	/**
+	 * local行列を取得します。
+	 * 
+	 * @param buffer
+	 *            バッファ。nullは不可。
+	 * @return local行列。
+	 */
+	public MMD_MATRIX getLocal(MMD_MATRIX buffer) {
+		if (buffer == null) {
+			throw new IllegalArgumentException();
+		}
+		buffer.copyFrom(m_effectLocal);
+		return buffer;
 	}
 
 	public PositionAndQT GetVectors() {
@@ -413,7 +430,7 @@ public class MMDBone {
 			m_qt.setY(m_motion.getQt()[1]);
 			m_qt.setZ(m_motion.getQt()[2]);
 			m_qt.setW(m_motion.getQt()[3]);
-			m_qt.Normalize();
+			m_qt.normalize();
 			MMD_MOTION_PAD pad = (new MMD_MOTION_PAD()).Read(buffer
 					.createFromByteArray(m_motion.getPad()));
 			MMD_VECTOR2 p1 = new MMD_VECTOR2(), p2 = new MMD_VECTOR2();
@@ -472,13 +489,25 @@ public class MMDBone {
 			return pDest;
 		}
 
-		public MMD_VECTOR4 Lerp(MMD_VECTOR4 pValue1, MMD_VECTOR4 pValue2,
-				float weight) {
-			if (pValue1 == null || pValue2 == null) {
-				throw new IllegalArgumentException("E_POINTER");
+		/**
+		 * 線形補間を行います。
+		 * 
+		 * @param target
+		 *            格納対象のベクトル。nullは不可。
+		 * @param pValue1
+		 *            値1。nullは不可。
+		 * @param pValue2
+		 *            値2。nullは不可。
+		 * @param weight
+		 *            重み。
+		 */
+		public void lerp(MMD_VECTOR4 target, MMD_VECTOR4 pValue1,
+				MMD_VECTOR4 pValue2, float weight) {
+			if (target == null || pValue1 == null || pValue2 == null) {
+				throw new IllegalArgumentException();
 			}
 			float rotLerp = m_pRotBez.getValue(weight);
-			return CalcUtil.Lerp(pValue1, pValue2, rotLerp);
+			target.lerp(pValue1, pValue2, rotLerp);
 		}
 	}
 
