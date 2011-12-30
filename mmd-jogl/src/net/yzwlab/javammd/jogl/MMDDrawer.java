@@ -10,13 +10,16 @@ import javax.media.opengl.awt.GLCanvas;
 import javax.media.opengl.glu.GLU;
 
 import net.yzwlab.javammd.IDataMutex;
+import net.yzwlab.javammd.IMMDTextureProvider;
 import net.yzwlab.javammd.ReadException;
+import net.yzwlab.javammd.format.TEXTURE_DESC;
 import net.yzwlab.javammd.model.MMDModel;
 
 /**
  * OpenGL‚Ì•`‰æˆ—‚Å‚·B
  */
-public class MMDDrawer implements GLEventListener, IDataMutex {
+public class MMDDrawer implements GLEventListener, IDataMutex,
+		IMMDTextureProvider.Handler {
 
 	private File baseDir;
 
@@ -46,7 +49,7 @@ public class MMDDrawer implements GLEventListener, IDataMutex {
 
 		GLU glu = new GLU();
 		glu.gluPerspective(30.0, (double) width / (double) height, 1.0, 100.0);
-		gl2.glTranslated(0.0, 0.0, -5.0);
+		gl2.glTranslated(0.0, 0.0, -20.0);
 		glu.gluLookAt(3.0, 2.0 + 14.0, 5.0 + 10.0, 0.0, 0.0 + 14.0, 0.0, 0.0,
 				1.0, 0.0);
 
@@ -77,7 +80,7 @@ public class MMDDrawer implements GLEventListener, IDataMutex {
 		JOGL jogl = new JOGL(baseDir, gl2);
 		if (loaded == false) {
 			try {
-				model.Prepare(jogl);
+				model.prepare(jogl, this);
 			} catch (ReadException e) {
 				e.printStackTrace();
 			}
@@ -99,7 +102,7 @@ public class MMDDrawer implements GLEventListener, IDataMutex {
 			gl2.glColor3d(1.0, 1.0, 1.0);
 			gl2.glTranslatef(0.0f, -0.0f, 0.0f);
 
-			model.DrawAsync(this, jogl);
+			model.draw(jogl);
 
 			gl2.glDisable(GL.GL_DEPTH_TEST);
 			gl2.glFlush();
@@ -111,22 +114,22 @@ public class MMDDrawer implements GLEventListener, IDataMutex {
 		if (baseTime == null) {
 			baseTime = System.currentTimeMillis();
 		}
-		double curTime = (System.currentTimeMillis() - baseTime) / 1000.0;
-		float frame = (float) (curTime * 20.0);
-		Integer frameCount = model.getMaxFrame();
-		if (frameCount == null) {
-			return;
-		}
-		if (frameCount == 0) {
-			return;
-		}
-		while (frame > frameCount) {
-			frame -= frameCount;
-		}
-		final float nextFrame = frame;
 		(new Thread(new Runnable() {
 			@Override
 			public void run() {
+				double curTime = (System.currentTimeMillis() - baseTime) / 1000.0;
+				float frame = (float) (curTime * 30.0);
+				Integer frameCount = model.getMaxFrame();
+				if (frameCount == null) {
+					return;
+				}
+				if (frameCount == 0) {
+					return;
+				}
+				while (frame > frameCount) {
+					frame -= frameCount;
+				}
+				float nextFrame = frame;
 				model.UpdateAsync(MMDDrawer.this, nextFrame);
 				canvas.repaint();
 			}
@@ -141,6 +144,17 @@ public class MMDDrawer implements GLEventListener, IDataMutex {
 	@Override
 	public void End() {
 		;
+	}
+
+	@Override
+	public void onSuccess(byte[] filename, TEXTURE_DESC desc) {
+		// TODO Auto-generated method stub
+		;
+	}
+
+	@Override
+	public void onError(byte[] filename, Throwable error) {
+		error.printStackTrace();
 	}
 
 }
