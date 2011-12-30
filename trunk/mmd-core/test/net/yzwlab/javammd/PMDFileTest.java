@@ -11,7 +11,8 @@ import java.io.InputStream;
 import net.yzwlab.javammd.format.TEXTURE_DESC;
 import net.yzwlab.javammd.model.MMDModel;
 
-public class PMDFileTest implements IDataMutex, IMMDTextureProvider, IGL {
+public class PMDFileTest implements IDataMutex, IMMDTextureProvider, IGL,
+		IMMDTextureProvider.Handler {
 
 	public static void main(String[] args) {
 		try {
@@ -28,8 +29,8 @@ public class PMDFileTest implements IDataMutex, IMMDTextureProvider, IGL {
 							+ model.GetFaceName(i));
 				}
 				PMDFileTest main = new PMDFileTest();
-				model.Prepare(main);
-				model.DrawAsync(main, main);
+				model.prepare(main, main);
+				model.draw(main);
 			} finally {
 				if (in != null) {
 					try {
@@ -54,7 +55,8 @@ public class PMDFileTest implements IDataMutex, IMMDTextureProvider, IGL {
 		}
 
 		@Override
-		public IReadBuffer createFromByteArray(byte[] data) throws ReadException {
+		public IReadBuffer createFromByteArray(byte[] data)
+				throws ReadException {
 			if (data == null) {
 				throw new IllegalArgumentException();
 			}
@@ -64,8 +66,8 @@ public class PMDFileTest implements IDataMutex, IMMDTextureProvider, IGL {
 	}
 
 	@Override
-	public TEXTURE_DESC Load(byte[] filename) {
-		if (filename == null) {
+	public void load(byte[] filename, IMMDTextureProvider.Handler handler) {
+		if (filename == null || handler == null) {
 			throw new IllegalArgumentException();
 		}
 		TEXTURE_DESC ret = new TEXTURE_DESC();
@@ -74,7 +76,7 @@ public class PMDFileTest implements IDataMutex, IMMDTextureProvider, IGL {
 		ret.setTextureId(1L);
 		ret.setTexWidth(100);
 		ret.setTexHeight(100);
-		return ret;
+		handler.onSuccess(filename, ret);
 	}
 
 	@Override
@@ -211,6 +213,16 @@ public class PMDFileTest implements IDataMutex, IMMDTextureProvider, IGL {
 	public void glDisableClientState(C target) {
 		// TODO Auto-generated method stub
 
+	}
+
+	@Override
+	public void onSuccess(byte[] filename, TEXTURE_DESC desc) {
+		;
+	}
+
+	@Override
+	public void onError(byte[] filename, Throwable error) {
+		error.printStackTrace();
 	}
 
 }

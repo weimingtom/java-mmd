@@ -203,13 +203,23 @@ public class MMDModel {
 		return new MotionSegment(offset);
 	}
 
-	public void Prepare(IMMDTextureProvider pTextureProvider)
-			throws ReadException {
-		if (pTextureProvider == null) {
-			throw new IllegalArgumentException("E_POINTER");
+	/**
+	 * テクスチャの準備を行います。
+	 * 
+	 * @param pTextureProvider
+	 *            テクスチャプロバイダ。nullは不可。
+	 * @param handler
+	 *            ハンドラ。nullは不可。
+	 * @throws ReadException
+	 *             読み込み処理時のエラー。
+	 */
+	public void prepare(IMMDTextureProvider pTextureProvider,
+			IMMDTextureProvider.Handler handler) throws ReadException {
+		if (pTextureProvider == null || handler == null) {
+			throw new IllegalArgumentException();
 		}
 		for (int i = 0; i < m_materials.size(); i++) {
-			m_materials.get(i).Prepare(pTextureProvider);
+			m_materials.get(i).prepare(pTextureProvider, handler);
 		}
 	}
 
@@ -245,25 +255,28 @@ public class MMDModel {
 		pMutex.End();
 	}
 
-	public IDataMutex DrawAsync(IDataMutex pMutex, IGL gl) {
-		if (pMutex == null || gl == null) {
-			throw new IllegalArgumentException("E_POINTER");
+	/**
+	 * 描画処理を実行します。
+	 * 
+	 * @param gl
+	 *            描画対象のプラットフォーム。nullは不可。
+	 */
+	public void draw(IGL gl) {
+		if (gl == null) {
+			throw new IllegalArgumentException();
 		}
-		pMutex.Begin();
 		UpdateVertexBuffer();
-		pMutex.End();
 		gl.glPushMatrix();
 		gl.glScalef(m_scale, m_scale, m_scale * -1.0f);
 		boolean normalizeEnabled = gl.glIsEnabled(IGL.C.GL_NORMALIZE);
 		gl.glEnable(IGL.C.GL_NORMALIZE);
 		for (int i = 0; i < m_materials.size(); i++) {
-			m_materials.get(i).Draw(gl);
+			m_materials.get(i).draw(gl);
 		}
 		if (normalizeEnabled == false) {
 			gl.glDisable(IGL.C.GL_NORMALIZE);
 		}
 		gl.glPopMatrix();
-		return pMutex;
 	}
 
 	public void SetFace(byte[] faceName) {
