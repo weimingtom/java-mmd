@@ -10,7 +10,15 @@ public interface IGL {
 
 	public void glFrontFace(C mode);
 
-	public void glBegin(C mode);
+	/**
+	 * レンダリングを開始します。
+	 * 
+	 * @param mode
+	 *            レンダリングモード。nullは不可。
+	 * @param vertices
+	 *            頂点数。
+	 */
+	public void glBegin(C mode, int vertices);
 
 	public void glEnd();
 
