@@ -121,18 +121,19 @@ public class MMDMaterial {
 				});
 	}
 
-	public void UpdateVertexBuffer() {
-		if (m_pVertexes == null) {
-			throw new IllegalArgumentException("E_UNEXPECTED");
-		}
+	/**
+	 * 頂点バッファを更新します。
+	 */
+	public void updateVertexBuffer() {
 		if (m_bVisible == false) {
 			return;
 		}
-		for (int i = 0; i < m_material.getNEdges(); i++) {
-			m_pVertexes[i].pOriginalVert
-					.copyCurrentTo(m_pVertexes[i].pCurrentVert);
+		if (m_pVertexes == null) {
+			throw new IllegalStateException();
 		}
-		return;
+		for (MMD_VERTEX_UNIT vert : m_pVertexes) {
+			vert.pOriginalVert.copyCurrentTo(vert.pCurrentVert);
+		}
 	}
 
 	/**
@@ -146,7 +147,6 @@ public class MMDMaterial {
 			throw new IllegalArgumentException();
 		}
 		float dalpha = 0.0f;
-		MMD_VERTEX_TEXUSE pVert = null;
 		if (m_bVisible == false) {
 			return;
 		}
@@ -209,8 +209,8 @@ public class MMDMaterial {
 		gl.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 		// gl.glDrawArrays(IGL.C.GL_TRIANGLES, 0, m_material.nEdges);
 		gl.glBegin(IGL.C.GL_TRIANGLES);
-		for (int i = 0; i < m_material.getNEdges(); i++) {
-			pVert = m_pVertexes[i].pCurrentVert;
+		for (MMD_VERTEX_UNIT unit : m_pVertexes) {
+			MMD_VERTEX_TEXUSE pVert = unit.pCurrentVert;
 			gl.glTexCoord2f(pVert.getUv().getX(), pVert.getUv().getY());
 			gl.glVertex3f(pVert.getPoint().getX(), pVert.getPoint().getY(),
 					pVert.getPoint().getZ());

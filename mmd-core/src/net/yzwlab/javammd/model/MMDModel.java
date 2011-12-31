@@ -246,9 +246,9 @@ public class MMDModel {
 		if (m_pVertexList == null || pMutex == null) {
 			throw new IllegalArgumentException("E_POINTER");
 		}
-		UpdateMotion(frameNo);
+		updateMotion(frameNo);
 		for (int i = 0; i < m_bones.size(); i++) {
-			m_bones.get(i).UpdateSkinning();
+			m_bones.get(i).updateSkinning();
 		}
 		pMutex.Begin();
 		m_pVertexList.updateSkinning();
@@ -464,24 +464,29 @@ public class MMDModel {
 			throw new IllegalArgumentException("E_POINTER");
 		}
 		for (int i = 0; i < m_bones.size(); i++) {
-			m_bones.get(i).UpdateSkinning();
+			m_bones.get(i).updateSkinning();
 		}
 		m_pVertexList.updateSkinning();
 	}
 
 	public void UpdateVertexBuffer() {
 		for (int i = 0; i < m_materials.size(); i++) {
-			m_materials.get(i).UpdateVertexBuffer();
+			m_materials.get(i).updateVertexBuffer();
 		}
 	}
 
-	public boolean UpdateMotion(float elapsedFrame) {
-		MMD_VERTEX_DESC[] ppOriginalDescs = null;
+	/**
+	 * モーションを更新します。
+	 * 
+	 * @param elapsedFrame
+	 *            経過フレーム数。
+	 * @return 更新に成功した場合はtrue。
+	 */
+	public boolean updateMotion(float elapsedFrame) {
 		if (m_pVertexList == null) {
 			return false;
 		}
-		ppOriginalDescs = null;
-		ppOriginalDescs = m_pVertexList.GetVertexDescs();
+		MMD_VERTEX_DESC[] ppOriginalDescs = m_pVertexList.GetVertexDescs();
 		if (m_morps.size() > 0) {
 			m_morps.get(0).Set(ppOriginalDescs);
 		}
@@ -495,7 +500,7 @@ public class MMDModel {
 			m_bones.get(i).updateMatrix();
 		}
 		for (int i = 0; i < m_iks.size(); i++) {
-			m_iks.get(i).Update();
+			m_iks.get(i).update();
 		}
 		return true;
 	}

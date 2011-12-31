@@ -106,9 +106,9 @@ public class MMD_VECTOR3 {
 		if (pValue1 == null || pValue2 == null) {
 			throw new IllegalArgumentException("E_POINTER");
 		}
-		x = (pValue1.getX() - pValue2.getX());
-		y = (pValue1.getY() - pValue2.getY());
-		z = (pValue1.getZ() - pValue2.getZ());
+		x = (pValue1.x - pValue2.x);
+		y = (pValue1.y - pValue2.y);
+		z = (pValue1.z - pValue2.z);
 		return this;
 	}
 
@@ -130,9 +130,9 @@ public class MMD_VECTOR3 {
 		}
 		float t0 = 0.0f;
 		t0 = 1.0f - weight;
-		x = (pValue1.getX() * t0 + pValue2.getX() * weight);
-		y = (pValue1.getY() * t0 + pValue2.getY() * weight);
-		z = (pValue1.getZ() * t0 + pValue2.getZ() * weight);
+		x = (pValue1.x * t0 + pValue2.x * weight);
+		y = (pValue1.y * t0 + pValue2.y * weight);
+		z = (pValue1.z * t0 + pValue2.z * weight);
 		return this;
 	}
 
@@ -147,7 +147,7 @@ public class MMD_VECTOR3 {
 		if (pValue2 == null) {
 			throw new IllegalArgumentException();
 		}
-		return (x * pValue2.getX() + y * pValue2.getY() + z * pValue2.getZ());
+		return (x * pValue2.x + y * pValue2.y + z * pValue2.z);
 	}
 
 	/**
@@ -159,7 +159,7 @@ public class MMD_VECTOR3 {
 	 */
 	public MMD_VECTOR3 rotate(MMD_MATRIX pMatrix) {
 		if (pMatrix == null) {
-			throw new IllegalArgumentException("E_POINTER");
+			throw new IllegalArgumentException();
 		}
 		float sourceX = x;
 		float sourceY = y;
@@ -189,6 +189,61 @@ public class MMD_VECTOR3 {
 		y += (pMatrix.values[3][1]);
 		z += (pMatrix.values[3][2]);
 		return this;
+	}
+
+	/**
+	 * 外積を計算します。
+	 * 
+	 * @param pValue1
+	 *            値1。nullは不可。
+	 * @param pValue2
+	 *            値2。nullは不可。
+	 * @return 外積。
+	 */
+	public MMD_VECTOR3 crossProduct(MMD_VECTOR3 pValue1, MMD_VECTOR3 pValue2) {
+		if (pValue1 == null || pValue2 == null) {
+			throw new IllegalArgumentException();
+		}
+		x = (pValue1.y * pValue2.z - pValue1.z * pValue2.y);
+		y = (pValue1.z * pValue2.x - pValue1.x * pValue2.z);
+		z = (pValue1.x * pValue2.y - pValue1.y * pValue2.x);
+		return this;
+	}
+
+	/**
+	 * オイラー表現から生成します。
+	 * 
+	 * @param buf
+	 *            バッファ。nullは不可。
+	 * @return オイラー表現。
+	 */
+	public MMD_VECTOR4 createEuler(MMD_VECTOR4 buf) {
+		if (buf == null) {
+			throw new IllegalArgumentException();
+		}
+		float cosX = 0.0f;
+		float cosY = 0.0f;
+		float cosZ = 0.0f;
+		float sinX = 0.0f;
+		float sinY = 0.0f;
+		float sinZ = 0.0f;
+		float xRadian = 0.0f;
+		float yRadian = 0.0f;
+		float zRadian = 0.0f;
+		xRadian = x * 0.5f;
+		yRadian = y * 0.5f;
+		zRadian = z * 0.5f;
+		sinX = (float) Math.sin(xRadian);
+		cosX = (float) Math.cos(xRadian);
+		sinY = (float) Math.sin(yRadian);
+		cosY = (float) Math.cos(yRadian);
+		sinZ = (float) Math.sin(zRadian);
+		cosZ = (float) Math.cos(zRadian);
+		buf.x = (sinX * cosY * cosZ - cosX * sinY * sinZ);
+		buf.y = (cosX * sinY * cosZ + sinX * cosY * sinZ);
+		buf.z = (cosX * cosY * sinZ - sinX * sinY * cosZ);
+		buf.w = (cosX * cosY * cosZ + sinX * sinY * sinZ);
+		return buf;
 	}
 
 	public MMD_VECTOR3 Read(IReadBuffer buffer) throws ReadException {

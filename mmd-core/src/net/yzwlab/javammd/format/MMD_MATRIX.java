@@ -131,15 +131,15 @@ public class MMD_MATRIX {
 		if (pQuat == null) {
 			throw new IllegalArgumentException();
 		}
-		float x2 = pQuat.getX() * pQuat.getX() * 2.0f;
-		float y2 = pQuat.getY() * pQuat.getY() * 2.0f;
-		float z2 = pQuat.getZ() * pQuat.getZ() * 2.0f;
-		float xy = pQuat.getX() * pQuat.getY() * 2.0f;
-		float yz = pQuat.getY() * pQuat.getZ() * 2.0f;
-		float zx = pQuat.getZ() * pQuat.getX() * 2.0f;
-		float xw = pQuat.getX() * pQuat.getW() * 2.0f;
-		float yw = pQuat.getY() * pQuat.getW() * 2.0f;
-		float zw = pQuat.getZ() * pQuat.getW() * 2.0f;
+		float x2 = pQuat.x * pQuat.x * 2.0f;
+		float y2 = pQuat.y * pQuat.y * 2.0f;
+		float z2 = pQuat.z * pQuat.z * 2.0f;
+		float xy = pQuat.x * pQuat.y * 2.0f;
+		float yz = pQuat.y * pQuat.z * 2.0f;
+		float zx = pQuat.z * pQuat.x * 2.0f;
+		float xw = pQuat.x * pQuat.w * 2.0f;
+		float yw = pQuat.y * pQuat.w * 2.0f;
+		float zw = pQuat.z * pQuat.w * 2.0f;
 
 		values[0][0] = 1.0f - y2 - z2;
 		values[0][1] = xy + zw;
@@ -152,6 +152,64 @@ public class MMD_MATRIX {
 		values[2][2] = 1.0f - x2 - y2;
 		values[0][3] = values[1][3] = values[2][3] = values[3][0] = values[3][1] = values[3][2] = 0.0f;
 		values[3][3] = 1.0f;
+		return this;
+	}
+
+	/**
+	 * 乗算を行い、その結果を格納します。
+	 * 
+	 * @param pValue1
+	 *            値1。nullは不可。
+	 * @param pValue2
+	 *            値2。nullは不可。
+	 * @return 自分自身。
+	 */
+	public MMD_MATRIX multiply(MMD_MATRIX pValue1, MMD_MATRIX pValue2) {
+		if (pValue1 == null || pValue2 == null) {
+			throw new IllegalArgumentException();
+		}
+		float[][] values1 = pValue1.values;
+		float[][] values2 = pValue2.values;
+		for (int i = 0; i < 4; i++) {
+			values[i][0] = values1[i][0] * values2[0][0] + values1[i][1]
+					* values2[1][0] + values1[i][2] * values2[2][0]
+					+ values1[i][3] * values2[3][0];
+			values[i][1] = values1[i][0] * values2[0][1] + values1[i][1]
+					* values2[1][1] + values1[i][2] * values2[2][1]
+					+ values1[i][3] * values2[3][1];
+			values[i][2] = values1[i][0] * values2[0][2] + values1[i][1]
+					* values2[1][2] + values1[i][2] * values2[2][2]
+					+ values1[i][3] * values2[3][2];
+			values[i][3] = values1[i][0] * values2[0][3] + values1[i][1]
+					* values2[1][3] + values1[i][2] * values2[2][3]
+					+ values1[i][3] * values2[3][3];
+		}
+		return this;
+	}
+
+	/**
+	 * 線形補間を行います。
+	 * 
+	 * @param pValue1
+	 *            値1。nullは不可。
+	 * @param pValue2
+	 *            値2。nullは不可。
+	 * @param weight
+	 *            重み。
+	 * @return 自分自身。
+	 */
+	public MMD_MATRIX lerp(MMD_MATRIX pValue1, MMD_MATRIX pValue2, float weight) {
+		if (pValue1 == null || pValue2 == null) {
+			throw new IllegalArgumentException();
+		}
+		float[][] fSrc1 = (pValue1.values);
+		float[][] fSrc2 = (pValue2.values);
+		float rev = 1.0f - weight;
+		for (int y = 0; y < 4; y++) {
+			for (int x = 0; x < 4; x++) {
+				values[x][y] = fSrc1[x][y] * weight + fSrc2[x][y] * rev;
+			}
+		}
 		return this;
 	}
 

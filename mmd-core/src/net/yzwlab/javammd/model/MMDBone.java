@@ -186,8 +186,11 @@ public class MMDBone {
 		return;
 	}
 
-	public void UpdateSkinning() {
-		m_effectSkinning = CalcUtil.Multiply(m_invTransform, m_effectLocal);
+	/**
+	 * スキニング行列を更新します。
+	 */
+	public void updateSkinning() {
+		m_effectSkinning.multiply(m_invTransform, m_effectLocal);
 	}
 
 	/**
@@ -214,13 +217,29 @@ public class MMDBone {
 		return pDest;
 	}
 
-	public MMD_VERTEX_TEXUSE ApplySkinning(MMD_VERTEX_TEXUSE pOriginal,
-			MMDBone pBone, float bweight, MMD_VERTEX_TEXUSE pDest) {
-		if (pOriginal == null || pBone == null || pDest == null) {
-			throw new IllegalArgumentException("E_POINTER");
+	/**
+	 * スキニング行列を適用します。
+	 * 
+	 * @param pOriginal
+	 *            オリジナル行列。nullは不可。
+	 * @param pBone
+	 *            ボーン。nullは不可。
+	 * @param bweight
+	 *            重み。
+	 * @param pDest
+	 *            適用結果の格納先。nullは不可。
+	 * @param skinning
+	 *            スキニング用バッファ。nullは不可。
+	 * @return
+	 */
+	public MMD_VERTEX_TEXUSE applySkinning(MMD_VERTEX_TEXUSE pOriginal,
+			MMDBone pBone, float bweight, MMD_VERTEX_TEXUSE pDest,
+			MMD_MATRIX skinning) {
+		if (pOriginal == null || pBone == null || pDest == null
+				|| skinning == null) {
+			throw new IllegalArgumentException();
 		}
-		MMD_MATRIX skinning = CalcUtil.Lerp(m_effectSkinning,
-				pBone.m_effectSkinning, bweight);
+		skinning.lerp(m_effectSkinning, pBone.m_effectSkinning, bweight);
 		MMD_VECTOR3 point = pDest.getPoint();
 		point.copyFrom(pOriginal.getPoint());
 		point.transform(skinning);
@@ -255,22 +274,12 @@ public class MMDBone {
 		pEnd = motionSet.motion2;
 		offset = motionSet.offset;
 		if (pEnd == null) {
-			PositionAndQT pqt = pBegin.GetVectors();
-			m_effectPosition = pqt.position;
-			m_effectRotation = pqt.qt;
+			pBegin.GetVectors(m_effectPosition, m_effectRotation);
 		} else {
-			MMD_VECTOR3 beginPos = null, endPos = null;
-			MMD_VECTOR4 beginQt = null, endQt = null;
-			PositionAndQT beginpqt = pBegin.GetVectors();
-			if (beginpqt != null) {
-				beginPos = beginpqt.position;
-				beginQt = beginpqt.qt;
-			}
-			PositionAndQT endpqt = pEnd.GetVectors();
-			if (endpqt != null) {
-				endPos = endpqt.position;
-				endQt = endpqt.qt;
-			}
+			MMD_VECTOR3 beginPos = new MMD_VECTOR3(), endPos = new MMD_VECTOR3();
+			MMD_VECTOR4 beginQt = new MMD_VECTOR4(), endQt = new MMD_VECTOR4();
+			pBegin.GetVectors(beginPos, beginQt);
+			pEnd.GetVectors(endPos, endQt);
 			m_effectPosition = pEnd.Lerp(beginPos, endPos, offset);
 			pEnd.lerp(m_effectRotation, beginQt, endQt, offset);
 		}
@@ -288,7 +297,7 @@ public class MMDBone {
 		m_effectLocal.getValues()[3][2] = m_effectPosition.getZ()
 				+ m_offset.getZ();
 		if (m_pParent != null) {
-			m_effectLocal = CalcUtil.Multiply(m_effectLocal,
+			m_effectLocal.multiply(new MMD_MATRIX(m_effectLocal),
 					m_pParent.m_effectLocal);
 		}
 	}
@@ -491,8 +500,12 @@ public class MMDBone {
 			return m_motion.getFrameNo() + offset;
 		}
 
-		public PositionAndQT GetVectors() {
-			return new PositionAndQT(m_pos, m_qt);
+		public void GetVectors(MMD_VECTOR3 pos, MMD_VECTOR4 qt) {
+			if (pos == null || qt == null) {
+				throw new IllegalArgumentException();
+			}
+			pos.copyFrom(m_pos);
+			qt.copyFrom(m_qt);
 		}
 
 		public MMD_VECTOR3 Lerp(MMD_VECTOR3 pValue1, MMD_VECTOR3 pValue2,
