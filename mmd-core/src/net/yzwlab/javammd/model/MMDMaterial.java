@@ -208,14 +208,9 @@ public class MMDMaterial {
 		// gl.glNormalPointer(GL_FLOAT, sizeof, base + offset);
 		gl.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 		// gl.glDrawArrays(IGL.C.GL_TRIANGLES, 0, m_material.nEdges);
-		gl.glBegin(IGL.C.GL_TRIANGLES);
+		gl.glBegin(IGL.C.GL_TRIANGLES, m_pVertexes.length);
 		for (MMD_VERTEX_UNIT unit : m_pVertexes) {
-			MMD_VERTEX_TEXUSE pVert = unit.pCurrentVert;
-			gl.glTexCoord2f(pVert.getUv().getX(), pVert.getUv().getY());
-			gl.glVertex3f(pVert.getPoint().getX(), pVert.getPoint().getY(),
-					pVert.getPoint().getZ());
-			gl.glNormal3f(pVert.getNormal().getX(), pVert.getNormal().getY(),
-					pVert.getNormal().getZ());
+			unit.pCurrentVert.toGL(gl);
 		}
 		gl.glEnd();
 		gl.glBindTexture(IGL.C.GL_TEXTURE_2D, bindGL_TEXTURE_2D);

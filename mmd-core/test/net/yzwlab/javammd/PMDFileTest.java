@@ -159,7 +159,7 @@ public class PMDFileTest implements IDataMutex, IMMDTextureProvider, IGL,
 	}
 
 	@Override
-	public void glBegin(C mode) {
+	public void glBegin(C mode, int length) {
 		// TODO Auto-generated method stub
 
 	}

@@ -1,5 +1,6 @@
 package net.yzwlab.javammd.format;
 
+import net.yzwlab.javammd.IGL;
 import net.yzwlab.javammd.IReadBuffer;
 import net.yzwlab.javammd.ReadException;
 
@@ -50,5 +51,20 @@ public class MMD_VERTEX_TEXUSE {
 		this.normal.copyFrom((new MMD_VECTOR3()).Read(buffer));
 		this.uv.copyFrom((new MMD_VECTOR2()).Read(buffer));
 		return this;
+	}
+
+	/**
+	 * GLに対して頂点などを転送します。
+	 * 
+	 * @param gl
+	 *            転送対象。nullは不可。
+	 */
+	public void toGL(IGL gl) {
+		if (gl == null) {
+			throw new IllegalArgumentException();
+		}
+		gl.glTexCoord2f(uv.x, uv.y);
+		gl.glVertex3f(point.x, point.y, point.z);
+		gl.glNormal3f(normal.x, normal.y, normal.z);
 	}
 }
