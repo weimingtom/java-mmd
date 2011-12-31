@@ -16,10 +16,17 @@ import net.yzwlab.javammd.IGL;
 import net.yzwlab.javammd.IMMDTextureProvider;
 import net.yzwlab.javammd.ReadException;
 import net.yzwlab.javammd.format.TEXTURE_DESC;
-import net.yzwlab.javammd.jogl.io.TargaReader;
+import net.yzwlab.javammd.image.IImage;
+import net.yzwlab.javammd.image.TargaReader;
+import net.yzwlab.javammd.jogl.io.FileBuffer;
 import net.yzwlab.javammd.model.DataUtils;
 
 public class JOGL implements IGL, IMMDTextureProvider {
+
+	/**
+	 * 画像サービスを保持します。
+	 */
+	private AWTImageService imageService;
 
 	private File baseDir;
 
@@ -29,6 +36,7 @@ public class JOGL implements IGL, IMMDTextureProvider {
 		if (baseDir == null || gl == null) {
 			throw new IllegalArgumentException();
 		}
+		this.imageService = new AWTImageService();
 		this.baseDir = baseDir;
 		this.gl = gl;
 	}
@@ -49,7 +57,8 @@ public class JOGL implements IGL, IMMDTextureProvider {
 			TargaReader reader = new TargaReader();
 			BufferedImage image = null;
 			if (f.getName().endsWith(".tga")) {
-				image = reader.read(f);
+				IImage rawImage = reader.read(imageService, new FileBuffer(f));
+				image = ((AWTImageService.Image) rawImage).getImage();
 			} else {
 				System.out.println(f.getPath());
 				image = ImageIO.read(f);
@@ -139,7 +148,7 @@ public class JOGL implements IGL, IMMDTextureProvider {
 	}
 
 	@Override
-	public void glBegin(C mode) {
+	public void glBegin(C mode, int length) {
 		int imode = 0;
 		if (mode == C.GL_TRIANGLES) {
 			imode = GL.GL_TRIANGLES;

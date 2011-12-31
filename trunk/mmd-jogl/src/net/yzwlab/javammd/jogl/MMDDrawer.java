@@ -91,7 +91,25 @@ public class MMDDrawer implements GLEventListener, IDataMutex,
 		// model.SetBoneVisible(30, false);
 
 		long beginTime = System.currentTimeMillis();
+		long updateEndTime = 0L;
 		try {
+			if (baseTime == null) {
+				baseTime = System.currentTimeMillis();
+			}
+			double curTime = (System.currentTimeMillis() - baseTime) / 1000.0;
+			float frame = (float) (curTime * 30.0);
+			Integer frameCount = model.getMaxFrame();
+			if (frameCount != null) {
+				if (frameCount > 0) {
+					while (frame > frameCount) {
+						frame -= frameCount;
+					}
+				}
+			}
+			float nextFrame = frame;
+			model.UpdateAsync(MMDDrawer.this, nextFrame);
+			updateEndTime = System.currentTimeMillis();
+
 			gl2.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
 
 			gl2.glMatrixMode(GL2.GL_MODELVIEW);
@@ -107,30 +125,15 @@ public class MMDDrawer implements GLEventListener, IDataMutex,
 			gl2.glDisable(GL.GL_DEPTH_TEST);
 			gl2.glFlush();
 		} finally {
-			long dur = System.currentTimeMillis() - beginTime;
-			System.out.println("Frame: duration=" + dur + "msec.");
+			long updateDur = updateEndTime - beginTime;
+			long dur = System.currentTimeMillis() - updateEndTime;
+			System.out.println("Frame: update=" + updateDur + "msec., draw="
+					+ dur + "msec.");
 		}
 
-		if (baseTime == null) {
-			baseTime = System.currentTimeMillis();
-		}
 		(new Thread(new Runnable() {
 			@Override
 			public void run() {
-				double curTime = (System.currentTimeMillis() - baseTime) / 1000.0;
-				float frame = (float) (curTime * 30.0);
-				Integer frameCount = model.getMaxFrame();
-				if (frameCount == null) {
-					return;
-				}
-				if (frameCount == 0) {
-					return;
-				}
-				while (frame > frameCount) {
-					frame -= frameCount;
-				}
-				float nextFrame = frame;
-				model.UpdateAsync(MMDDrawer.this, nextFrame);
 				canvas.repaint();
 			}
 		})).start();
