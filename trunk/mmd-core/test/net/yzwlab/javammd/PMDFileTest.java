@@ -23,7 +23,7 @@ public class PMDFileTest implements IDataMutex, IMMDTextureProvider, IGL,
 				MMDModel model = new MMDModel();
 				model.openPMD(new FileBuffer(new DataInputStream(
 						new BufferedInputStream(in)), f.length()));
-				model.UpdateMotion(0.0f);
+				model.updateMotion(0.0f);
 				for (int i = 0; i < model.GetFaceCount(); i++) {
 					System.out.println("Face(#" + String.valueOf(i + 1) + "): "
 							+ model.GetFaceName(i));
@@ -172,17 +172,17 @@ public class PMDFileTest implements IDataMutex, IMMDTextureProvider, IGL,
 
 	@Override
 	public void glVertex3f(float x, float y, float z) {
-		System.out.println("V: " + x + ", " + y + ", " + z);
+		// System.out.println("V: " + x + ", " + y + ", " + z);
 	}
 
 	@Override
 	public void glTexCoord2f(float x, float y) {
-		System.out.println("T: " + x + ", " + y);
+		// System.out.println("T: " + x + ", " + y);
 	}
 
 	@Override
 	public void glNormal3f(float x, float y, float z) {
-		System.out.println("N: " + x + ", " + y + ", " + z);
+		// System.out.println("N: " + x + ", " + y + ", " + z);
 	}
 
 	@Override

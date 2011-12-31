@@ -3,6 +3,7 @@ package net.yzwlab.javammd.model;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.yzwlab.javammd.format.MMD_MATRIX;
 import net.yzwlab.javammd.format.MMD_VERTEX_DESC;
 import net.yzwlab.javammd.format.MMD_VERTEX_TEXUSE;
 import net.yzwlab.javammd.format.PMD_VERTEX_RECORD;
@@ -67,36 +68,35 @@ public class MMDVertexList {
 		MMDBone pBone = null;
 		MMDBone pBone0 = null;
 		MMDBone pBone1 = null;
-		MMD_VERTEX_DESC pVert = null;
 		MMD_VERTEX_TEXUSE buffer = new MMD_VERTEX_TEXUSE();
 		MMD_VERTEX_TEXUSE destBuffer = new MMD_VERTEX_TEXUSE();
-		for (int i = 0; i < m_vertexes.size(); i++) {
-			pVert = m_pVertexes[i];
+		MMD_MATRIX skinningBuffer = new MMD_MATRIX();
+		for (MMD_VERTEX_DESC pVert : m_pVertexes) {
 			if (pVert.getBweight() == 0.0f) {
 				pBone = pVert.getPBones()[1];
 				if (pBone == null) {
-					throw new IllegalArgumentException("E_POINTER");
+					throw new IllegalStateException();
 				}
 				pVert.setCurrent(pBone.applySkinning(pVert.getFaced(buffer),
 						destBuffer));
 			} else if (pVert.getBweight() >= 0.9999f) {
 				pBone = pVert.getPBones()[0];
 				if (pBone == null) {
-					throw new IllegalArgumentException("E_POINTER");
+					throw new IllegalStateException();
 				}
 				pVert.setCurrent(pBone.applySkinning(pVert.getFaced(buffer),
 						destBuffer));
 			} else {
 				pBone0 = pVert.getPBones()[0];
 				if (pBone0 == null) {
-					throw new IllegalArgumentException("E_POINTER");
+					throw new IllegalStateException();
 				}
 				pBone1 = pVert.getPBones()[1];
 				if (pBone1 == null) {
-					throw new IllegalArgumentException("E_POINTER");
+					throw new IllegalStateException();
 				}
-				pVert.setCurrent(pBone0.ApplySkinning(pVert.getFaced(buffer),
-						pBone1, pVert.getBweight(), destBuffer));
+				pVert.setCurrent(pBone0.applySkinning(pVert.getFaced(buffer),
+						pBone1, pVert.getBweight(), destBuffer, skinningBuffer));
 			}
 		}
 		return;
