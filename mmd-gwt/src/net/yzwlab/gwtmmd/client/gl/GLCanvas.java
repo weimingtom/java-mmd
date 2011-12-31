@@ -540,6 +540,7 @@ public class GLCanvas extends Widget {
 		@Override
 		public void run() {
 			long beginTime = System.currentTimeMillis();
+			long updateEndTime = 0L;
 			try {
 				clearScene(gl);
 				setPMatrix(gl, program, pMatrix);
@@ -550,6 +551,8 @@ public class GLCanvas extends Widget {
 							model.getCurrentFrame(currentTime));
 				}
 
+				updateEndTime = System.currentTimeMillis();
+
 				for (DynamicModel model : models) {
 					GL glctx = new GL(model.model, currentRx, currentRy,
 							currentRz);
@@ -557,8 +560,10 @@ public class GLCanvas extends Widget {
 					glctx.flush();
 				}
 			} finally {
-				long dur = System.currentTimeMillis() - beginTime;
-				performanceLabel.setText("モデル更新+レンダリング時間: " + dur + "msec.");
+				long dur = System.currentTimeMillis() - updateEndTime;
+				long updateDur = updateEndTime - beginTime;
+				performanceLabel.setText("モデル更新時間: " + updateDur + "msec."
+						+ ", レンダリング時間: " + dur + "msec.");
 			}
 		}
 
@@ -598,6 +603,16 @@ public class GLCanvas extends Widget {
 			private JavaScriptObject mvMatrix;
 
 			/**
+			 * バッファのインデックスを保持します。
+			 */
+			private int vertCount;
+
+			/**
+			 * バッファのインデックスを保持します。
+			 */
+			private int normCount;
+
+			/**
 			 * 構築します。
 			 * 
 			 * @param model
@@ -614,9 +629,11 @@ public class GLCanvas extends Widget {
 					throw new IllegalArgumentException();
 				}
 				this.bufferIndex = 0;
-				this.vertexes = createVertexes();
-				this.normals = createVertexes();
+				this.vertexes = null;
+				this.normals = null;
 				this.mvMatrix = createMVMatrix(rx, ry, rz);
+				this.vertCount = 0;
+				this.normCount = 0;
 			}
 
 			/**
@@ -624,6 +641,7 @@ public class GLCanvas extends Widget {
 			 */
 			public void flush() {
 				setMVMatrix(gl, program, mvMatrix);
+
 				for (int i = 0; i < bufferIndex; i++) {
 					BufferGroup g = buffers.get(i);
 					drawArrays(gl, program, g.vbuffer, g.nbuffer);
@@ -642,10 +660,15 @@ public class GLCanvas extends Widget {
 			}
 
 			@Override
-			public void glBegin(C mode) {
+			public void glBegin(C mode, int count) {
 				if (mode == null) {
 					throw new IllegalArgumentException();
 				}
+
+				vertCount = 0;
+				normCount = 0;
+				vertexes = createVertexes(count);
+				normals = createVertexes(count);
 			}
 
 			@Override
@@ -661,14 +684,12 @@ public class GLCanvas extends Widget {
 				initBuffer(gl, buffer.nbuffer, normals);
 
 				bufferIndex++;
-
-				vertexes = createVertexes();
-				normals = createVertexes();
 			}
 
 			@Override
 			public void glVertex3f(float x, float y, float z) {
-				pushVertexes(vertexes, x, y, z);
+				pushVertexes(vertexes, vertCount, x, y, z);
+				vertCount++;
 			}
 
 			@Override
@@ -679,7 +700,8 @@ public class GLCanvas extends Widget {
 
 			@Override
 			public void glNormal3f(float x, float y, float z) {
-				pushVertexes(normals, x, y, z);
+				pushVertexes(normals, normCount, x, y, z);
+				normCount++;
 			}
 
 			@Override
@@ -794,10 +816,12 @@ public class GLCanvas extends Widget {
 			/**
 			 * 頂点バッファをリセットします。
 			 * 
+			 * @param length
+			 *            長さ。
 			 * @return 頂点バッファ。
 			 */
-			private native JavaScriptObject createVertexes() /*-{
-				return new Array();
+			private native JavaScriptObject createVertexes(int length) /*-{
+				return new Array(length * 3);
 			}-*/;
 
 			/**
@@ -805,6 +829,8 @@ public class GLCanvas extends Widget {
 			 * 
 			 * @param vertexes
 			 *            頂点リスト。nullは不可。
+			 * @param offset
+			 *            オフセット。
 			 * @param x
 			 *            座標。
 			 * @param y
@@ -813,10 +839,10 @@ public class GLCanvas extends Widget {
 			 *            座標。
 			 */
 			private native void pushVertexes(JavaScriptObject vertexes,
-					float x, float y, float z) /*-{
-				vertexes.push(x);
-				vertexes.push(y);
-				vertexes.push(-z);
+					int offset, float x, float y, float z) /*-{
+				vertexes[offset * 3] = x;
+				vertexes[offset * 3 + 1] = y;
+				vertexes[offset * 3 + 2] = -z;
 			}-*/;
 
 		}
