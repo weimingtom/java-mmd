@@ -1,9 +1,17 @@
 package net.yzwlab.javammd.format;
 
+import java.io.Serializable;
+
 import net.yzwlab.javammd.IReadBuffer;
 import net.yzwlab.javammd.ReadException;
 
-public class VMD_MORP_RECORD {
+public class VMD_MORP_RECORD implements Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	protected byte[] name;
 
 	protected int frame_no;

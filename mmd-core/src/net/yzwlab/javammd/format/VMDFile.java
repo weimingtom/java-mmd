@@ -1,5 +1,6 @@
 package net.yzwlab.javammd.format;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -10,7 +11,13 @@ import net.yzwlab.javammd.IReadBuffer;
 import net.yzwlab.javammd.ReadException;
 import net.yzwlab.javammd.model.DataUtils;
 
-public class VMDFile {
+public class VMDFile implements Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	public static final byte[] c_hdr_string = "Vocaloid Motion Data 0002"
 			.getBytes();
 
@@ -56,7 +63,19 @@ public class VMDFile {
 	public void dispose() {
 	}
 
-	public boolean Open(IReadBuffer fs) throws ReadException {
+	/**
+	 * バッファからデータを開きます。
+	 * 
+	 * @param fs
+	 *            ファイル。nullは不可。
+	 * @return データ。
+	 * @throws ReadException
+	 *             読み込み関係のエラー。
+	 */
+	public boolean open(IReadBuffer fs) throws ReadException {
+		if (fs == null) {
+			throw new IllegalArgumentException();
+		}
 		int size = 0;
 		;
 		m_vmd_header = (new VMD_HEADER()).Read(fs);

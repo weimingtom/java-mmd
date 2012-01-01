@@ -1,10 +1,18 @@
 package net.yzwlab.javammd.format;
 
+import java.io.Serializable;
+
 import net.yzwlab.javammd.IGL;
 import net.yzwlab.javammd.IReadBuffer;
 import net.yzwlab.javammd.ReadException;
 
-public class MMD_VERTEX_TEXUSE {
+public class MMD_VERTEX_TEXUSE implements Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	protected final MMD_VECTOR3 point;
 
 	protected final MMD_VECTOR3 normal;

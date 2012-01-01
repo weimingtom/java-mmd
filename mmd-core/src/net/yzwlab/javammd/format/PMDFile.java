@@ -1,5 +1,6 @@
 package net.yzwlab.javammd.format;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -7,7 +8,13 @@ import java.util.List;
 import net.yzwlab.javammd.IReadBuffer;
 import net.yzwlab.javammd.ReadException;
 
-public class PMDFile {
+public class PMDFile implements Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	protected PMD_HEADER m_header;
 
 	protected List<PMD_VERTEX_RECORD> m_vertexs;
@@ -50,18 +57,22 @@ public class PMDFile {
 	public void dispose() {
 	}
 
-	public boolean Open(IReadBuffer fs) throws ReadException {
-		byte[] boneDispName = new byte[50];
-		byte[] boneName = new byte[20];
-		byte[] ename = new byte[276];
-		byte[] morpName = new byte[20];
+	/**
+	 * バッファからデータを開きます。
+	 * 
+	 * @param fs
+	 *            ファイル。nullは不可。
+	 * @return データ。
+	 * @throws ReadException
+	 *             読み込み関係のエラー。
+	 */
+	public boolean open(IReadBuffer fs) throws ReadException {
+		if (fs == null) {
+			throw new IllegalArgumentException();
+		}
 		int size = 0;
 		byte size_b = 0;
 		short size_w = 0;
-		byte[] textureName = new byte[100];
-		;
-		if (false || false)
-			return false;
 		m_header = (new PMD_HEADER()).Read(fs);
 		size = fs.readInteger();
 		SetVertexChunkSize(size);
@@ -127,27 +138,27 @@ public class PMDFile {
 		}
 		size_b = fs.readByte();
 		if (size_b != 0) {
-			ename = fs.readByteArray(276);
+			fs.readByteArray(276);
 			for (int i = 0; i < m_bones.size(); i++) {
-				boneName = fs.readByteArray(20);
+				fs.readByteArray(20);
 			}
 			Iterator<PMD_MORP_RECORD> it = m_morps.iterator();
 			if (it.hasNext()) {
 				it.next();
 				for (; it.hasNext(); it.next()) {
-					morpName = fs.readByteArray(20);
+					fs.readByteArray(20);
 				}
 			}
 			for (Iterator<PMD_GRP_NAME_RECORD> git = m_grp_name.iterator(); git
 					.hasNext(); git.next()) {
-				boneDispName = fs.readByteArray(50);
+				fs.readByteArray(50);
 			}
 		}
 		if (fs.isEOF()) {
 			return true;
 		}
 		for (int i = 0; i < 10; i++) {
-			textureName = fs.readByteArray(100);
+			fs.readByteArray(100);
 		}
 		size = fs.readInteger();
 		SetRigidBodyChunkSize(size);

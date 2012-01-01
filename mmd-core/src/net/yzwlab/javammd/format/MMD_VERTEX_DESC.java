@@ -1,8 +1,16 @@
 package net.yzwlab.javammd.format;
 
+import java.io.Serializable;
+
 import net.yzwlab.javammd.model.MMDBone;
 
-public class MMD_VERTEX_DESC {
+public class MMD_VERTEX_DESC implements Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	private final MMD_VERTEX_TEXUSE original;
 
 	private final MMD_VERTEX_TEXUSE faced;
