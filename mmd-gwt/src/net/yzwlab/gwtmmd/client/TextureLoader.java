@@ -7,7 +7,6 @@ import net.yzwlab.javammd.IMMDTextureProvider;
 import net.yzwlab.javammd.format.TEXTURE_DESC;
 
 import com.google.gwt.dom.client.Document;
-import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.VerticalPanel;
 
 public class TextureLoader {
@@ -49,9 +48,16 @@ public class TextureLoader {
 		if (str == null) {
 			throw new IllegalArgumentException();
 		}
-		this.filenameString = str;
-		panel.add(new Label(str));
-		panel.add(canvas);
+		int pos = str.indexOf("*");
+		if (pos >= 0) {
+			this.filenameString = str.substring(0, pos);
+		} else {
+			this.filenameString = str;
+		}
+	}
+
+	public String getResolvedFilename() {
+		return filenameString;
 	}
 
 	/**
@@ -78,6 +84,19 @@ public class TextureLoader {
 		desc.setTexHeight(height);
 		desc.setTexMemHeight(height);
 		desc.setTextureId(index);
+		set(desc);
+	}
+
+	/**
+	 * ラスタ化済みの画像を設定します。
+	 * 
+	 * @param desc
+	 *            ラスタ化済みの画像。nullは不可。
+	 */
+	public void set(TEXTURE_DESC desc) {
+		if (desc == null) {
+			throw new IllegalArgumentException();
+		}
 		handler.onSuccess(filename, desc);
 	}
 }
