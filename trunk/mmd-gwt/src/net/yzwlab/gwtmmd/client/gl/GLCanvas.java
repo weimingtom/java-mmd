@@ -71,6 +71,11 @@ public class GLCanvas extends Widget {
 	private int currentRz;
 
 	/**
+	 * テクスチャを保持します。
+	 */
+	private List<JavaScriptObject> textures;
+
+	/**
 	 * 構築します。
 	 * 
 	 * @param performanceLabel
@@ -94,6 +99,7 @@ public class GLCanvas extends Widget {
 		this.currentRx = 0;
 		this.currentRy = 0;
 		this.currentRz = 0;
+		this.textures = new ArrayList<JavaScriptObject>();
 
 		canvasElement.setAttribute("width", String.valueOf(width));
 		canvasElement.setAttribute("height", String.valueOf(height));
@@ -167,6 +173,24 @@ public class GLCanvas extends Widget {
 	 */
 	public void removeAllModels() {
 		models.clear();
+	}
+
+	/**
+	 * テクスチャを生成します。
+	 * 
+	 * @param imageElement
+	 *            画像要素。nullは不可。
+	 * @param width
+	 *            幅。
+	 * @param height
+	 *            高さ。
+	 * @return テクスチャのインデックス。
+	 */
+	public int createTexture(Element imageElement, int width, int height) {
+		JavaScriptObject t = createTexture(gl, imageElement, width, height);
+		int index = textures.size();
+		textures.add(t);
+		return index + 1;
 	}
 
 	@Override
@@ -259,6 +283,8 @@ public class GLCanvas extends Widget {
 		gl.enable(gl.DEPTH_TEST);
 		gl.depthFunc(gl.LEQUAL);
 
+		gl.enable(gl.TEXTURING);
+		gl.enable(gl.TEXTURE_2D);
 		return gl;
 	}-*/;
 
@@ -338,10 +364,16 @@ public class GLCanvas extends Widget {
 		gl.enableVertexAttribArray(attr);
 		program.vertexNormalAttribute = attr;
 
+		attr = gl.getAttribLocation(program, "coord");
+		gl.enableVertexAttribArray(attr);
+		program.vertexCoordAttribute = attr;
+
 		program.mvMatrixUniform = gl.getUniformLocation(program, "uMVMatrix");
 		program.pMatrixUniform = gl.getUniformLocation(program, "uPMatrix");
 		program.normalMatrixUniform = gl.getUniformLocation(program,
 				"uNormalMatrix");
+		program.texture0 = gl.getUniformLocation(program,
+				"texture0");
 
 		return program;
 	}-*/;
@@ -378,12 +410,30 @@ public class GLCanvas extends Widget {
 	 * @param vertices
 	 *            頂点。nullは不可。
 	 */
-	private native void initBuffer(JavaScriptObject gl,
+	private native void initBuffer3(JavaScriptObject gl,
 			JavaScriptObject buffer, JavaScriptObject vertices) /*-{
 		gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices),
 				gl.STATIC_DRAW);
 		buffer.vertexNum = vertices.length / 3;
+	}-*/;
+
+	/**
+	 * バッファを初期化します。
+	 * 
+	 * @param gl
+	 *            WebGLオブジェクト。nullは不可。
+	 * @param buffer
+	 *            バッファ。nullは不可。
+	 * @param vertices
+	 *            頂点。nullは不可。
+	 */
+	private native void initBuffer2(JavaScriptObject gl,
+			JavaScriptObject buffer, JavaScriptObject vertices) /*-{
+		gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices),
+				gl.STATIC_DRAW);
+		buffer.vertexNum = vertices.length / 2;
 	}-*/;
 
 	/**
@@ -433,17 +483,54 @@ public class GLCanvas extends Widget {
 	 *            バッファ。nullは不可。
 	 * @param nbuffer
 	 *            バッファ。nullは不可。
+	 * @param cbuffer
+	 *            バッファ。nullは不可。
+	 * @param texture
+	 *            テクスチャ。nullは不可。
 	 */
 	private native void drawArrays(JavaScriptObject gl,
 			JavaScriptObject program, JavaScriptObject vbuffer,
-			JavaScriptObject nbuffer)/*-{
+			JavaScriptObject nbuffer, JavaScriptObject cbuffer,
+			JavaScriptObject texture)/*-{
 		gl.bindBuffer(gl.ARRAY_BUFFER, vbuffer);
 		gl.vertexAttribPointer(program.vertexPositionAttribute, 3, gl.FLOAT,
 				false, 0, 0);
 		gl.bindBuffer(gl.ARRAY_BUFFER, nbuffer);
 		gl.vertexAttribPointer(program.vertexNormalAttribute, 3, gl.FLOAT,
 				false, 0, 0);
+		gl.bindBuffer(gl.ARRAY_BUFFER, cbuffer);
+		gl.vertexAttribPointer(program.vertexCoordAttribute, 2, gl.FLOAT,
+				false, 0, 0);
+
+		gl.activeTexture(gl.TEXTURE0);
+		gl.bindTexture(gl.TEXTURE_2D, texture);
+		gl.uniform1i(program.texture0, 0);
 		gl.drawArrays(gl.TRIANGLES, 0, vbuffer.vertexNum);
+	}-*/;
+
+	/**
+	 * テクスチャを生成します。
+	 * 
+	 * @param gl
+	 *            GL。nullは不可。
+	 * @param imageElement
+	 *            画像要素。nullは不可。
+	 * @param width
+	 *            幅。
+	 * @param height
+	 *            高さ。
+	 * @return テクスチャ。
+	 */
+	private native JavaScriptObject createTexture(JavaScriptObject gl,
+			Element imageElement, int width, int height) /*-{
+		var texture = gl.createTexture();
+		gl.activeTexture(gl.TEXTURE0);
+		gl.bindTexture(gl.TEXTURE_2D, texture);
+		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA,
+				gl.UNSIGNED_SHORT_4_4_4_4, imageElement);
+		gl.generateMipmap(gl.TEXTURE_2D);
+		gl.bindTexture(gl.TEXTURE_2D, null);
+		return texture;
 	}-*/;
 
 	/**
@@ -598,6 +685,11 @@ public class GLCanvas extends Widget {
 			private JavaScriptObject normals;
 
 			/**
+			 * テクスチャ座標リストを保持します。
+			 */
+			private JavaScriptObject coords;
+
+			/**
 			 * 変換行列を保持します。
 			 */
 			private JavaScriptObject mvMatrix;
@@ -611,6 +703,16 @@ public class GLCanvas extends Widget {
 			 * バッファのインデックスを保持します。
 			 */
 			private int normCount;
+
+			/**
+			 * バッファのインデックスを保持します。
+			 */
+			private int coordCount;
+
+			/**
+			 * 現在のテクスチャを保持します。
+			 */
+			private JavaScriptObject currentTexture;
 
 			/**
 			 * 構築します。
@@ -631,9 +733,11 @@ public class GLCanvas extends Widget {
 				this.bufferIndex = 0;
 				this.vertexes = null;
 				this.normals = null;
+				this.coords = null;
 				this.mvMatrix = createMVMatrix(rx, ry, rz);
 				this.vertCount = 0;
 				this.normCount = 0;
+				this.coordCount = 0;
 			}
 
 			/**
@@ -644,7 +748,8 @@ public class GLCanvas extends Widget {
 
 				for (int i = 0; i < bufferIndex; i++) {
 					BufferGroup g = buffers.get(i);
-					drawArrays(gl, program, g.vbuffer, g.nbuffer);
+					drawArrays(gl, program, g.vbuffer, g.nbuffer, g.cbuffer,
+							g.texture);
 				}
 			}
 
@@ -667,21 +772,26 @@ public class GLCanvas extends Widget {
 
 				vertCount = 0;
 				normCount = 0;
-				vertexes = createVertexes(count);
-				normals = createVertexes(count);
+				coordCount = 0;
+				vertexes = createVertexes3(count);
+				normals = createVertexes3(count);
+				coords = createVertexes2(count);
 			}
 
 			@Override
 			public void glEnd() {
 				BufferGroup buffer = null;
 				if (bufferIndex >= buffers.size()) {
-					buffer = new BufferGroup(createBuffer(gl), createBuffer(gl));
+					buffer = new BufferGroup(createBuffer(gl),
+							createBuffer(gl), createBuffer(gl));
 					buffers.add(buffer);
 				} else {
 					buffer = buffers.get(bufferIndex);
 				}
-				initBuffer(gl, buffer.vbuffer, vertexes);
-				initBuffer(gl, buffer.nbuffer, normals);
+				initBuffer3(gl, buffer.vbuffer, vertexes);
+				initBuffer3(gl, buffer.nbuffer, normals);
+				initBuffer2(gl, buffer.cbuffer, coords);
+				buffer.texture = currentTexture;
 
 				bufferIndex++;
 			}
@@ -694,8 +804,8 @@ public class GLCanvas extends Widget {
 
 			@Override
 			public void glTexCoord2f(float x, float y) {
-				// TODO Auto-generated method stub
-
+				pushVertexes(coords, coordCount, x, y);
+				coordCount++;
 			}
 
 			@Override
@@ -706,8 +816,12 @@ public class GLCanvas extends Widget {
 
 			@Override
 			public void glBindTexture(C target, long texture) {
-				// TODO Auto-generated method stub
-
+				if (texture > 0) {
+					int index = ((int) (texture - 1));
+					currentTexture = textures.get(index);
+				} else {
+					currentTexture = null;
+				}
 			}
 
 			@Override
@@ -820,8 +934,19 @@ public class GLCanvas extends Widget {
 			 *            長さ。
 			 * @return 頂点バッファ。
 			 */
-			private native JavaScriptObject createVertexes(int length) /*-{
+			private native JavaScriptObject createVertexes3(int length) /*-{
 				return new Array(length * 3);
+			}-*/;
+
+			/**
+			 * 頂点バッファをリセットします。
+			 * 
+			 * @param length
+			 *            長さ。
+			 * @return 頂点バッファ。
+			 */
+			private native JavaScriptObject createVertexes2(int length) /*-{
+				return new Array(length * 2);
 			}-*/;
 
 			/**
@@ -845,6 +970,24 @@ public class GLCanvas extends Widget {
 				vertexes[offset * 3 + 2] = -z;
 			}-*/;
 
+			/**
+			 * 頂点を追加します。
+			 * 
+			 * @param vertexes
+			 *            頂点リスト。nullは不可。
+			 * @param offset
+			 *            オフセット。
+			 * @param x
+			 *            座標。
+			 * @param y
+			 *            座標。
+			 */
+			private native void pushVertexes(JavaScriptObject vertexes,
+					int offset, float x, float y) /*-{
+				vertexes[offset * 2] = x;
+				vertexes[offset * 2 + 1] = y;
+			}-*/;
+
 		}
 
 	}
@@ -855,10 +998,17 @@ public class GLCanvas extends Widget {
 
 		private JavaScriptObject nbuffer;
 
-		public BufferGroup(JavaScriptObject vbuffer, JavaScriptObject nbuffer) {
+		private JavaScriptObject cbuffer;
+
+		private JavaScriptObject texture;
+
+		public BufferGroup(JavaScriptObject vbuffer, JavaScriptObject nbuffer,
+				JavaScriptObject cbuffer) {
 			super();
 			this.vbuffer = vbuffer;
 			this.nbuffer = nbuffer;
+			this.cbuffer = cbuffer;
+			this.texture = null;
 		}
 
 	}

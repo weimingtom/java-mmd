@@ -1,13 +1,19 @@
 package net.yzwlab.gwtmmd.client;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import net.yzwlab.gwtmmd.client.gl.GLCanvas;
+import net.yzwlab.gwtmmd.client.image.CanvasImageService;
+import net.yzwlab.gwtmmd.client.image.CanvasRaster;
 import net.yzwlab.gwtmmd.client.io.FileReadBuffer;
 import net.yzwlab.javammd.IMMDTextureProvider;
 import net.yzwlab.javammd.ReadException;
 import net.yzwlab.javammd.format.TEXTURE_DESC;
+import net.yzwlab.javammd.image.IImage;
+import net.yzwlab.javammd.image.TargaReader;
 import net.yzwlab.javammd.model.IMotionSegment;
 import net.yzwlab.javammd.model.MMDModel;
 
@@ -67,6 +73,11 @@ public class Main implements EntryPoint, IMMDTextureProvider {
 			.create(GreetingService.class);
 
 	/**
+	 * WebGLキャンバスを保持します。
+	 */
+	private GLCanvas glCanvas;
+
+	/**
 	 * 結果ラベルを保持します。
 	 */
 	private Label resultLabel;
@@ -85,14 +96,45 @@ public class Main implements EntryPoint, IMMDTextureProvider {
 	protected List<File> readQueue;
 
 	/**
+	 * ローダを保持します。
+	 */
+	private List<TextureLoader> textureLoaders;
+
+	/**
+	 * リソースパネルを保持します。
+	 */
+	private VerticalPanel resourcePanel;
+
+	/**
+	 * 画像サービスを保持します。
+	 */
+	private CanvasImageService imageService;
+
+	/**
+	 * テクスチャ候補の画像を保持します。
+	 */
+	private Map<String, CanvasRaster> textureImages;
+
+	/**
+	 * 名前解決済みのテクスチャローダを保持します。
+	 */
+	private Map<String, List<TextureLoader>> namedTextureLoaders;
+
+	/**
 	 * 構築します。
 	 */
 	public Main() {
+		this.glCanvas = null;
 		this.resultLabel = null;
 		this.currentModel = null;
 		this.motionPanel = null;
 		this.reader = new FileReader();
 		this.readQueue = new ArrayList<File>();
+		this.textureLoaders = new ArrayList<TextureLoader>();
+		this.resourcePanel = new VerticalPanel();
+		this.imageService = new CanvasImageService(resourcePanel);
+		this.textureImages = new HashMap<String, CanvasRaster>();
+		this.namedTextureLoaders = new HashMap<String, List<TextureLoader>>();
 	}
 
 	@Override
@@ -106,6 +148,12 @@ public class Main implements EntryPoint, IMMDTextureProvider {
 		desc.setTextureId(0L);
 		// TODO
 		// return desc;
+
+		VerticalPanel vpanel = new VerticalPanel();
+		resourcePanel.add(vpanel);
+		TextureLoader loader = new TextureLoader(glCanvas, filename, vpanel,
+				handler);
+		textureLoaders.add(loader);
 	}
 
 	/**
@@ -166,7 +214,7 @@ public class Main implements EntryPoint, IMMDTextureProvider {
 				}
 			});
 
-			final GLCanvas glCanvas = new GLCanvas(perfLabel, 640, 480);
+			glCanvas = new GLCanvas(perfLabel, 640, 480);
 			glCanvas.setCurrentRy(-1);
 			glCanvas.setCurrentRx(1);
 
@@ -187,6 +235,8 @@ public class Main implements EntryPoint, IMMDTextureProvider {
 									}
 									loadVMD(glCanvas, currentModel,
 											file.getName(), buf, null);
+								} else if (isTgaImage(file)) {
+									loadTGA(file.getName(), buf, null);
 								}
 							} catch (Throwable e) {
 								handleError(file, e.getClass().getName() + ": "
@@ -271,6 +321,7 @@ public class Main implements EntryPoint, IMMDTextureProvider {
 
 			RootPanel.get("canvas3d_ctrl").add(vpanel);
 			RootPanel.get("dropFieldContainer").add(dropPanelContainer);
+			RootPanel.get("resources_3d").add(resourcePanel);
 
 			final DialogBox dlg = new LoadingDialogBox("PMD");
 			dlg.center();
@@ -304,7 +355,7 @@ public class Main implements EntryPoint, IMMDTextureProvider {
 		if (readQueue.size() > 0) {
 			File file = readQueue.get(0);
 			try {
-				if (isModel(file) || isMotion(file)) {
+				if (isModel(file) || isMotion(file) || isTgaImage(file)) {
 					reader.readAsArrayBuffer(file);
 				} else {
 					readQueue.remove(0);
@@ -378,6 +429,34 @@ public class Main implements EntryPoint, IMMDTextureProvider {
 					resultLabel.setText(msg);
 					currentModel = model;
 					motionPanel.clear();
+
+					ArrayList<byte[]> dt = new ArrayList<byte[]>();
+					for (TextureLoader textureLoader : textureLoaders) {
+						dt.add(textureLoader.getFilename());
+					}
+					greetingService.getStrings(dt,
+							new AsyncCallback<List<String>>() {
+
+								@Override
+								public void onFailure(Throwable caught) {
+									Window.alert("Error: "
+											+ caught.getClass().getName()
+											+ ": " + caught.getMessage());
+								}
+
+								@Override
+								public void onSuccess(List<String> result) {
+									for (int i = result.size() - 1; i >= 0; i--) {
+										TextureLoader loader = textureLoaders
+												.get(i);
+										loader.set(result.get(i));
+										textureLoaders.remove(i);
+										setNamingResolvedLoader(result.get(i),
+												loader);
+									}
+								}
+
+							});
 				} catch (ReadException e) {
 					Window.alert(e.getClass().getName() + ": " + e.getMessage());
 				} finally {
@@ -431,6 +510,45 @@ public class Main implements EntryPoint, IMMDTextureProvider {
 	}
 
 	/**
+	 * TGAファイルを読み込みます。
+	 * 
+	 * @param name
+	 *            名前。nullは不可。
+	 * @param buf
+	 *            バッファ。nullは不可。
+	 * @param dlg
+	 *            ダイアログ。nullを指定可能。
+	 */
+	private void loadTGA(final String name, final ArrayBuffer buf, DialogBox dlg) {
+		if (name == null || buf == null) {
+			throw new IllegalArgumentException();
+		}
+		if (dlg == null) {
+			dlg = new LoadingDialogBox("TGA");
+			dlg.center();
+		}
+		final DialogBox tdlg = dlg;
+		Scheduler.get().scheduleDeferred(new ScheduledCommand() {
+			@Override
+			public void execute() {
+				try {
+					TargaReader reader = new TargaReader();
+					IImage image = reader.read(imageService,
+							new FileReadBuffer(buf));
+
+					addRaster(name, (CanvasRaster) image);
+					resultLabel.setText("TGA読み込み完了: " + image.getWidth() + "x"
+							+ image.getHeight());
+				} catch (Throwable e) {
+					Window.alert(e.getClass().getName() + ": " + e.getMessage());
+				} finally {
+					tdlg.hide();
+				}
+			}
+		});
+	}
+
+	/**
 	 * モデルファイルかどうかを判定します。
 	 * 
 	 * @param file
@@ -456,6 +574,70 @@ public class Main implements EntryPoint, IMMDTextureProvider {
 			throw new IllegalArgumentException();
 		}
 		return file.getName().toLowerCase().endsWith(".vmd");
+	}
+
+	/**
+	 * TGA画像ファイルかどうかを判定します。
+	 * 
+	 * @param file
+	 *            ファイル。nullは不可。
+	 * @return TGA画像ファイルであればtrue。
+	 */
+	private boolean isTgaImage(File file) {
+		if (file == null) {
+			throw new IllegalArgumentException();
+		}
+		return file.getName().toLowerCase().endsWith(".tga");
+	}
+
+	/**
+	 * 名前解決済みのローダを設定します。
+	 * 
+	 * @param name
+	 *            名前。nullは不可。
+	 * @param loader
+	 *            テクスチャローダ。nullは不可。
+	 */
+	private void setNamingResolvedLoader(String name, TextureLoader loader) {
+		if (name == null || loader == null) {
+			throw new IllegalArgumentException();
+		}
+		CanvasRaster raster = textureImages.get(name);
+		if (raster != null) {
+			// ロード済み
+			loader.set(raster);
+			return;
+		}
+		List<TextureLoader> loaders = namedTextureLoaders.get(name);
+		if (loaders == null) {
+			loaders = new ArrayList<TextureLoader>();
+			namedTextureLoaders.put(name, loaders);
+		}
+		loaders.add(loader);
+	}
+
+	/**
+	 * ラスタを追加します。
+	 * 
+	 * @param name
+	 *            名前。nullは不可。
+	 * @param raster
+	 *            ラスタ。nullは不可。
+	 */
+	private void addRaster(String name, CanvasRaster raster) {
+		if (name == null || raster == null) {
+			throw new IllegalArgumentException();
+		}
+		textureImages.put(name, raster);
+
+		List<TextureLoader> loader = namedTextureLoaders.get(name);
+		if (loader == null) {
+			return;
+		}
+		for (TextureLoader l : loader) {
+			l.set(raster);
+		}
+		namedTextureLoaders.remove(name);
 	}
 
 	private class LoadingDialogBox extends DialogBox {
