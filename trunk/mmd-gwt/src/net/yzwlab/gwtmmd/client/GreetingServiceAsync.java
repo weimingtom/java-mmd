@@ -2,6 +2,8 @@ package net.yzwlab.gwtmmd.client;
 
 import java.util.List;
 
+import net.yzwlab.gwtmmd.client.model.AnalyzedPMDFile;
+
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 /**
@@ -11,7 +13,7 @@ public interface GreetingServiceAsync {
 	void greetServer(String input, AsyncCallback<String> callback)
 			throws IllegalArgumentException;
 
-	public void getDefaultModel(AsyncCallback<byte[]> callback)
+	public void getDefaultPMD(AsyncCallback<AnalyzedPMDFile> callback)
 			throws IllegalArgumentException;
 
 	/**

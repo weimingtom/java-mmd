@@ -2,6 +2,8 @@ package net.yzwlab.gwtmmd.client;
 
 import java.util.List;
 
+import net.yzwlab.gwtmmd.client.model.AnalyzedPMDFile;
+
 import com.google.gwt.user.client.rpc.RemoteService;
 import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 
@@ -12,7 +14,7 @@ import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 public interface GreetingService extends RemoteService {
 	String greetServer(String name) throws IllegalArgumentException;
 
-	public byte[] getDefaultModel() throws IllegalArgumentException;
+	public AnalyzedPMDFile getDefaultPMD() throws IllegalArgumentException;
 
 	/**
 	 * ï∂éöóÒÇéÊìæÇµÇ‹Ç∑ÅB

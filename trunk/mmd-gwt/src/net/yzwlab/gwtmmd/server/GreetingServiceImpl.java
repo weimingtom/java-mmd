@@ -1,6 +1,7 @@
 package net.yzwlab.gwtmmd.server;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -10,7 +11,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.yzwlab.gwtmmd.client.GreetingService;
+import net.yzwlab.gwtmmd.client.model.AnalyzedPMDFile;
 import net.yzwlab.gwtmmd.shared.FieldVerifier;
+import net.yzwlab.javammd.ReadException;
+import net.yzwlab.javammd.format.PMDFile;
+import net.yzwlab.javammd.format.PMD_MATERIAL_RECORD;
 
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
@@ -44,7 +49,7 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 	}
 
 	@Override
-	public byte[] getDefaultModel() throws IllegalArgumentException {
+	public AnalyzedPMDFile getDefaultPMD() throws IllegalArgumentException {
 		InputStream in = null;
 		try {
 			in = GreetingServiceImpl.class
@@ -59,7 +64,33 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 			while ((ch = bufIn.read()) != -1) {
 				bout.write(ch);
 			}
-			return bout.toByteArray();
+			byte[] dt = bout.toByteArray();
+			ByteArrayInputStream bin = new ByteArrayInputStream(dt);
+
+			PMDFile pmdFile = new PMDFile();
+			pmdFile.open(new InputStreamReader(bin, dt.length));
+
+			ArrayList<String> filenames = new ArrayList<String>();
+			if (pmdFile.GetMaterialChunk() != null) {
+				try {
+					for (PMD_MATERIAL_RECORD chunk : pmdFile.GetMaterialChunk()) {
+						filenames.add(StringUtils.getString(chunk
+								.getTextureFileName()));
+					}
+				} catch (UnsupportedEncodingException e) {
+					throw new IllegalArgumentException(e);
+				}
+			}
+
+			AnalyzedPMDFile apmdFile = new AnalyzedPMDFile();
+			apmdFile.setFile(pmdFile);
+			apmdFile.setBaseDir("azunyan");
+			apmdFile.setImageFilenames(filenames);
+			return apmdFile;
+		} catch (ReadException e) {
+			e.printStackTrace();
+			throw new IllegalArgumentException(e.getClass().getName() + ": "
+					+ e.getMessage());
 		} catch (IOException e) {
 			e.printStackTrace();
 			throw new IllegalArgumentException(e.getClass().getName() + ": "
@@ -85,14 +116,7 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 		try {
 			ArrayList<String> r = new ArrayList<String>();
 			for (byte[] d : data) {
-				int len = 0;
-				for (byte elem : d) {
-					if (elem == 0) {
-						break;
-					}
-					len++;
-				}
-				r.add(new String(d, 0, len, "Shift_JIS"));
+				r.add(StringUtils.getString(d));
 			}
 			return r;
 		} catch (UnsupportedEncodingException e) {
