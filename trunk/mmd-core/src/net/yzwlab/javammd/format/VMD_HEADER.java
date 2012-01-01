@@ -1,9 +1,17 @@
 package net.yzwlab.javammd.format;
 
+import java.io.Serializable;
+
 import net.yzwlab.javammd.IReadBuffer;
 import net.yzwlab.javammd.ReadException;
 
-public class VMD_HEADER {
+public class VMD_HEADER implements Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	protected byte[] hdr_string;
 
 	protected byte[] unknown;

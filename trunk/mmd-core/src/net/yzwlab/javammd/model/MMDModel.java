@@ -51,14 +51,19 @@ public class MMDModel {
 	 * 
 	 * @param buffer
 	 *            バッファ。nullは不可。
+	 * @param pmdFile
+	 *            PMDファイル。nullは不可。
 	 * @throws ReadException
 	 *             読み込み関係のエラー。
 	 */
-	public void openPMD(IReadBuffer buffer) throws ReadException {
+	public void setPMD(IReadBuffer buffer, PMDFile pmdFile)
+			throws ReadException {
+		if (buffer == null || pmdFile == null) {
+			throw new IllegalArgumentException();
+		}
 		PMD_MORP_RECORD baseMorp = new PMD_MORP_RECORD();
 		PMD_BONE_RECORD bone = new PMD_BONE_RECORD();
 		List<PMD_BONE_RECORD> bones = new ArrayList<PMD_BONE_RECORD>();
-		boolean br = false;
 		PMD_IK_RECORD ik = new PMD_IK_RECORD();
 		List<PMD_IK_RECORD> iks = new ArrayList<PMD_IK_RECORD>();
 		List<Short> indices = new ArrayList<Short>();
@@ -67,16 +72,8 @@ public class MMDModel {
 		PMD_MORP_RECORD morp = new PMD_MORP_RECORD();
 		List<PMD_MORP_RECORD> morps = new ArrayList<PMD_MORP_RECORD>();
 		int offset = 0;
-		PMDFile pmdFile = new PMDFile();
 		List<PMD_VERTEX_RECORD> vertexes = new ArrayList<PMD_VERTEX_RECORD>();
-		if (buffer == null) {
-			throw new IllegalArgumentException("E_POINTER");
-		}
 		if (m_pVertexList != null) {
-			throw new IllegalArgumentException("E_UNEXPECTED");
-		}
-		br = pmdFile.Open(buffer);
-		if (br == false) {
 			throw new IllegalArgumentException("E_UNEXPECTED");
 		}
 		vertexes = pmdFile.GetVertexChunk();
@@ -123,7 +120,26 @@ public class MMDModel {
 		for (int i = 0; i < m_materials.size(); i++) {
 			offset = m_materials.get(i).Init(m_pVertexList, m_bones, offset);
 		}
-		return;
+	}
+
+	/**
+	 * PMDファイルを読み出します。
+	 * 
+	 * @param buffer
+	 *            バッファ。nullは不可。
+	 * @throws ReadException
+	 *             読み込み関係のエラー。
+	 */
+	public void openPMD(IReadBuffer buffer) throws ReadException {
+		if (buffer == null) {
+			throw new IllegalArgumentException();
+		}
+		PMDFile pmdFile = new PMDFile();
+		boolean br = pmdFile.open(buffer);
+		if (br == false) {
+			throw new IllegalArgumentException();
+		}
+		setPMD(buffer, pmdFile);
 	}
 
 	/**
@@ -135,7 +151,11 @@ public class MMDModel {
 	 * @throws ReadException
 	 *             読み込み関係のエラー。
 	 */
-	public IMotionSegment openVMD(IReadBuffer buffer) throws ReadException {
+	public IMotionSegment setVMD(IReadBuffer buffer, VMDFile vmdFile)
+			throws ReadException {
+		if (buffer == null || vmdFile == null) {
+			throw new IllegalArgumentException();
+		}
 		boolean added = false;
 		boolean br = false;
 		VMD_MORP_RECORD morp = null;
@@ -144,14 +164,6 @@ public class MMDModel {
 		List<VMD_MOTION_RECORD> motions = new ArrayList<VMD_MOTION_RECORD>();
 		MMDBone pBone = null;
 		MMDMorp pMorp = null;
-		VMDFile vmdFile = new VMDFile();
-		if (buffer == null) {
-			throw new IllegalArgumentException("E_POINTER");
-		}
-		br = vmdFile.Open(buffer);
-		if (br == false) {
-			throw new IllegalArgumentException("E_UNEXPECTED");
-		}
 
 		// モーションを追加するオフセット値
 		int offset = 0;
@@ -201,6 +213,27 @@ public class MMDModel {
 			pMorp.PrepareMotion();
 		}
 		return new MotionSegment(offset);
+	}
+
+	/**
+	 * VMDファイルを読み出します。
+	 * 
+	 * @param buffer
+	 *            バッファ。nullは不可。
+	 * @return モーションが登録された時間区分。
+	 * @throws ReadException
+	 *             読み込み関係のエラー。
+	 */
+	public IMotionSegment openVMD(IReadBuffer buffer) throws ReadException {
+		if (buffer == null) {
+			throw new IllegalArgumentException();
+		}
+		VMDFile vmdFile = new VMDFile();
+		boolean br = vmdFile.open(buffer);
+		if (br == false) {
+			throw new IllegalArgumentException("E_UNEXPECTED");
+		}
+		return setVMD(buffer, vmdFile);
 	}
 
 	/**

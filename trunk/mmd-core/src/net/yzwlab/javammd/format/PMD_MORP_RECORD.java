@@ -1,12 +1,19 @@
 package net.yzwlab.javammd.format;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 import net.yzwlab.javammd.IReadBuffer;
 import net.yzwlab.javammd.ReadException;
 
-public class PMD_MORP_RECORD {
+public class PMD_MORP_RECORD implements Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	protected byte[] name;
 
 	protected int vnum;
