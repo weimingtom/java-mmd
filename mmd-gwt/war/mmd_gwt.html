@@ -30,20 +30,24 @@
     <script id="shader-fs" type="x-shader/x-fragment">
       precision mediump float;
       varying vec3 vLighting;
+      varying vec2 texCoord;      
+      uniform sampler2D texture0;
       
       void main(void) {
-        vec4 texelColor = vec4(0.5, 0.5, 0.5, 1.0);
-        gl_FragColor = vec4(texelColor.rgb * vLighting, texelColor.a);
+        vec4 texelColor = texture2D(texture0, texCoord);
+        gl_FragColor = texelColor; //vec4(texelColor.rgb * vLighting, texelColor.a);
       }
     </script>
     <script id="shader-vs" type="x-shader/x-vertex">
       attribute vec3 pos;
       attribute vec3 norm;
+      attribute vec2 coord;
       
       uniform mat4 uNormalMatrix;
       uniform mat4 uMVMatrix;
       uniform mat4 uPMatrix;
-      
+
+      varying vec2 texCoord;      
       varying vec3 vLighting;
       
       void main(void) {
@@ -56,6 +60,7 @@
           
         float directional = max(dot(transformedNormal.xyz, directionalVector), 0.0);  
         vLighting = ambientLight + (directionalLightColor * directional);  
+        texCoord = coord;
       }
     </script>
     
@@ -96,6 +101,9 @@
       <tr>
         <td id="canvas3d_ctrl" valign="top"></td>
         <td id="dropFieldContainer" align="center"></td>
+      </tr>
+      <tr>
+        <td id="resources_3d" colspan="2"></td>
       </tr>
     </table>
     <br/>

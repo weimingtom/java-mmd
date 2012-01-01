@@ -5,6 +5,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.List;
 
 import net.yzwlab.gwtmmd.client.GreetingService;
 import net.yzwlab.gwtmmd.shared.FieldVerifier;
@@ -70,6 +73,30 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 				}
 				in = null;
 			}
+		}
+	}
+
+	@Override
+	public List<String> getStrings(List<byte[]> data)
+			throws IllegalArgumentException {
+		if (data == null) {
+			throw new IllegalArgumentException();
+		}
+		try {
+			ArrayList<String> r = new ArrayList<String>();
+			for (byte[] d : data) {
+				int len = 0;
+				for (byte elem : d) {
+					if (elem == 0) {
+						break;
+					}
+					len++;
+				}
+				r.add(new String(d, 0, len, "Shift_JIS"));
+			}
+			return r;
+		} catch (UnsupportedEncodingException e) {
+			throw new IllegalArgumentException(e);
 		}
 	}
 
