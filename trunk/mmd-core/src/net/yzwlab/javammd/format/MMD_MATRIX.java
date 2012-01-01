@@ -1,9 +1,20 @@
 package net.yzwlab.javammd.format;
 
+import java.io.Serializable;
+
 import net.yzwlab.javammd.IReadBuffer;
 import net.yzwlab.javammd.ReadException;
 
-public class MMD_MATRIX {
+/**
+ * 行列を表現するクラスです。
+ */
+public class MMD_MATRIX implements Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	protected float[][] values;
 
 	/**
