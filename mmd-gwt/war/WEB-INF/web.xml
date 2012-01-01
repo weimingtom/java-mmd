@@ -11,9 +11,19 @@
     <servlet-class>net.yzwlab.gwtmmd.server.GreetingServiceImpl</servlet-class>
   </servlet>
   
+  <servlet>
+    <servlet-name>imageServlet</servlet-name>
+    <servlet-class>net.yzwlab.gwtmmd.server.ImageServlet</servlet-class>
+  </servlet>
+  
   <servlet-mapping>
     <servlet-name>greetServlet</servlet-name>
     <url-pattern>/mmd_gwt/greet</url-pattern>
+  </servlet-mapping>
+  
+  <servlet-mapping>
+    <servlet-name>imageServlet</servlet-name>
+    <url-pattern>/image</url-pattern>
   </servlet-mapping>
   
   <!-- Default page to serve -->

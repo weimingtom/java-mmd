@@ -48,7 +48,7 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 		InputStream in = null;
 		try {
 			in = GreetingServiceImpl.class
-					.getResourceAsStream("mmd/azunyan.pmd");
+					.getResourceAsStream("mmd/azunyan/azunyan.pmd");
 			if (in == null) {
 				throw new FileNotFoundException();
 			}
