@@ -1,9 +1,17 @@
 package net.yzwlab.javammd.format;
 
+import java.io.Serializable;
+
 import net.yzwlab.javammd.IReadBuffer;
 import net.yzwlab.javammd.ReadException;
 
-public class MMD_MOTION_PAD {
+public class MMD_MOTION_PAD implements Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	protected byte[] cInterpolationX;
 
 	protected byte[] cInterpolationY;
