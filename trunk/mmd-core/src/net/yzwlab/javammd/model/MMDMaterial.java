@@ -38,13 +38,24 @@ public class MMDMaterial {
 		m_material = pMaterial;
 	}
 
-	public int Init(MMDVertexList pVertexList, List<MMDBone> bones, int offset) {
+	/**
+	 * 初期化します。
+	 * 
+	 * @param pVertexList
+	 *            頂点リスト。nullは不可。
+	 * @param bones
+	 *            ボーンリスト。nullは不可。
+	 * @param offset
+	 *            オフセット。
+	 * @return 次のオフセット。
+	 */
+	public int init(MMDVertexList pVertexList, List<MMDBone> bones, int offset) {
+		if (pVertexList == null || bones == null) {
+			throw new IllegalArgumentException();
+		}
 		Integer pNextOffset = 0;
 		MMD_VERTEX_DESC pOriginalVert = null;
 		PMD_VERTEX_RECORD vert = new PMD_VERTEX_RECORD();
-		if (pVertexList == null || pNextOffset == null) {
-			throw new IllegalArgumentException("E_POINTER");
-		}
 		m_pVertexes = new MMD_VERTEX_UNIT[m_material.getNEdges()];
 		for (int i = 0; i < m_material.getNEdges(); i++) {
 			pOriginalVert = pVertexList.GetVertexDesc(i + offset);
@@ -56,13 +67,23 @@ public class MMDMaterial {
 			if (vert.getB1() >= bones.size()) {
 				throw new IllegalArgumentException("E_UNEXPECTED");
 			}
-			m_pVertexes[i].pOriginalVert.getPBones()[0] = bones.get(vert
-					.getB1());
+			MMDBone targetBone = bones.get(vert.getB1());
+			if (targetBone == null) {
+				throw new IllegalArgumentException("Bone not found: "
+						+ vert.getB1());
+			}
+			MMDBone[] tbones = new MMDBone[2];
+			tbones[0] = targetBone;
 			if (vert.getB2() >= bones.size()) {
 				throw new IllegalArgumentException("E_UNEXPECTED");
 			}
-			m_pVertexes[i].pOriginalVert.getPBones()[1] = bones.get(vert
-					.getB2());
+			targetBone = bones.get(vert.getB2());
+			if (targetBone == null) {
+				throw new IllegalArgumentException("Bone not found: "
+						+ vert.getB2());
+			}
+			tbones[1] = targetBone;
+			m_pVertexes[i].pOriginalVert.setBones(tbones);
 			m_pVertexes[i].pOriginalVert.setBweight((vert.getBw() / 100.0f));
 		}
 		pNextOffset = offset + m_material.getNEdges();
@@ -236,14 +257,14 @@ public class MMDMaterial {
 		}
 		vis = true;
 		for (int i = 0; i < m_material.getNEdges(); i++) {
-			pBone = m_pVertexes[i].pOriginalVert.getPBones()[0];
+			pBone = m_pVertexes[i].pOriginalVert.getBones()[0];
 			if (pBone != null) {
 				vis = pBone.IsVisible();
 				if (vis == false) {
 					break;
 				}
 			}
-			pBone = m_pVertexes[i].pOriginalVert.getPBones()[1];
+			pBone = m_pVertexes[i].pOriginalVert.getBones()[1];
 			if (pBone != null) {
 				vis = pBone.IsVisible();
 				if (vis == false) {

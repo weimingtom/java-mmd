@@ -17,7 +17,10 @@ public class MMD_VERTEX_DESC implements Serializable {
 
 	private final MMD_VERTEX_TEXUSE current;
 
-	protected MMDBone[] pBones;
+	/**
+	 * ボーンの一覧を保持します。
+	 */
+	protected MMDBone[] bones;
 
 	protected float bweight;
 
@@ -28,7 +31,7 @@ public class MMD_VERTEX_DESC implements Serializable {
 		this.original = new MMD_VERTEX_TEXUSE();
 		this.faced = new MMD_VERTEX_TEXUSE();
 		this.current = new MMD_VERTEX_TEXUSE();
-		this.pBones = new MMDBone[2];
+		this.bones = null;
 		this.bweight = 0.0f;
 
 		this.original.point.x = vert.x;
@@ -39,6 +42,15 @@ public class MMD_VERTEX_DESC implements Serializable {
 		this.original.normal.z = vert.nz;
 		this.original.uv.x = vert.tx;
 		this.original.uv.y = vert.ty;
+	}
+
+	/**
+	 * 内容の妥当性を検証します。
+	 */
+	public void verify() {
+		if (bones == null) {
+			System.err.println("NG");
+		}
 	}
 
 	public void setCurrent(MMD_VERTEX_TEXUSE current) {
@@ -94,12 +106,15 @@ public class MMD_VERTEX_DESC implements Serializable {
 		faced.getPoint().copyFrom(v);
 	}
 
-	public MMDBone[] getPBones() {
-		return pBones;
+	public MMDBone[] getBones() {
+		return bones;
 	}
 
-	public void setPBones(MMDBone[] pBones) {
-		this.pBones = pBones;
+	public void setBones(MMDBone[] bones) {
+		if (bones == null) {
+			throw new IllegalArgumentException();
+		}
+		this.bones = bones;
 	}
 
 	public float getBweight() {

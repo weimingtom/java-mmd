@@ -118,8 +118,9 @@ public class MMDModel {
 		}
 		offset = 0;
 		for (int i = 0; i < m_materials.size(); i++) {
-			offset = m_materials.get(i).Init(m_pVertexList, m_bones, offset);
+			offset = m_materials.get(i).init(m_pVertexList, m_bones, offset);
 		}
+		m_pVertexList.verify();
 	}
 
 	/**
