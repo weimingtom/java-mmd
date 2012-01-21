@@ -28,6 +28,18 @@ public class MMDVertexList {
 		CreateVertexDesc();
 	}
 
+	/**
+	 * 検証します。
+	 */
+	public void verify() {
+		int index = 0;
+		for (MMD_VERTEX_DESC desc : m_pVertexes) {
+			System.out.println("Verifying: " + index);
+			desc.verify();
+			index ++;
+		}
+	}
+
 	public void dispose() {
 		if (m_pVertexes != null) {
 			// for (int i = 0; i < m_vertexes.size(); i++) {
@@ -65,33 +77,34 @@ public class MMDVertexList {
 	 * 頂点分だけ処理を行うので、パフォーマンスに効いてくる部分。(と、思われる)
 	 */
 	public void updateSkinning() {
-		MMDBone pBone = null;
-		MMDBone pBone0 = null;
-		MMDBone pBone1 = null;
 		MMD_VERTEX_TEXUSE buffer = new MMD_VERTEX_TEXUSE();
 		MMD_VERTEX_TEXUSE destBuffer = new MMD_VERTEX_TEXUSE();
 		MMD_MATRIX skinningBuffer = new MMD_MATRIX();
 		for (MMD_VERTEX_DESC pVert : m_pVertexes) {
+			MMDBone[] bones = pVert.getBones();
+			if(bones == null) {
+				continue;
+			}
 			if (pVert.getBweight() == 0.0f) {
-				pBone = pVert.getPBones()[1];
+				MMDBone pBone = bones[1];
 				if (pBone == null) {
 					throw new IllegalStateException();
 				}
 				pVert.setCurrent(pBone.applySkinning(pVert.getFaced(buffer),
 						destBuffer));
 			} else if (pVert.getBweight() >= 0.9999f) {
-				pBone = pVert.getPBones()[0];
+				MMDBone pBone = bones[0];
 				if (pBone == null) {
 					throw new IllegalStateException();
 				}
 				pVert.setCurrent(pBone.applySkinning(pVert.getFaced(buffer),
 						destBuffer));
 			} else {
-				pBone0 = pVert.getPBones()[0];
+				MMDBone pBone0 = bones[0];
 				if (pBone0 == null) {
 					throw new IllegalStateException();
 				}
-				pBone1 = pVert.getPBones()[1];
+				MMDBone pBone1 = bones[1];
 				if (pBone1 == null) {
 					throw new IllegalStateException();
 				}
@@ -99,7 +112,6 @@ public class MMDVertexList {
 						pBone1, pVert.getBweight(), destBuffer, skinningBuffer));
 			}
 		}
-		return;
 	}
 
 	public void ResetVertexes() {
