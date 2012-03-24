@@ -171,12 +171,11 @@ public class MMDMaterial {
 		if (m_bVisible == false) {
 			return;
 		}
-		int intFrontFace;
 		gl.glPushMatrix();
-		intFrontFace = gl.glGetIntegerv(IGL.C.GL_FRONT_FACE);
-		gl.glFrontFace(IGL.C.GL_CW);
+		IGL.FrontFace frontFace = gl.glGetFrontFace();
+		gl.glFrontFace(IGL.FrontFace.GL_CW);
 		// dalpha = 1.0f;
-		int bindGL_TEXTURE_2D = 0;
+		long bindGL_TEXTURE_2D = 0;
 		boolean isGL_TEXTURE_2D = false;
 		boolean isGL_BLEND = false;
 
@@ -210,7 +209,7 @@ public class MMDMaterial {
 		}
 		isGL_TEXTURE_2D = gl.glIsEnabled(IGL.C.GL_TEXTURE_2D);
 		isGL_BLEND = gl.glIsEnabled(IGL.C.GL_BLEND);
-		bindGL_TEXTURE_2D = gl.glGetIntegerv(IGL.C.GL_TEXTURE_BINDING_2D);
+		bindGL_TEXTURE_2D = gl.glGetBindTexture(IGL.C.GL_TEXTURE_2D);
 		gl.glEnable(IGL.C.GL_TEXTURE_2D);
 		gl.glEnable(IGL.C.GL_BLEND);
 		gl.glBlendFunc(IGL.C.GL_SRC_ALPHA, IGL.C.GL_ONE_MINUS_SRC_ALPHA);
@@ -244,7 +243,7 @@ public class MMDMaterial {
 		if (m_texture != null) {
 			gl.glDisableClientState(IGL.C.GL_TEXTURE_COORD_ARRAY);
 		}
-		gl.glFrontFace(gl.getGlFontFaceCode(intFrontFace));
+		gl.glFrontFace(frontFace);
 		gl.glPopMatrix();
 		return;
 	}

@@ -3,12 +3,16 @@ package net.yzwlab.javammd;
 public interface IGL {
 
 	public enum C {
-		GL_VERTEX_ARRAY, GL_NORMAL_ARRAY, GL_TEXTURE_COORD_ARRAY, GL_FRONT_FACE, GL_CW, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_TRIANGLES, GL_TEXTURE_2D, GL_BLEND, GL_NORMALIZE, GL_FRONT_AND_BACK, GL_DIFFUSE, GL_AMBIENT, GL_SPECULAR, GL_EMISSION, GL_SHININESS, GL_TEXTURE_BINDING_2D
+		GL_VERTEX_ARRAY, GL_NORMAL_ARRAY, GL_TEXTURE_COORD_ARRAY, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_TRIANGLES, GL_TEXTURE_2D, GL_BLEND, GL_NORMALIZE, GL_FRONT_AND_BACK, GL_DIFFUSE, GL_AMBIENT, GL_SPECULAR, GL_EMISSION, GL_SHININESS
 	}
 
-	public C getGlFontFaceCode(int target);
+	public enum FrontFace {
+		GL_CW;
+	}
 
-	public void glFrontFace(C mode);
+	public FrontFace glGetFrontFace();
+
+	public void glFrontFace(FrontFace mode);
 
 	/**
 	 * レンダリングを開始します。
@@ -30,6 +34,8 @@ public interface IGL {
 
 	public void glBindTexture(C target, long texture);
 
+	public long glGetBindTexture(C target);
+
 	public void glBlendFunc(C c1, C c2);
 
 	public void glPushMatrix();
@@ -40,8 +46,6 @@ public interface IGL {
 
 	public void glColor4f(float a1, float a2, float a3, float a4);
 
-	public void glDrawArrays(C mode, int offset, int length);
-
 	public void glEnable(C target);
 
 	public void glDisable(C target);
@@ -51,8 +55,6 @@ public interface IGL {
 	public void glMaterialfv(C c1, C c2, float[] fv);
 
 	public void glMaterialf(C c1, C c2, float f);
-
-	public int glGetIntegerv(C target);
 
 	public void glEnableClientState(C target);
 

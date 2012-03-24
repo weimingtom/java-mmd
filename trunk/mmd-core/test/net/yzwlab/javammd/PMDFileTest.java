@@ -24,9 +24,9 @@ public class PMDFileTest implements IDataMutex, IMMDTextureProvider, IGL,
 				model.openPMD(new FileBuffer(new DataInputStream(
 						new BufferedInputStream(in)), f.length()));
 				model.updateMotion(0.0f);
-				for (int i = 0; i < model.GetFaceCount(); i++) {
+				for (int i = 0; i < model.getFaceCount(); i++) {
 					System.out.println("Face(#" + String.valueOf(i + 1) + "): "
-							+ model.GetFaceName(i));
+							+ model.getFaceName(i));
 				}
 				PMDFileTest main = new PMDFileTest();
 				model.prepare(main, main);
@@ -111,12 +111,6 @@ public class PMDFileTest implements IDataMutex, IMMDTextureProvider, IGL,
 	}
 
 	@Override
-	public void glDrawArrays(C mode, int offset, int length) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
 	public void glEnable(C target) {
 		// TODO Auto-generated method stub
 
@@ -147,13 +141,13 @@ public class PMDFileTest implements IDataMutex, IMMDTextureProvider, IGL,
 	}
 
 	@Override
-	public C getGlFontFaceCode(int target) {
+	public FrontFace glGetFrontFace() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public void glFrontFace(C mode) {
+	public void glFrontFace(FrontFace mode) {
 		// TODO Auto-generated method stub
 
 	}
@@ -198,7 +192,7 @@ public class PMDFileTest implements IDataMutex, IMMDTextureProvider, IGL,
 	}
 
 	@Override
-	public int glGetIntegerv(C target) {
+	public long glGetBindTexture(C target) {
 		// TODO Auto-generated method stub
 		return 0;
 	}
