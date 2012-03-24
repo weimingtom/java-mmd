@@ -22,7 +22,11 @@ import net.yzwlab.javammd.format.VMDFile;
 import net.yzwlab.javammd.format.VMD_MORP_RECORD;
 import net.yzwlab.javammd.format.VMD_MOTION_RECORD;
 
+/**
+ * MMDのモデルを表現します。
+ */
 public class MMDModel {
+
 	protected float m_scale;
 
 	protected MMDVertexList m_pVertexList;
@@ -35,6 +39,9 @@ public class MMDModel {
 
 	protected List<MMDIK> m_iks;
 
+	/**
+	 * 構築します。
+	 */
 	public MMDModel() {
 		this.m_iks = new ArrayList<MMDIK>();
 		this.m_morps = new ArrayList<MMDMorp>();
@@ -257,16 +264,30 @@ public class MMDModel {
 		}
 	}
 
-	public void SetScale(float scale) {
+	/**
+	 * 拡大率を設定します。
+	 * 
+	 * @param scale
+	 *            拡大率。
+	 */
+	public void setScale(float scale) {
 		m_scale = scale;
 		return;
 	}
 
-	public float GetScale() {
+	/**
+	 * 拡大率を取得します。
+	 * 
+	 * @return 拡大率。
+	 */
+	public float getScale() {
 		return m_scale;
 	}
 
-	public void ClearMotion() {
+	/**
+	 * モーション情報を消去します。
+	 */
+	public void clearMotion() {
 		for (int i = 0; i < m_bones.size(); i++) {
 			m_bones.get(i).ClearMotion();
 		}
@@ -276,7 +297,15 @@ public class MMDModel {
 		return;
 	}
 
-	public void UpdateAsync(IDataMutex pMutex, float frameNo) {
+	/**
+	 * 更新処理を非同期的に行います。
+	 * 
+	 * @param pMutex
+	 *            同期用オブジェクト。近いうちに廃止予定。
+	 * @param frameNo
+	 *            フレーム番号。
+	 */
+	public void updateAsync(IDataMutex pMutex, float frameNo) {
 		if (m_pVertexList == null || pMutex == null) {
 			throw new IllegalArgumentException("E_POINTER");
 		}
@@ -299,7 +328,7 @@ public class MMDModel {
 		if (gl == null) {
 			throw new IllegalArgumentException();
 		}
-		UpdateVertexBuffer();
+		updateVertexBuffer();
 		gl.glPushMatrix();
 		gl.glScalef(m_scale, m_scale, m_scale * -1.0f);
 		boolean normalizeEnabled = gl.glIsEnabled(IGL.C.GL_NORMALIZE);
@@ -313,15 +342,21 @@ public class MMDModel {
 		gl.glPopMatrix();
 	}
 
-	public void SetFace(byte[] faceName) {
+	/**
+	 * Faceを設定します。
+	 * 
+	 * @param faceName
+	 *            Face名。nullは不可。
+	 */
+	public void setFace(byte[] faceName) {
+		if (faceName == null) {
+			throw new IllegalArgumentException("E_POINTER");
+		}
 		byte[] elemName = null;
 		byte[] name = null;
 		MMDMorp pElem = null;
 		MMDMorp pSelectedElem = null;
 		MMD_VERTEX_DESC[] ppOriginalDescs = null;
-		if (faceName == null) {
-			throw new IllegalArgumentException("E_POINTER");
-		}
 		name = faceName;
 		pSelectedElem = null;
 		for (int i = 0; i < m_morps.size(); i++) {
@@ -339,11 +374,23 @@ public class MMDModel {
 		pSelectedElem.Set(ppOriginalDescs);
 	}
 
-	public int GetFaceCount() {
+	/**
+	 * Face数を取得します。
+	 * 
+	 * @return Face数。
+	 */
+	public int getFaceCount() {
 		return m_morps.size();
 	}
 
-	public byte[] GetFaceName(int index) {
+	/**
+	 * Face名を取得します。
+	 * 
+	 * @param index
+	 *            インデックス。
+	 * @return Face名。
+	 */
+	public byte[] getFaceName(int index) {
 		if (index >= m_morps.size()) {
 			throw new IllegalArgumentException("E_INVALIDARG");
 		}
@@ -398,32 +445,67 @@ public class MMDModel {
 		return new MaterialAccessor(m_materials.get(index));
 	}
 
-	public int GetIKCount() {
+	/**
+	 * IK数を取得します。
+	 * 
+	 * @return IK数。
+	 */
+	public int getIKCount() {
 		return m_iks.size();
 	}
 
-	public byte[] GetIKTargetName(int index) {
+	/**
+	 * IK名を取得します。
+	 * 
+	 * @param index
+	 *            インデックス。
+	 * @return IK名。
+	 */
+	public byte[] getIKTargetName(int index) {
 		if (index >= m_iks.size()) {
 			throw new IllegalArgumentException("E_INVALIDARG");
 		}
 		return m_iks.get(index).GetTargetName();
 	}
 
-	public boolean IsIKEnabled(int index) {
+	/**
+	 * IKが有効かどうかを判定します。
+	 * 
+	 * @param index
+	 *            インデックス。
+	 * @return IKが有効であればtrue。
+	 */
+	public boolean isIKEnabled(int index) {
 		if (index >= m_iks.size()) {
 			throw new IllegalArgumentException("E_INVALIDARG");
 		}
 		return m_iks.get(index).IsEnabled();
 	}
 
-	public void SetIKEnabled(int index, boolean value) {
+	/**
+	 * IKが有効かどうかを設定します。
+	 * 
+	 * @param index
+	 *            インデックス。
+	 * @param value
+	 *            IKが有効であればtrue。
+	 */
+	public void setIKEnabled(int index, boolean value) {
 		if (index >= m_iks.size()) {
 			throw new IllegalArgumentException("E_INVALIDARG");
 		}
 		m_iks.get(index).SetEnabled(value);
 	}
 
-	public void SetBoneVisible(int index, boolean visible) {
+	/**
+	 * ボーンを表示するかどうかを設定します。
+	 * 
+	 * @param index
+	 *            インデックス。
+	 * @param visible
+	 *            ボーンを表示する場合はtrue。
+	 */
+	public void setBoneVisible(int index, boolean visible) {
 		boolean curVisible = false;
 		MMDBone pBone = null;
 		MMDMaterial pElem = null;
@@ -440,10 +522,16 @@ public class MMDModel {
 			pElem = m_materials.get(i);
 			pElem.UpdateVisibility();
 		}
-		return;
 	}
 
-	public boolean IsBoneVisible(int index) {
+	/**
+	 * ボーンを表示するかどうかを判定します。
+	 * 
+	 * @param index
+	 *            インデックス。
+	 * @return ボーンを表示する場合はtrue。
+	 */
+	public boolean isBoneVisible(int index) {
 		if (index >= m_bones.size()) {
 			throw new IllegalArgumentException("E_INVALIDARG");
 		}
@@ -486,14 +574,20 @@ public class MMDModel {
 		return ret;
 	}
 
-	public void ResetVertexes() {
+	/**
+	 * 頂点情報をリセットします。
+	 */
+	public void resetVertexes() {
 		if (m_pVertexList == null) {
 			throw new IllegalArgumentException("E_POINTER");
 		}
 		m_pVertexList.ResetVertexes();
 	}
 
-	public void UpdateSkinning() {
+	/**
+	 * スキニング情報を更新します。
+	 */
+	public void updateSkinning() {
 		if (m_pVertexList == null) {
 			throw new IllegalArgumentException("E_POINTER");
 		}
@@ -503,7 +597,10 @@ public class MMDModel {
 		m_pVertexList.updateSkinning();
 	}
 
-	public void UpdateVertexBuffer() {
+	/**
+	 * 頂点バッファを更新します。
+	 */
+	public void updateVertexBuffer() {
 		for (int i = 0; i < m_materials.size(); i++) {
 			m_materials.get(i).updateVertexBuffer();
 		}
