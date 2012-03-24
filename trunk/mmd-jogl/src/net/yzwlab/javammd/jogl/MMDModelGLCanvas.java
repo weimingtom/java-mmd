@@ -45,9 +45,9 @@ public class MMDModelGLCanvas {
 			e.printStackTrace();
 		}
 
-		for (int j = 0; j < model.GetFaceCount(); j++) {
+		for (int j = 0; j < model.getFaceCount(); j++) {
 			System.out.println("Face #" + String.valueOf(j + 1) + ": "
-					+ model.GetFaceName(j));
+					+ model.getFaceName(j));
 		}
 
 		for (int j = 0; j < model.getBoneCount(); j++) {
@@ -55,11 +55,11 @@ public class MMDModelGLCanvas {
 					+ new String(model.getBone(j).getName()));
 		}
 
-		for (int j = 0; j < model.GetIKCount(); j++) {
-			String name = new String(model.GetIKTargetName(j));
+		for (int j = 0; j < model.getIKCount(); j++) {
+			String name = new String(model.getIKTargetName(j));
 			System.out.println("IK #" + String.valueOf(j + 1) + ": " + name);
 			if (name.indexOf("˜r") > 0) {
-				model.SetIKEnabled(j, false);
+				model.setIKEnabled(j, false);
 			}
 		}
 

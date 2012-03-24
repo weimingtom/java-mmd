@@ -86,7 +86,7 @@ public class MMDDrawer implements GLEventListener, IDataMutex,
 			}
 			loaded = true;
 		}
-		model.SetScale(1.0f);
+		model.setScale(1.0f);
 		// model.SetFace("‚É‚±");
 		// model.SetBoneVisible(30, false);
 
@@ -107,7 +107,7 @@ public class MMDDrawer implements GLEventListener, IDataMutex,
 				}
 			}
 			float nextFrame = frame;
-			model.UpdateAsync(MMDDrawer.this, nextFrame);
+			model.updateAsync(MMDDrawer.this, nextFrame);
 			updateEndTime = System.currentTimeMillis();
 
 			gl2.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);

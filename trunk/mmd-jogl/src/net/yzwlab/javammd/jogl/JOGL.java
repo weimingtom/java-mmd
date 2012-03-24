@@ -131,15 +131,15 @@ public class JOGL implements IGL, IMMDTextureProvider {
 	}
 
 	@Override
-	public C getGlFontFaceCode(int target) {
+	public FrontFace glGetFrontFace() {
 		// TODO Auto-generated method stub
-		return C.GL_CW;
+		return FrontFace.GL_CW;
 	}
 
 	@Override
-	public void glFrontFace(C mode) {
+	public void glFrontFace(FrontFace mode) {
 		int imode = 0;
-		if (mode == C.GL_CW) {
+		if (mode == FrontFace.GL_CW) {
 			imode = GL2.GL_CW;
 		} else {
 			throw new IllegalArgumentException();
@@ -224,12 +224,6 @@ public class JOGL implements IGL, IMMDTextureProvider {
 	@Override
 	public void glColor4f(float a1, float a2, float a3, float a4) {
 		gl.glColor4f(a1, a2, a3, a4);
-	}
-
-	@Override
-	public void glDrawArrays(C mode, int offset, int length) {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override
@@ -328,11 +322,9 @@ public class JOGL implements IGL, IMMDTextureProvider {
 	}
 
 	@Override
-	public int glGetIntegerv(C target) {
+	public long glGetBindTexture(C target) {
 		int itarget = 0;
-		if (target == C.GL_FRONT_FACE) {
-			itarget = GL2.GL_FRONT_FACE;
-		} else if (target == C.GL_TEXTURE_BINDING_2D) {
+		if (target == C.GL_TEXTURE_2D) {
 			itarget = GL2.GL_TEXTURE_BINDING_2D;
 		} else {
 			throw new IllegalArgumentException();
