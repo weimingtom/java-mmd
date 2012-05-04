@@ -493,7 +493,7 @@ public class Main implements EntryPoint, IMMDTextureProvider,
 					glCanvas.addModel(model);
 
 					String msg = "モデル読み込み完了: Bones=" + model.getBoneCount()
-							+ ", IKs=" + model.GetIKCount();
+							+ ", IKs=" + model.getIKCount();
 					resultLabel.setText(msg);
 					currentModel = model;
 					motionPanel.clear();
@@ -561,7 +561,7 @@ public class Main implements EntryPoint, IMMDTextureProvider,
 			glCanvas.addModel(model);
 
 			String msg = "モデル読み込み完了: Bones=" + model.getBoneCount() + ", IKs="
-					+ model.GetIKCount();
+					+ model.getIKCount();
 			resultLabel.setText(msg);
 			currentModel = model;
 			motionPanel.clear();
