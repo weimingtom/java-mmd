@@ -372,8 +372,7 @@ public class GLCanvas extends Widget {
 		program.pMatrixUniform = gl.getUniformLocation(program, "uPMatrix");
 		program.normalMatrixUniform = gl.getUniformLocation(program,
 				"uNormalMatrix");
-		program.texture0 = gl.getUniformLocation(program,
-				"texture0");
+		program.texture0 = gl.getUniformLocation(program, "texture0");
 
 		return program;
 	}-*/;
@@ -634,7 +633,7 @@ public class GLCanvas extends Widget {
 
 				long currentTime = System.currentTimeMillis();
 				for (DynamicModel model : models) {
-					model.model.UpdateAsync(this,
+					model.model.updateAsync(this,
 							model.getCurrentFrame(currentTime));
 				}
 
@@ -754,14 +753,13 @@ public class GLCanvas extends Widget {
 			}
 
 			@Override
-			public C getGlFontFaceCode(int target) {
-				return C.GL_FRONT_AND_BACK;
+			public FrontFace glGetFrontFace() {
+				return FrontFace.GL_CW;
 			}
 
 			@Override
-			public void glFrontFace(C mode) {
-				// TODO Auto-generated method stub
-
+			public void glFrontFace(FrontFace mode) {
+				;
 			}
 
 			@Override
@@ -855,12 +853,6 @@ public class GLCanvas extends Widget {
 			}
 
 			@Override
-			public void glDrawArrays(C mode, int offset, int length) {
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
 			public void glEnable(C target) {
 				// TODO Auto-generated method stub
 
@@ -891,7 +883,7 @@ public class GLCanvas extends Widget {
 			}
 
 			@Override
-			public int glGetIntegerv(C target) {
+			public long glGetBindTexture(C target) {
 				// TODO Auto-generated method stub
 				return 0;
 			}
