@@ -1,14 +1,11 @@
 package net.yzwlab.gwtmmd.client;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import net.yzwlab.gwtmmd.client.gl.GLCanvas;
 import net.yzwlab.gwtmmd.client.image.CanvasImageService;
 import net.yzwlab.gwtmmd.client.image.CanvasRaster;
-import net.yzwlab.gwtmmd.client.image.ImageResourceLoader;
 import net.yzwlab.gwtmmd.client.io.FileReadBuffer;
 import net.yzwlab.gwtmmd.client.model.AnalyzedPMDFile;
 import net.yzwlab.javammd.IMMDTextureProvider;
@@ -58,8 +55,7 @@ import com.google.gwt.user.client.ui.VerticalPanel;
 /**
  * Entry point classes define <code>onModuleLoad()</code>.
  */
-public class Main implements EntryPoint, IMMDTextureProvider,
-		ImageResourceLoader.Handler {
+public class Main implements EntryPoint {
 	/**
 	 * The message displayed to the user when the server cannot be reached or
 	 * returns an error.
@@ -78,7 +74,7 @@ public class Main implements EntryPoint, IMMDTextureProvider,
 	/**
 	 * WebGLキャンバスを保持します。
 	 */
-	private GLCanvas glCanvas;
+	private List<GLCanvasManager> canvasManagers;
 
 	/**
 	 * 結果ラベルを保持します。
@@ -99,11 +95,6 @@ public class Main implements EntryPoint, IMMDTextureProvider,
 	protected List<File> readQueue;
 
 	/**
-	 * ローダを保持します。
-	 */
-	private List<TextureLoader> textureLoaders;
-
-	/**
 	 * リソースパネルを保持します。
 	 */
 	private VerticalPanel resourcePanel;
@@ -114,103 +105,17 @@ public class Main implements EntryPoint, IMMDTextureProvider,
 	private CanvasImageService imageService;
 
 	/**
-	 * テクスチャ候補の画像を保持します。
-	 */
-	private Map<String, CanvasRaster> textureImages;
-
-	/**
-	 * テクスチャ候補の画像を保持します。
-	 */
-	private Map<String, TEXTURE_DESC> textureDescs;
-
-	/**
-	 * 名前解決済みのテクスチャローダを保持します。
-	 */
-	private Map<String, List<TextureLoader>> namedTextureLoaders;
-
-	/**
-	 * 画像リソースローダを保持します。
-	 */
-	private ImageResourceLoader imageResourceLoader;
-
-	/**
-	 * 残りファイル名を保持します。
-	 */
-	private List<String> remainFilenames;
-
-	/**
-	 * 基本ディレクトリを保持します。
-	 */
-	private String lastBaseDir;
-
-	/**
 	 * 構築します。
 	 */
 	public Main() {
-		this.glCanvas = null;
+		this.canvasManagers = new ArrayList<GLCanvasManager>();
 		this.resultLabel = null;
 		this.currentModel = null;
 		this.motionPanel = null;
 		this.reader = new FileReader();
 		this.readQueue = new ArrayList<File>();
-		this.textureLoaders = new ArrayList<TextureLoader>();
 		this.resourcePanel = new VerticalPanel();
 		this.imageService = new CanvasImageService(resourcePanel);
-		this.textureImages = new HashMap<String, CanvasRaster>();
-		this.textureDescs = new HashMap<String, TEXTURE_DESC>();
-		this.namedTextureLoaders = new HashMap<String, List<TextureLoader>>();
-		this.imageResourceLoader = new ImageResourceLoader(resourcePanel);
-		this.remainFilenames = new ArrayList<String>();
-		this.lastBaseDir = null;
-	}
-
-	@Override
-	public void load(byte[] filename, IMMDTextureProvider.Handler handler)
-			throws ReadException {
-		// いったんダミーキャンバスを入れておく
-		handler.onSuccess(filename, imageResourceLoader.getDummyTexture());
-
-		VerticalPanel vpanel = new VerticalPanel();
-		resourcePanel.add(vpanel);
-		TextureLoader loader = new TextureLoader(glCanvas, filename, vpanel,
-				handler);
-		textureLoaders.add(loader);
-	}
-
-	@Override
-	public void onLoad(String name, TEXTURE_DESC raster) {
-		if (name == null || raster == null) {
-			throw new IllegalArgumentException();
-		}
-		try {
-			textureDescs.put(name, raster);
-			List<TextureLoader> loader = namedTextureLoaders.get(name);
-			if (loader == null) {
-				return;
-			}
-			for (TextureLoader l : loader) {
-				l.set(raster);
-			}
-			namedTextureLoaders.remove(name);
-		} finally {
-			if (remainFilenames.size() == 0) {
-				return;
-			}
-			String filename = remainFilenames.remove(0);
-			imageResourceLoader.load(filename, "/image?p=" + lastBaseDir + "/"
-					+ filename, Main.this);
-		}
-	}
-
-	@Override
-	public void onError(String efilename) {
-		Window.alert("Error: " + efilename);
-		if (remainFilenames.size() == 0) {
-			return;
-		}
-		String filename = remainFilenames.remove(0);
-		imageResourceLoader.load(filename, "/image?p=" + lastBaseDir + "/"
-				+ filename, Main.this);
 	}
 
 	/**
@@ -271,11 +176,25 @@ public class Main implements EntryPoint, IMMDTextureProvider,
 				}
 			});
 
-			glCanvas = new GLCanvas(perfLabel, 640, 480);
-			glCanvas.setCurrentRy(-1);
-			glCanvas.setCurrentRx(1);
+			RootPanel canvasLeft = RootPanel.get("canvas3d_left");
+			RootPanel canvasRight = RootPanel.get("canvas3d_right");
+			RootPanel canvasMain = RootPanel.get("canvas3d");
+			int canvasCount = 0;
+			if (canvasLeft != null && canvasRight != null) {
+				canvasCount = 2;
+			} else if (canvasMain != null) {
+				canvasCount = 1;
+			} else {
+				throw new IllegalStateException();
+			}
 
-			imageResourceLoader.setGLCanvas(glCanvas);
+			for (int i = 0; i < canvasCount; i++) {
+				GLCanvas glCanvas = new GLCanvas(perfLabel, 640, 480);
+				glCanvas.setCurrentRy(-1);
+				glCanvas.setCurrentRx(1);
+				canvasManagers
+						.add(new GLCanvasManager(glCanvas, resourcePanel));
+			}
 
 			reader.addLoadEndHandler(new LoadEndHandler() {
 				@Override
@@ -287,7 +206,7 @@ public class Main implements EntryPoint, IMMDTextureProvider,
 								if (isModel(file)) {
 									ArrayBuffer buf = reader
 											.getArrayBufferResult();
-									loadPMD(glCanvas, buf, null);
+									loadPMD(buf, null);
 								} else if (isMotion(file)) {
 									ArrayBuffer buf = reader
 											.getArrayBufferResult();
@@ -295,15 +214,17 @@ public class Main implements EntryPoint, IMMDTextureProvider,
 										Window.alert("モデルがロードされていません");
 										return;
 									}
-									loadVMD(glCanvas, currentModel,
-											file.getName(), buf, null);
+									loadVMD(currentModel, file.getName(), buf,
+											null);
 								} else if (isTgaImage(file)) {
 									ArrayBuffer buf = reader
 											.getArrayBufferResult();
 									loadTGA(file.getName(), buf, null);
 								} else if (file.getType().startsWith("image/")) {
-									imageResourceLoader.load(file.getName(),
-											reader.getStringResult(), Main.this);
+									for (GLCanvasManager canvasManager : canvasManagers) {
+										canvasManager.addImage(file.getName(),
+												reader.getStringResult());
+									}
 								}
 							} catch (Throwable e) {
 								handleError(file, e.getClass().getName() + ": "
@@ -329,7 +250,12 @@ public class Main implements EntryPoint, IMMDTextureProvider,
 				}
 			});
 
-			RootPanel.get("canvas3d").add(glCanvas);
+			if (canvasLeft != null && canvasRight != null) {
+				canvasLeft.add(canvasManagers.get(0).getGlCanvas());
+				canvasRight.add(canvasManagers.get(1).getGlCanvas());
+			} else {
+				canvasMain.add(canvasManagers.get(0).getGlCanvas());
+			}
 
 			VerticalPanel vpanel = new VerticalPanel();
 			vpanel.add(resultLabel);
@@ -339,7 +265,9 @@ public class Main implements EntryPoint, IMMDTextureProvider,
 			button.addClickHandler(new ClickHandler() {
 				@Override
 				public void onClick(ClickEvent event) {
-					glCanvas.setCurrentRx(glCanvas.getCurrentRx() + 1);
+					for (GLCanvas glCanvas : getCanvases()) {
+						glCanvas.setCurrentRx(glCanvas.getCurrentRx() + 1);
+					}
 				}
 			});
 			buttons.add(button);
@@ -347,7 +275,9 @@ public class Main implements EntryPoint, IMMDTextureProvider,
 			button.addClickHandler(new ClickHandler() {
 				@Override
 				public void onClick(ClickEvent event) {
-					glCanvas.setCurrentRx(glCanvas.getCurrentRx() - 1);
+					for (GLCanvas glCanvas : getCanvases()) {
+						glCanvas.setCurrentRx(glCanvas.getCurrentRx() - 1);
+					}
 				}
 			});
 			buttons.add(button);
@@ -355,7 +285,9 @@ public class Main implements EntryPoint, IMMDTextureProvider,
 			button.addClickHandler(new ClickHandler() {
 				@Override
 				public void onClick(ClickEvent event) {
-					glCanvas.setCurrentRy(glCanvas.getCurrentRy() + 1);
+					for (GLCanvas glCanvas : getCanvases()) {
+						glCanvas.setCurrentRy(glCanvas.getCurrentRy() + 1);
+					}
 				}
 			});
 			buttons.add(button);
@@ -363,7 +295,9 @@ public class Main implements EntryPoint, IMMDTextureProvider,
 			button.addClickHandler(new ClickHandler() {
 				@Override
 				public void onClick(ClickEvent event) {
-					glCanvas.setCurrentRy(glCanvas.getCurrentRy() - 1);
+					for (GLCanvas glCanvas : getCanvases()) {
+						glCanvas.setCurrentRy(glCanvas.getCurrentRy() - 1);
+					}
 				}
 			});
 			buttons.add(button);
@@ -371,7 +305,9 @@ public class Main implements EntryPoint, IMMDTextureProvider,
 			button.addClickHandler(new ClickHandler() {
 				@Override
 				public void onClick(ClickEvent event) {
-					glCanvas.setCurrentRz(glCanvas.getCurrentRz() + 1);
+					for (GLCanvas glCanvas : getCanvases()) {
+						glCanvas.setCurrentRz(glCanvas.getCurrentRz() + 1);
+					}
 				}
 			});
 			buttons.add(button);
@@ -379,7 +315,9 @@ public class Main implements EntryPoint, IMMDTextureProvider,
 			button.addClickHandler(new ClickHandler() {
 				@Override
 				public void onClick(ClickEvent event) {
-					glCanvas.setCurrentRz(glCanvas.getCurrentRz() - 1);
+					for (GLCanvas glCanvas : getCanvases()) {
+						glCanvas.setCurrentRz(glCanvas.getCurrentRz() - 1);
+					}
 				}
 			});
 			buttons.add(button);
@@ -403,7 +341,7 @@ public class Main implements EntryPoint, IMMDTextureProvider,
 
 				@Override
 				public void onSuccess(AnalyzedPMDFile result) {
-					loadPMD(glCanvas, result.getFile(), dlg);
+					loadPMD(result.getFile(), dlg);
 					boolean first = true;
 					for (String filename : result.getImageFilenames()) {
 						int pos = filename.indexOf("*");
@@ -411,14 +349,17 @@ public class Main implements EntryPoint, IMMDTextureProvider,
 							filename = filename.substring(0, pos);
 						}
 						if (first) {
-							imageResourceLoader.load(filename, "/image?p="
-									+ result.getBaseDir() + "/" + filename,
-									Main.this);
+							for (GLCanvasManager canvasManager : canvasManagers) {
+								canvasManager.load(result.getBaseDir(),
+										filename);
+							}
 							first = false;
 							continue;
 						}
-						lastBaseDir = result.getBaseDir();
-						remainFilenames.add(filename);
+						for (GLCanvasManager canvasManager : canvasManagers) {
+							canvasManager.addQueue(result.getBaseDir(),
+									filename);
+						}
 					}
 				}
 			});
@@ -463,8 +404,7 @@ public class Main implements EntryPoint, IMMDTextureProvider,
 		Window.alert("Error: " + f.getName() + ": " + message);
 	}
 
-	private void loadPMD(final GLCanvas glCanvas, final ArrayBuffer buf,
-			DialogBox dlg) {
+	private void loadPMD(final ArrayBuffer buf, DialogBox dlg) {
 		if (dlg == null) {
 			dlg = new LoadingDialogBox("PMD");
 			dlg.center();
@@ -477,20 +417,26 @@ public class Main implements EntryPoint, IMMDTextureProvider,
 					MMDModel model = new MMDModel();
 					model.openPMD(new FileReadBuffer(buf));
 
-					model.prepare(Main.this, new IMMDTextureProvider.Handler() {
-						@Override
-						public void onSuccess(byte[] filename, TEXTURE_DESC desc) {
-							// TODO Auto-generated method stub
+					for (GLCanvasManager canvasManager : canvasManagers) {
+						GLCanvas glCanvas = canvasManager.getGlCanvas();
+						model.prepare(canvasManager,
+								new IMMDTextureProvider.Handler() {
+									@Override
+									public void onSuccess(byte[] filename,
+											TEXTURE_DESC desc) {
+										// TODO Auto-generated method stub
 
-						}
+									}
 
-						@Override
-						public void onError(byte[] filename, Throwable error) {
-							error.printStackTrace();
-						}
-					});
-					glCanvas.removeAllModels();
-					glCanvas.addModel(model);
+									@Override
+									public void onError(byte[] filename,
+											Throwable error) {
+										error.printStackTrace();
+									}
+								});
+						glCanvas.removeAllModels();
+						glCanvas.addModel(model);
+					}
 
 					String msg = "モデル読み込み完了: Bones=" + model.getBoneCount()
 							+ ", IKs=" + model.getIKCount();
@@ -498,34 +444,9 @@ public class Main implements EntryPoint, IMMDTextureProvider,
 					currentModel = model;
 					motionPanel.clear();
 
-					ArrayList<byte[]> dt = new ArrayList<byte[]>();
-					for (TextureLoader textureLoader : textureLoaders) {
-						dt.add(textureLoader.getFilename());
+					for (GLCanvasManager canvasManager : canvasManagers) {
+						canvasManager.loadTexts(greetingService);
 					}
-					greetingService.getStrings(dt,
-							new AsyncCallback<List<String>>() {
-
-								@Override
-								public void onFailure(Throwable caught) {
-									Window.alert("Error: "
-											+ caught.getClass().getName()
-											+ ": " + caught.getMessage());
-								}
-
-								@Override
-								public void onSuccess(List<String> result) {
-									for (int i = result.size() - 1; i >= 0; i--) {
-										TextureLoader loader = textureLoaders
-												.get(i);
-										loader.set(result.get(i));
-										textureLoaders.remove(i);
-										setNamingResolvedLoader(
-												loader.getResolvedFilename(),
-												loader);
-									}
-								}
-
-							});
 				} catch (ReadException e) {
 					Window.alert(e.getClass().getName() + ": " + e.getMessage());
 				} finally {
@@ -535,7 +456,7 @@ public class Main implements EntryPoint, IMMDTextureProvider,
 		});
 	}
 
-	private void loadPMD(final GLCanvas glCanvas, PMDFile file, DialogBox dlg) {
+	private void loadPMD(PMDFile file, DialogBox dlg) {
 		if (dlg == null) {
 			dlg = new LoadingDialogBox("PMD");
 			dlg.center();
@@ -545,20 +466,23 @@ public class Main implements EntryPoint, IMMDTextureProvider,
 			MMDModel model = new MMDModel();
 			model.setPMD(new FileReadBuffer(ArrayBuffer.create(1)), file);
 
-			model.prepare(Main.this, new IMMDTextureProvider.Handler() {
-				@Override
-				public void onSuccess(byte[] filename, TEXTURE_DESC desc) {
-					// TODO Auto-generated method stub
+			for (GLCanvasManager canvasManager : canvasManagers) {
+				GLCanvas glCanvas = canvasManager.getGlCanvas();
+				model.prepare(canvasManager, new IMMDTextureProvider.Handler() {
+					@Override
+					public void onSuccess(byte[] filename, TEXTURE_DESC desc) {
+						// TODO Auto-generated method stub
 
-				}
+					}
 
-				@Override
-				public void onError(byte[] filename, Throwable error) {
-					error.printStackTrace();
-				}
-			});
-			glCanvas.removeAllModels();
-			glCanvas.addModel(model);
+					@Override
+					public void onError(byte[] filename, Throwable error) {
+						error.printStackTrace();
+					}
+				});
+				glCanvas.removeAllModels();
+				glCanvas.addModel(model);
+			}
 
 			String msg = "モデル読み込み完了: Bones=" + model.getBoneCount() + ", IKs="
 					+ model.getIKCount();
@@ -566,30 +490,9 @@ public class Main implements EntryPoint, IMMDTextureProvider,
 			currentModel = model;
 			motionPanel.clear();
 
-			ArrayList<byte[]> dt = new ArrayList<byte[]>();
-			for (TextureLoader textureLoader : textureLoaders) {
-				dt.add(textureLoader.getFilename());
+			for (GLCanvasManager canvasManager : canvasManagers) {
+				canvasManager.loadTexts(greetingService);
 			}
-			greetingService.getStrings(dt, new AsyncCallback<List<String>>() {
-
-				@Override
-				public void onFailure(Throwable caught) {
-					Window.alert("Error: " + caught.getClass().getName() + ": "
-							+ caught.getMessage());
-				}
-
-				@Override
-				public void onSuccess(List<String> result) {
-					for (int i = result.size() - 1; i >= 0; i--) {
-						TextureLoader loader = textureLoaders.get(i);
-						loader.set(result.get(i));
-						textureLoaders.remove(i);
-						setNamingResolvedLoader(loader.getResolvedFilename(),
-								loader);
-					}
-				}
-
-			});
 		} catch (ReadException e) {
 			Window.alert(e.getClass().getName() + ": " + e.getMessage());
 		} finally {
@@ -611,9 +514,9 @@ public class Main implements EntryPoint, IMMDTextureProvider,
 	 * @param dlg
 	 *            ダイアログ。nullを指定可能。
 	 */
-	private void loadVMD(final GLCanvas canvas, final MMDModel model,
-			final String name, final ArrayBuffer buf, DialogBox dlg) {
-		if (canvas == null || model == null || name == null || buf == null) {
+	private void loadVMD(final MMDModel model, final String name,
+			final ArrayBuffer buf, DialogBox dlg) {
+		if (model == null || name == null || buf == null) {
 			throw new IllegalArgumentException();
 		}
 		if (dlg == null) {
@@ -627,8 +530,8 @@ public class Main implements EntryPoint, IMMDTextureProvider,
 				try {
 					IMotionSegment segment = model.openVMD(new FileReadBuffer(
 							buf));
-					motionPanel.add(new MotionStartButton(canvas, resultLabel,
-							24.0f, currentModel, name, segment));
+					motionPanel.add(new MotionStartButton(getCanvases(),
+							resultLabel, 24.0f, currentModel, name, segment));
 
 					resultLabel.setText("モーション読み込み完了");
 				} catch (Throwable e) {
@@ -667,7 +570,9 @@ public class Main implements EntryPoint, IMMDTextureProvider,
 					IImage image = reader.read(imageService,
 							new FileReadBuffer(buf));
 
-					addRaster(name, (CanvasRaster) image);
+					for (GLCanvasManager canvasManager : canvasManagers) {
+						canvasManager.addRaster(name, (CanvasRaster) image);
+					}
 					resultLabel.setText("TGA読み込み完了: " + image.getWidth() + "x"
 							+ image.getHeight());
 				} catch (Throwable e) {
@@ -722,59 +627,16 @@ public class Main implements EntryPoint, IMMDTextureProvider,
 	}
 
 	/**
-	 * 名前解決済みのローダを設定します。
+	 * キャンバスを取得します。
 	 * 
-	 * @param name
-	 *            名前。nullは不可。
-	 * @param loader
-	 *            テクスチャローダ。nullは不可。
+	 * @return キャンバス。
 	 */
-	private void setNamingResolvedLoader(String name, TextureLoader loader) {
-		if (name == null || loader == null) {
-			throw new IllegalArgumentException();
+	private GLCanvas[] getCanvases() {
+		GLCanvas[] r = new GLCanvas[canvasManagers.size()];
+		for (int i = 0; i < r.length; i++) {
+			r[i] = canvasManagers.get(i).getGlCanvas();
 		}
-		TEXTURE_DESC desc = textureDescs.get(name);
-		if (desc != null) {
-			// ロード済み
-			loader.set(desc);
-			return;
-		}
-		CanvasRaster raster = textureImages.get(name);
-		if (raster != null) {
-			// ロード済み
-			loader.set(raster);
-			return;
-		}
-		List<TextureLoader> loaders = namedTextureLoaders.get(name);
-		if (loaders == null) {
-			loaders = new ArrayList<TextureLoader>();
-			namedTextureLoaders.put(name, loaders);
-		}
-		loaders.add(loader);
-	}
-
-	/**
-	 * ラスタを追加します。
-	 * 
-	 * @param name
-	 *            名前。nullは不可。
-	 * @param raster
-	 *            ラスタ。nullは不可。
-	 */
-	private void addRaster(String name, CanvasRaster raster) {
-		if (name == null || raster == null) {
-			throw new IllegalArgumentException();
-		}
-		textureImages.put(name, raster);
-
-		List<TextureLoader> loader = namedTextureLoaders.get(name);
-		if (loader == null) {
-			return;
-		}
-		for (TextureLoader l : loader) {
-			l.set(raster);
-		}
-		namedTextureLoaders.remove(name);
+		return r;
 	}
 
 	private class LoadingDialogBox extends DialogBox {

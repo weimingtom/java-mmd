@@ -18,7 +18,7 @@ public class MotionStartButton extends Composite implements ClickHandler {
 	/**
 	 * キャンバスを保持します。
 	 */
-	private GLCanvas canvas;
+	private GLCanvas[] canvases;
 
 	/**
 	 * 結果ラベルを保持します。
@@ -48,7 +48,7 @@ public class MotionStartButton extends Composite implements ClickHandler {
 	/**
 	 * 構築します。
 	 * 
-	 * @param canvas
+	 * @param canvases
 	 *            キャンバス。nullは不可。
 	 * @param resultLabel
 	 *            結果ラベル。nullは不可。
@@ -61,14 +61,14 @@ public class MotionStartButton extends Composite implements ClickHandler {
 	 * @param motionSeg
 	 *            モーション区分。nullは不可。
 	 */
-	public MotionStartButton(GLCanvas canvas, Label resultLabel,
+	public MotionStartButton(GLCanvas[] canvases, Label resultLabel,
 			float frameRate, MMDModel model, String name,
 			IMotionSegment motionSeg) {
-		if (canvas == null || resultLabel == null || model == null
+		if (canvases == null || resultLabel == null || model == null
 				|| name == null || motionSeg == null) {
 			throw new IllegalArgumentException();
 		}
-		this.canvas = canvas;
+		this.canvases = canvases;
 		this.resultLabel = resultLabel;
 		this.frameRate = frameRate;
 		this.model = model;
@@ -85,7 +85,9 @@ public class MotionStartButton extends Composite implements ClickHandler {
 		if (event == null) {
 			throw new IllegalArgumentException();
 		}
-		canvas.setMotion(model, frameRate, motionSeg);
+		for (GLCanvas canvas : canvases) {
+			canvas.setMotion(model, frameRate, motionSeg);
+		}
 		resultLabel.setText("モーション実行開始: " + name);
 	}
 
