@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.yzwlab.gwtmmd.client.gl.GLCanvas;
+import net.yzwlab.gwtmmd.client.gl.GLCanvasEvent;
+import net.yzwlab.gwtmmd.client.gl.GLCanvasHandler;
+import net.yzwlab.gwtmmd.client.gl.PixelBuffer;
 import net.yzwlab.gwtmmd.client.image.CanvasImageService;
 import net.yzwlab.gwtmmd.client.image.CanvasRaster;
 import net.yzwlab.gwtmmd.client.io.FileReadBuffer;
@@ -32,6 +35,8 @@ import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
+import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.NodeList;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.DragEnterEvent;
@@ -253,6 +258,27 @@ public class Main implements EntryPoint {
 			if (canvasLeft != null && canvasRight != null) {
 				canvasLeft.add(canvasManagers.get(0).getGlCanvas());
 				canvasRight.add(canvasManagers.get(1).getGlCanvas());
+
+				RootPanel previewPanel = RootPanel.get("canvas3d_preview");
+				final NodeList<Element> previewCanvasElements = previewPanel
+						.getElement().getElementsByTagName("canvas");
+
+				final GLCanvas canvas = canvasManagers.get(0).getGlCanvas();
+				canvas.addGLCanvasHandler(new GLCanvasHandler() {
+					@Override
+					public void onDraw(GLCanvasEvent event) {
+						if (event == null) {
+							throw new IllegalArgumentException();
+						}
+						int width = canvas.getWidth();
+						int height = canvas.getHeight();
+						PixelBuffer buffer = canvas.readPixels(0, 0, width,
+								height);
+						for (int i = 0; i < previewCanvasElements.getLength(); i++) {
+							buffer.drawTo(previewCanvasElements.getItem(i));
+						}
+					}
+				});
 			} else {
 				canvasMain.add(canvasManagers.get(0).getGlCanvas());
 			}
