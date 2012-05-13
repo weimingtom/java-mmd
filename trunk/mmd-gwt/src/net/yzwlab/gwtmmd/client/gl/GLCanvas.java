@@ -11,6 +11,7 @@ import net.yzwlab.javammd.model.MMDModel;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
@@ -18,7 +19,7 @@ import com.google.gwt.user.client.ui.Widget;
 /**
  * WebGLキャンバスの実装です。
  */
-public class GLCanvas extends Widget {
+public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 
 	/**
 	 * 性能表示ラベルを保持します。
@@ -107,6 +108,40 @@ public class GLCanvas extends Widget {
 		setElement(canvasElement);
 	}
 
+	/**
+	 * 幅を取得します。
+	 * 
+	 * @return 幅。
+	 */
+	public int getWidth() {
+		String v = canvasElement.getAttribute("width");
+		if (v == null) {
+			return canvasElement.getOffsetWidth();
+		}
+		return Integer.parseInt(v);
+	}
+
+	/**
+	 * 高さを取得します。
+	 * 
+	 * @return 高さ。
+	 */
+	public int getHeight() {
+		String v = canvasElement.getAttribute("height");
+		if (v == null) {
+			return canvasElement.getOffsetHeight();
+		}
+		return Integer.parseInt(v);
+	}
+
+	@Override
+	public HandlerRegistration addGLCanvasHandler(GLCanvasHandler handler) {
+		if (handler == null) {
+			throw new IllegalArgumentException();
+		}
+		return addHandler(handler, GLCanvasEvent.TYPE);
+	}
+
 	public int getCurrentRx() {
 		return currentRx;
 	}
@@ -193,6 +228,24 @@ public class GLCanvas extends Widget {
 		return index + 1;
 	}
 
+	/**
+	 * ピクセルデータを読み出します。
+	 * 
+	 * @param x
+	 *            X。
+	 * @param y
+	 *            Y。
+	 * @param width
+	 *            幅。
+	 * @param height
+	 *            高さ。
+	 * @return ピクセルバッファ。
+	 */
+	public PixelBuffer readPixels(int x, int y, int width, int height) {
+		JavaScriptObject rawObject = readPixels(gl, x, y, width, height);
+		return new PixelBufferImpl(width, height, rawObject);
+	}
+
 	@Override
 	protected void onLoad() {
 		super.onLoad();
@@ -270,7 +323,9 @@ public class GLCanvas extends Widget {
 	 * @return WebGLオブジェクト。
 	 */
 	private native JavaScriptObject attach(Element elem) /*-{
-		var gl = elem.getContext("experimental-webgl");
+		var gl = elem.getContext("experimental-webgl", {
+			preserveDrawingBuffer : true
+		});
 		if (!gl) {
 			//throw "Failed to initialize WebGL";
 			return null;
@@ -533,6 +588,31 @@ public class GLCanvas extends Widget {
 	}-*/;
 
 	/**
+	 * ピクセル値を読み出します。
+	 * 
+	 * @param gl
+	 *            GL。nullは不可。
+	 * @param x
+	 *            X。
+	 * @param y
+	 *            Y。
+	 * @param width
+	 *            幅。
+	 * @param height
+	 *            高さ。
+	 * @return ピクセル値。
+	 */
+	private native JavaScriptObject readPixels(JavaScriptObject gl, int x,
+			int y, int width, int height) /*-{
+		var pixelValues = new Uint8Array(width * height * 4);
+		gl.readPixels(x, y, width, height, gl.RGBA, gl.UNSIGNED_BYTE,
+				pixelValues);
+		console.log("Read: (" + x + ", " + y + ")-(" + width + ", " + height
+				+ ")");
+		return pixelValues;
+	}-*/;
+
+	/**
 	 * 動的モデルを実装します。
 	 */
 	private class DynamicModel {
@@ -645,6 +725,7 @@ public class GLCanvas extends Widget {
 					model.model.draw(glctx);
 					glctx.flush();
 				}
+				fireEvent(new GLCanvasEvent(GLCanvasEvent.Action.DRAW));
 			} finally {
 				long dur = System.currentTimeMillis() - updateEndTime;
 				long updateDur = updateEndTime - beginTime;
@@ -1002,6 +1083,96 @@ public class GLCanvas extends Widget {
 			this.cbuffer = cbuffer;
 			this.texture = null;
 		}
+
+	}
+
+	/**
+	 * ピクセルバッファの実装です。
+	 */
+	private class PixelBufferImpl implements PixelBuffer {
+
+		/**
+		 * 幅を保持します。
+		 */
+		private int width;
+
+		/**
+		 * 高さを保持します。
+		 */
+		private int height;
+
+		/**
+		 * バッファを保持します。
+		 */
+		private JavaScriptObject buffer;
+
+		/**
+		 * 構築します。
+		 * 
+		 * @param width
+		 *            幅。
+		 * @param height
+		 *            高さ。
+		 * @param buffer
+		 *            バッファ。
+		 */
+		public PixelBufferImpl(int width, int height, JavaScriptObject buffer) {
+			if (buffer == null) {
+				throw new IllegalArgumentException();
+			}
+			this.width = width;
+			this.height = height;
+			this.buffer = buffer;
+		}
+
+		@Override
+		public int getWidth() {
+			return width;
+		}
+
+		@Override
+		public int getHeight() {
+			return height;
+		}
+
+		@Override
+		public int getPixel(int x, int y) {
+			// TODO
+			return 0;
+		}
+
+		@Override
+		public void drawTo(Element canvasElement) {
+			if (canvasElement == null) {
+				throw new IllegalArgumentException();
+			}
+			drawToCanvas(buffer, width, height, canvasElement);
+		}
+
+		/**
+		 * キャンバスに対して描画します。
+		 * 
+		 * @param buffer
+		 *            バッファ。nullは不可。
+		 * @param width
+		 *            幅。
+		 * @param height
+		 *            高さ。
+		 * @param canvasElement
+		 *            要素。nullは不可。
+		 */
+		private native void drawToCanvas(JavaScriptObject buffer, int width,
+				int height, Element canvasElement) /*-{
+			console.log("Drawing...");
+			var ctx = canvasElement.getContext("2d");
+			var imageData = ctx.createImageData(width, height);
+			var destBuffer = imageData.data;
+			for(var i = 0; i < buffer.length; i ++) {
+				destBuffer[i] = buffer[i];
+			}
+			ctx.putImageData(imageData, 0, 0);
+			console.log("Completed");
+		}-*/;
 
 	}
 
