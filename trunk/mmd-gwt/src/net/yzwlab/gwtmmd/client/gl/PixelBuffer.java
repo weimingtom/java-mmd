@@ -1,5 +1,6 @@
 package net.yzwlab.gwtmmd.client.gl;
 
+import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.dom.client.Element;
 
 /**
@@ -39,5 +40,12 @@ public interface PixelBuffer {
 	 *            キャンバス要素。nullは不可。
 	 */
 	public void drawTo(Element canvasElement);
+
+	/**
+	 * ピクセルバッファを取得します。
+	 * 
+	 * @return ピクセルバッファ。UINT8のRGBA。
+	 */
+	public JavaScriptObject getPixelBuffer();
 
 }

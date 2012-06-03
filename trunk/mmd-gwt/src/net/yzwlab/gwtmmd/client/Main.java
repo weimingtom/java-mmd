@@ -1,11 +1,15 @@
 package net.yzwlab.gwtmmd.client;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import net.yzwlab.gwtmmd.client.gl.Camera3D;
 import net.yzwlab.gwtmmd.client.gl.GLCanvas;
 import net.yzwlab.gwtmmd.client.gl.GLCanvasEvent;
 import net.yzwlab.gwtmmd.client.gl.GLCanvasHandler;
+import net.yzwlab.gwtmmd.client.gl.IModelClock;
 import net.yzwlab.gwtmmd.client.gl.PixelBuffer;
 import net.yzwlab.gwtmmd.client.image.CanvasImageService;
 import net.yzwlab.gwtmmd.client.image.CanvasRaster;
@@ -33,10 +37,9 @@ import org.vectomatic.file.events.LoadEndHandler;
 
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
-import com.google.gwt.dom.client.Element;
-import com.google.gwt.dom.client.NodeList;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.DragEnterEvent;
@@ -110,6 +113,16 @@ public class Main implements EntryPoint {
 	private CanvasImageService imageService;
 
 	/**
+	 * レンダリング済みバッファを保持します。
+	 */
+	private Map<Integer, PixelBuffer> renderedBuffers;
+
+	/**
+	 * モデルの現在時刻を保持します。
+	 */
+	private Long modelCurrentTime;
+
+	/**
 	 * 構築します。
 	 */
 	public Main() {
@@ -121,6 +134,22 @@ public class Main implements EntryPoint {
 		this.readQueue = new ArrayList<File>();
 		this.resourcePanel = new VerticalPanel();
 		this.imageService = new CanvasImageService(resourcePanel);
+		this.renderedBuffers = new HashMap<Integer, PixelBuffer>();
+		this.modelCurrentTime = null;
+	}
+
+	/**
+	 * サイズを変更します。
+	 * 
+	 * @param width
+	 *            幅。
+	 * @param height
+	 *            高さ。
+	 */
+	public void changeSize(int width, int height) {
+		for (GLCanvasManager canvasManager : canvasManagers) {
+			canvasManager.getGlCanvas().setSize(width, height);
+		}
 	}
 
 	/**
@@ -193,10 +222,20 @@ public class Main implements EntryPoint {
 				throw new IllegalStateException();
 			}
 
+			final GLCamera camera = new GLCamera();
+			// camera.setCurrentRy(-1);
+			// camera.setCurrentRx(1);
 			for (int i = 0; i < canvasCount; i++) {
-				GLCanvas glCanvas = new GLCanvas(perfLabel, 640, 480);
-				glCanvas.setCurrentRy(-1);
-				glCanvas.setCurrentRx(1);
+				Camera3D.Mode mode = Camera3D.Mode.CENTER;
+				if (canvasCount == 2) {
+					if (i == 0) {
+						mode = Camera3D.Mode.LEFT;
+					} else {
+						mode = Camera3D.Mode.RIGHT;
+					}
+				}
+				GLCanvas glCanvas = new GLCanvas(new ClockImpl(i), camera,
+						mode, perfLabel, 640, 384);
 				canvasManagers
 						.add(new GLCanvasManager(glCanvas, resourcePanel));
 			}
@@ -259,26 +298,24 @@ public class Main implements EntryPoint {
 				canvasLeft.add(canvasManagers.get(0).getGlCanvas());
 				canvasRight.add(canvasManagers.get(1).getGlCanvas());
 
-				RootPanel previewPanel = RootPanel.get("canvas3d_preview");
-				final NodeList<Element> previewCanvasElements = previewPanel
-						.getElement().getElementsByTagName("canvas");
-
-				final GLCanvas canvas = canvasManagers.get(0).getGlCanvas();
-				canvas.addGLCanvasHandler(new GLCanvasHandler() {
-					@Override
-					public void onDraw(GLCanvasEvent event) {
-						if (event == null) {
-							throw new IllegalArgumentException();
+				for (int i = 0; i < 2; i++) {
+					final int index = i;
+					renderedBuffers.put(index, null);
+					final GLCanvas canvas = canvasManagers.get(i).getGlCanvas();
+					canvas.addGLCanvasHandler(new GLCanvasHandler() {
+						@Override
+						public void onDraw(GLCanvasEvent event) {
+							if (event == null) {
+								throw new IllegalArgumentException();
+							}
+							int width = canvas.getWidth();
+							int height = canvas.getHeight();
+							PixelBuffer buffer = canvas.readPixels(0, 0, width,
+									height);
+							setRenderedBuffer(index, buffer);
 						}
-						int width = canvas.getWidth();
-						int height = canvas.getHeight();
-						PixelBuffer buffer = canvas.readPixels(0, 0, width,
-								height);
-						for (int i = 0; i < previewCanvasElements.getLength(); i++) {
-							buffer.drawTo(previewCanvasElements.getItem(i));
-						}
-					}
-				});
+					});
+				}
 			} else {
 				canvasMain.add(canvasManagers.get(0).getGlCanvas());
 			}
@@ -291,9 +328,7 @@ public class Main implements EntryPoint {
 			button.addClickHandler(new ClickHandler() {
 				@Override
 				public void onClick(ClickEvent event) {
-					for (GLCanvas glCanvas : getCanvases()) {
-						glCanvas.setCurrentRx(glCanvas.getCurrentRx() + 1);
-					}
+					camera.setCurrentRx(camera.getCurrentRx() + 1);
 				}
 			});
 			buttons.add(button);
@@ -301,9 +336,7 @@ public class Main implements EntryPoint {
 			button.addClickHandler(new ClickHandler() {
 				@Override
 				public void onClick(ClickEvent event) {
-					for (GLCanvas glCanvas : getCanvases()) {
-						glCanvas.setCurrentRx(glCanvas.getCurrentRx() - 1);
-					}
+					camera.setCurrentRx(camera.getCurrentRx() - 1);
 				}
 			});
 			buttons.add(button);
@@ -311,9 +344,7 @@ public class Main implements EntryPoint {
 			button.addClickHandler(new ClickHandler() {
 				@Override
 				public void onClick(ClickEvent event) {
-					for (GLCanvas glCanvas : getCanvases()) {
-						glCanvas.setCurrentRy(glCanvas.getCurrentRy() + 1);
-					}
+					camera.setCurrentRy(camera.getCurrentRy() + 1);
 				}
 			});
 			buttons.add(button);
@@ -321,9 +352,7 @@ public class Main implements EntryPoint {
 			button.addClickHandler(new ClickHandler() {
 				@Override
 				public void onClick(ClickEvent event) {
-					for (GLCanvas glCanvas : getCanvases()) {
-						glCanvas.setCurrentRy(glCanvas.getCurrentRy() - 1);
-					}
+					camera.setCurrentRy(camera.getCurrentRy() - 1);
 				}
 			});
 			buttons.add(button);
@@ -331,9 +360,7 @@ public class Main implements EntryPoint {
 			button.addClickHandler(new ClickHandler() {
 				@Override
 				public void onClick(ClickEvent event) {
-					for (GLCanvas glCanvas : getCanvases()) {
-						glCanvas.setCurrentRz(glCanvas.getCurrentRz() + 1);
-					}
+					camera.setCurrentRz(camera.getCurrentRz() + 1);
 				}
 			});
 			buttons.add(button);
@@ -341,9 +368,7 @@ public class Main implements EntryPoint {
 			button.addClickHandler(new ClickHandler() {
 				@Override
 				public void onClick(ClickEvent event) {
-					for (GLCanvas glCanvas : getCanvases()) {
-						glCanvas.setCurrentRz(glCanvas.getCurrentRz() - 1);
-					}
+					camera.setCurrentRz(camera.getCurrentRz() - 1);
 				}
 			});
 			buttons.add(button);
@@ -389,6 +414,8 @@ public class Main implements EntryPoint {
 					}
 				}
 			});
+
+			initHandlers(this);
 		} catch (IllegalStateException e) {
 			Window.alert("初期化に失敗。WebGLをサポートしていない環境かも・・・？");
 		}
@@ -663,6 +690,61 @@ public class Main implements EntryPoint {
 			r[i] = canvasManagers.get(i).getGlCanvas();
 		}
 		return r;
+	}
+
+	private void setRenderedBuffer(int index, PixelBuffer buffer) {
+		if (buffer == null) {
+			throw new IllegalArgumentException();
+		}
+		renderedBuffers.put(index, buffer);
+
+		for (PixelBuffer buf : renderedBuffers.values()) {
+			if (buf == null) {
+				return;
+			}
+		}
+
+		setBuffers(renderedBuffers.get(0).getPixelBuffer(), renderedBuffers
+				.get(1).getPixelBuffer());
+
+		for (Integer key : renderedBuffers.keySet()) {
+			renderedBuffers.put(key, null);
+		}
+		modelCurrentTime = null;
+	}
+
+	private native void initHandlers(Main self) /*-{
+		$wnd.set3DCanvasSize = function(size) {
+			self.@net.yzwlab.gwtmmd.client.Main::changeSize(II)(size.width, size.height);
+		};
+	}-*/;
+
+	private native void setBuffers(JavaScriptObject left, JavaScriptObject right) /*-{
+		$wnd.canvas.setLeft(new $wnd.RV3DImageData(left));
+		$wnd.canvas.setRight(new $wnd.RV3DImageData(right));
+		$wnd.canvas.draw();
+	}-*/;
+
+	private class ClockImpl implements IModelClock {
+
+		private int index;
+
+		public ClockImpl(int index) {
+			this.index = index;
+		}
+
+		@Override
+		public Long getCurrentTime() {
+			if (renderedBuffers.get(index) != null) {
+				// バッファに設定済み
+				return null;
+			}
+			if (modelCurrentTime != null) {
+				return modelCurrentTime;
+			}
+			modelCurrentTime = System.currentTimeMillis();
+			return modelCurrentTime;
+		}
 	}
 
 	private class LoadingDialogBox extends DialogBox {
