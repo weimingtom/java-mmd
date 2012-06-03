@@ -63,6 +63,77 @@
         texCoord = coord;
       }
     </script>
+    <script type="text/javascript" language="javascript" src="rv3dweb.js"></script>
+    <script>
+    function RV3DImageData(imageData)
+    {
+    	var self = this;
+    	self._imageData = imageData;
+    	
+    	self.prepare = function(size) {
+    			if(set3DCanvasSize == null) {
+    				return;
+    			}
+    			set3DCanvasSize(size);
+    		};
+    		
+    	self.getImageData = function() {
+    			return {data: self._imageData};
+    		};
+    	
+    	return self;
+    }
+    function RV3DDummyImageData()
+    {
+    	var self = this;
+    	
+    	self.prepare = function(size) {
+    			if(set3DCanvasSize == null) {
+    				return;
+    			}
+    			set3DCanvasSize(size);
+    		};
+    		
+    	self.getImageData = function() {
+    			return null;
+    		};
+    	
+    	return self;
+    }
+	var canvas = null;
+	function loadCanvas() {
+		canvas = new RV3DCanvas(document.getElementById("display_canvas"));
+		canvas.flipVertical = true;
+	}
+    </script>
+	<style>
+	/* http://dvcs.w3.org/hg/fullscreen/raw-file/tip/Overview.html#user-agent-level-style-sheet-defaults */
+	/* 6.4 User-agent level style sheet defaults */
+#display_canvas:-webkit-full-screen {
+	position: fixed;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	margin: 0;
+	box-sizing: border-box;
+	width: 100%;
+	height: 100%;
+}
+
+iframe:-webkit-full-screen {
+	border: none;
+}
+
+#display_canvas:-webkit-full-screen::-webkit-backdrop {
+	position: fixed;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	background: black;
+}
+	</style>
     
   </head>
 
@@ -71,7 +142,7 @@
   <!-- you can leave the body empty if you want  -->
   <!-- to create a completely dynamic UI.        -->
   <!--                                           -->
-  <body>
+  <body onLoad="loadCanvas();">
 
     <!-- OPTIONAL: include this if you want history support -->
     <iframe src="javascript:''" id="__gwt_historyFrame" tabIndex='-1' style="position:absolute;width:0;height:0;border:0"></iframe>
@@ -111,12 +182,11 @@
         <td colspan="2"><div id="resources_3d" style="visibility: hidden;width: 1px; height: 1px;"></div></td>
       </tr>
     </table>
+	
+	<button onclick="canvas.start();">Fullscreen</button>
+	
+	<canvas width="640" height="384" id="display_canvas"></canvas>
     <br/>
-    <br/>
-    <h2>readPixels</h2>
-	<div id="canvas3d_preview">
-		<canvas width="640" height="480"></canvas>
-	</div>    
     <br/>
     <div align="center">作ってる人: <a href="http://twitter.com/yacchin1205">yacchin1205</a>&nbsp;&nbsp;コード(すげー適当): <a href="http://code.google.com/p/java-mmd">java-mmd</a></div>
     <div align="center">サンプルMMDモデル: <a href="http://www003.upp.so-net.ne.jp/kakomiki/page/3ddata.html">かこみき</a>様(すげえいいあずにゃんですね。)</div>

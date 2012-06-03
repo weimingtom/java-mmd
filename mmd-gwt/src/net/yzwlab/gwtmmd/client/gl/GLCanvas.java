@@ -22,6 +22,21 @@ import com.google.gwt.user.client.ui.Widget;
 public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 
 	/**
+	 * クロックを保持します。
+	 */
+	private IModelClock clock;
+
+	/**
+	 * カメラを保持します。
+	 */
+	private Camera3D camera;
+
+	/**
+	 * カメラモードを保持します。
+	 */
+	private Camera3D.Mode cameraMode;
+
+	/**
 	 * 性能表示ラベルを保持します。
 	 */
 	private Label performanceLabel;
@@ -57,21 +72,6 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 	private List<DynamicModel> models;
 
 	/**
-	 * 回転を保持します。
-	 */
-	private int currentRx;
-
-	/**
-	 * 回転を保持します。
-	 */
-	private int currentRy;
-
-	/**
-	 * 回転を保持します。
-	 */
-	private int currentRz;
-
-	/**
 	 * テクスチャを保持します。
 	 */
 	private List<JavaScriptObject> textures;
@@ -79,6 +79,10 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 	/**
 	 * 構築します。
 	 * 
+	 * @param camera
+	 *            カメラ。nullは不可。
+	 * @param cameraMode
+	 *            カメラモード。nullは不可。
 	 * @param performanceLabel
 	 *            性能表示ラベル。nullは不可。
 	 * @param width
@@ -86,10 +90,38 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 	 * @param height
 	 *            高さ。
 	 */
-	public GLCanvas(Label performanceLabel, int width, int height) {
-		if (performanceLabel == null) {
+	public GLCanvas(Camera3D camera, Camera3D.Mode cameraMode,
+			Label performanceLabel, int width, int height) {
+		this(new DefaultClock(), camera, cameraMode, performanceLabel, width,
+				height);
+	}
+
+	/**
+	 * 構築します。
+	 * 
+	 * @param clock
+	 *            クロック。nullは不可。
+	 * @param camera
+	 *            カメラ。nullは不可。
+	 * @param cameraMode
+	 *            カメラモード。nullは不可。
+	 * @param performanceLabel
+	 *            性能表示ラベル。nullは不可。
+	 * @param width
+	 *            幅。
+	 * @param height
+	 *            高さ。
+	 */
+	public GLCanvas(IModelClock clock, Camera3D camera,
+			Camera3D.Mode cameraMode, Label performanceLabel, int width,
+			int height) {
+		if (clock == null || camera == null || cameraMode == null
+				|| performanceLabel == null) {
 			throw new IllegalArgumentException();
 		}
+		this.clock = clock;
+		this.camera = camera;
+		this.cameraMode = cameraMode;
 		this.performanceLabel = performanceLabel;
 		this.canvasElement = Document.get().createElement("canvas");
 		this.timer = null;
@@ -97,15 +129,19 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 		this.program = null;
 		this.buffers = new ArrayList<BufferGroup>();
 		this.models = new ArrayList<DynamicModel>();
-		this.currentRx = 0;
-		this.currentRy = 0;
-		this.currentRz = 0;
 		this.textures = new ArrayList<JavaScriptObject>();
 
-		canvasElement.setAttribute("width", String.valueOf(width));
-		canvasElement.setAttribute("height", String.valueOf(height));
+		setSize(width, height);
 
 		setElement(canvasElement);
+	}
+
+	public Camera3D getCamera() {
+		return camera;
+	}
+
+	public Camera3D.Mode getCameraMode() {
+		return cameraMode;
 	}
 
 	/**
@@ -116,6 +152,9 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 	public int getWidth() {
 		String v = canvasElement.getAttribute("width");
 		if (v == null) {
+			return canvasElement.getOffsetWidth();
+		}
+		if (v.length() == 0) {
 			return canvasElement.getOffsetWidth();
 		}
 		return Integer.parseInt(v);
@@ -131,6 +170,9 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 		if (v == null) {
 			return canvasElement.getOffsetHeight();
 		}
+		if (v.length() == 0) {
+			return canvasElement.getOffsetHeight();
+		}
 		return Integer.parseInt(v);
 	}
 
@@ -140,30 +182,6 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 			throw new IllegalArgumentException();
 		}
 		return addHandler(handler, GLCanvasEvent.TYPE);
-	}
-
-	public int getCurrentRx() {
-		return currentRx;
-	}
-
-	public void setCurrentRx(int currentRx) {
-		this.currentRx = currentRx;
-	}
-
-	public int getCurrentRy() {
-		return currentRy;
-	}
-
-	public void setCurrentRy(int currentRy) {
-		this.currentRy = currentRy;
-	}
-
-	public int getCurrentRz() {
-		return currentRz;
-	}
-
-	public void setCurrentRz(int currentRz) {
-		this.currentRz = currentRz;
 	}
 
 	/**
@@ -246,11 +264,49 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 		return new PixelBufferImpl(width, height, rawObject);
 	}
 
+	/**
+	 * サイズを設定します。
+	 * 
+	 * @param width
+	 *            幅。
+	 * @param height
+	 *            高さ。
+	 */
+	public void setSize(int width, int height) {
+		if (getWidth() == width && getHeight() == height) {
+			return;
+		}
+
+		canvasElement.setAttribute("width", String.valueOf(width));
+		canvasElement.setAttribute("height", String.valueOf(height));
+		unloadContext();
+		loadContext(width, height);
+	}
+
 	@Override
 	protected void onLoad() {
 		super.onLoad();
 
-		gl = attach(canvasElement);
+		loadContext(null, null);
+	}
+
+	@Override
+	protected void onUnload() {
+		unloadContext();
+
+		super.onUnload();
+	}
+
+	private void loadContext(Integer width, Integer height) {
+		int w = getWidth();
+		if (width != null) {
+			w = width;
+		}
+		int h = getHeight();
+		if (height != null) {
+			h = height;
+		}
+		gl = attach(canvasElement, w, h);
 		if (gl == null) {
 			throw new IllegalStateException();
 		}
@@ -269,60 +325,26 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 		timer.scheduleRepeating(1000 / 30);
 	}
 
-	@Override
-	protected void onUnload() {
+	private void unloadContext() {
 		if (timer != null) {
 			timer.cancel();
 			timer = null;
 		}
 		gl = null;
-		// detach(canvasElement);
-
-		super.onUnload();
 	}
-
-	/**
-	 * Perspective行列を生成します。
-	 * 
-	 * @return Perspective行列。
-	 */
-	private native JavaScriptObject createPMatrix() /*-{
-		var persp = $wnd.mat4.create();
-		$wnd.mat4.perspective(45, 4 / 3, 1, 100, persp);
-		return persp;
-	}-*/;
-
-	/**
-	 * ModelView行列を生成します。
-	 * 
-	 * @param rx
-	 *            回転。
-	 * @param ry
-	 *            回転。
-	 * @param rz
-	 *            回転。
-	 * @return ModelView行列。
-	 */
-	private native JavaScriptObject createMVMatrix(int rx, int ry, int rz) /*-{
-		var modelView = $wnd.mat4.create();
-
-		$wnd.mat4.identity(modelView); // Set to identity
-		$wnd.mat4.translate(modelView, [ 0, -5, -15 ]); // Translate back 10 units
-		$wnd.mat4.rotate(modelView, Math.PI / 8 * rx, [ 1, 0, 0 ]); // Rotate 90 degrees around the Y axis
-		$wnd.mat4.rotate(modelView, Math.PI / 8 * ry, [ 0, 1, 0 ]); // Rotate 90 degrees around the Y axis
-		$wnd.mat4.rotate(modelView, Math.PI / 8 * rz, [ 0, 0, 1 ]); // Rotate 90 degrees around the Y axis
-		$wnd.mat4.scale(modelView, [ 0.5, 0.5, 0.5 ]); // Scale by 200%
-		return modelView;
-	}-*/;
 
 	/**
 	 * 初期化します。
 	 * 
 	 * @param elem
 	 *            要素。nullは不可。
+	 * @param width
+	 *            幅。
+	 * @param height
+	 *            高さ。
 	 * @return WebGLオブジェクト。
 	 */
-	private native JavaScriptObject attach(Element elem) /*-{
+	private native JavaScriptObject attach(Element elem, int width, int height) /*-{
 		var gl = elem.getContext("experimental-webgl", {
 			preserveDrawingBuffer : true
 		});
@@ -330,8 +352,9 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 			//throw "Failed to initialize WebGL";
 			return null;
 		}
-		gl.viewportWidth = elem.width;
-		gl.viewportHeight = elem.height;
+		gl.viewport(0, 0, width, height);
+		gl.viewportWidth = width;
+		gl.viewportHeight = height;
 
 		gl.clearColor(0.0, 0.0, 0.0, 1.0);
 		gl.clearDepth(1.0);
@@ -607,10 +630,320 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 		var pixelValues = new Uint8Array(width * height * 4);
 		gl.readPixels(x, y, width, height, gl.RGBA, gl.UNSIGNED_BYTE,
 				pixelValues);
-		console.log("Read: (" + x + ", " + y + ")-(" + width + ", " + height
-				+ ")");
 		return pixelValues;
 	}-*/;
+
+	/**
+	 * GLオブジェクトの抽象です。
+	 */
+	public class GL implements IGL {
+
+		/**
+		 * バッファインデックスを保持します。
+		 */
+		private int bufferIndex;
+
+		/**
+		 * 頂点リストを保持します。
+		 */
+		private JavaScriptObject vertexes;
+
+		/**
+		 * 法線ベクトルリストを保持します。
+		 */
+		private JavaScriptObject normals;
+
+		/**
+		 * テクスチャ座標リストを保持します。
+		 */
+		private JavaScriptObject coords;
+
+		/**
+		 * 変換行列を保持します。
+		 */
+		private JavaScriptObject mvMatrix;
+
+		/**
+		 * バッファのインデックスを保持します。
+		 */
+		private int vertCount;
+
+		/**
+		 * バッファのインデックスを保持します。
+		 */
+		private int normCount;
+
+		/**
+		 * バッファのインデックスを保持します。
+		 */
+		private int coordCount;
+
+		/**
+		 * 現在のテクスチャを保持します。
+		 */
+		private JavaScriptObject currentTexture;
+
+		/**
+		 * 構築します。
+		 * 
+		 * @param model
+		 *            モデル。nullは不可。
+		 */
+		public GL(MMDModel model) {
+			if (model == null) {
+				throw new IllegalArgumentException();
+			}
+			this.bufferIndex = 0;
+			this.vertexes = null;
+			this.normals = null;
+			this.coords = null;
+			this.mvMatrix = camera.getModelViewMatrix(cameraMode);
+			this.vertCount = 0;
+			this.normCount = 0;
+			this.coordCount = 0;
+		}
+
+		/**
+		 * 出力します。
+		 */
+		public void flush() {
+			setMVMatrix(gl, program, mvMatrix);
+
+			for (int i = 0; i < bufferIndex; i++) {
+				BufferGroup g = buffers.get(i);
+				drawArrays(gl, program, g.vbuffer, g.nbuffer, g.cbuffer,
+						g.texture);
+			}
+		}
+
+		@Override
+		public FrontFace glGetFrontFace() {
+			return FrontFace.GL_CW;
+		}
+
+		@Override
+		public void glFrontFace(FrontFace mode) {
+			;
+		}
+
+		@Override
+		public void glBegin(C mode, int count) {
+			if (mode == null) {
+				throw new IllegalArgumentException();
+			}
+
+			vertCount = 0;
+			normCount = 0;
+			coordCount = 0;
+			vertexes = createVertexes3(count);
+			normals = createVertexes3(count);
+			coords = createVertexes2(count);
+		}
+
+		@Override
+		public void glEnd() {
+			BufferGroup buffer = null;
+			if (bufferIndex >= buffers.size()) {
+				buffer = new BufferGroup(createBuffer(gl), createBuffer(gl),
+						createBuffer(gl));
+				buffers.add(buffer);
+			} else {
+				buffer = buffers.get(bufferIndex);
+			}
+			initBuffer3(gl, buffer.vbuffer, vertexes);
+			initBuffer3(gl, buffer.nbuffer, normals);
+			initBuffer2(gl, buffer.cbuffer, coords);
+			buffer.texture = currentTexture;
+
+			bufferIndex++;
+		}
+
+		@Override
+		public void glVertex3f(float x, float y, float z) {
+			pushVertexes(vertexes, vertCount, x, y, z);
+			vertCount++;
+		}
+
+		@Override
+		public void glTexCoord2f(float x, float y) {
+			pushVertexes(coords, coordCount, x, y);
+			coordCount++;
+		}
+
+		@Override
+		public void glNormal3f(float x, float y, float z) {
+			pushVertexes(normals, normCount, x, y, z);
+			normCount++;
+		}
+
+		@Override
+		public void glBindTexture(C target, long texture) {
+			if (texture > 0) {
+				int index = ((int) (texture - 1));
+				currentTexture = textures.get(index);
+			} else {
+				currentTexture = null;
+			}
+		}
+
+		@Override
+		public void glBlendFunc(C c1, C c2) {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void glPushMatrix() {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void glPopMatrix() {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void glScalef(float a1, float a2, float a3) {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void glColor4f(float a1, float a2, float a3, float a4) {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void glEnable(C target) {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void glDisable(C target) {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public boolean glIsEnabled(C target) {
+			// TODO Auto-generated method stub
+			return false;
+		}
+
+		@Override
+		public void glMaterialfv(C c1, C c2, float[] fv) {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void glMaterialf(C c1, C c2, float f) {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public long glGetBindTexture(C target) {
+			// TODO Auto-generated method stub
+			return 0;
+		}
+
+		@Override
+		public void glEnableClientState(C target) {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void glDisableClientState(C target) {
+			// TODO Auto-generated method stub
+
+		}
+
+		/**
+		 * 頂点の最大数を取得します。
+		 * 
+		 * @param model
+		 *            モデル。nullは不可。
+		 * @return 頂点の最大数。
+		 */
+		private int getMaxVertexesSize(MMDModel model) {
+			if (model == null) {
+				throw new IllegalArgumentException();
+			}
+			int size = 0;
+			for (int i = 0; i < model.getMaterialCount(); i++) {
+				size = Math.max(size, model.getMaterial(i).getVertexCount());
+			}
+			return size;
+		}
+
+		/**
+		 * 頂点バッファをリセットします。
+		 * 
+		 * @param length
+		 *            長さ。
+		 * @return 頂点バッファ。
+		 */
+		private native JavaScriptObject createVertexes3(int length) /*-{
+			return new Array(length * 3);
+		}-*/;
+
+		/**
+		 * 頂点バッファをリセットします。
+		 * 
+		 * @param length
+		 *            長さ。
+		 * @return 頂点バッファ。
+		 */
+		private native JavaScriptObject createVertexes2(int length) /*-{
+			return new Array(length * 2);
+		}-*/;
+
+		/**
+		 * 頂点を追加します。
+		 * 
+		 * @param vertexes
+		 *            頂点リスト。nullは不可。
+		 * @param offset
+		 *            オフセット。
+		 * @param x
+		 *            座標。
+		 * @param y
+		 *            座標。
+		 * @param z
+		 *            座標。
+		 */
+		private native void pushVertexes(JavaScriptObject vertexes, int offset,
+				float x, float y, float z) /*-{
+			vertexes[offset * 3] = x;
+			vertexes[offset * 3 + 1] = y;
+			vertexes[offset * 3 + 2] = -z;
+		}-*/;
+
+		/**
+		 * 頂点を追加します。
+		 * 
+		 * @param vertexes
+		 *            頂点リスト。nullは不可。
+		 * @param offset
+		 *            オフセット。
+		 * @param x
+		 *            座標。
+		 * @param y
+		 *            座標。
+		 */
+		private native void pushVertexes(JavaScriptObject vertexes, int offset,
+				float x, float y) /*-{
+			vertexes[offset * 2] = x;
+			vertexes[offset * 2 + 1] = y;
+		}-*/;
+
+	}
 
 	/**
 	 * 動的モデルを実装します。
@@ -700,18 +1033,22 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 		 * 構築します。
 		 */
 		public DrawSceneTimer() {
-			this.pMatrix = createPMatrix();
+			this.pMatrix = camera.getProjectionMatrix(cameraMode, getWidth(),
+					getHeight());
 		}
 
 		@Override
 		public void run() {
 			long beginTime = System.currentTimeMillis();
 			long updateEndTime = 0L;
+			Long currentTime = clock.getCurrentTime();
+			if (currentTime == null) {
+				return;
+			}
 			try {
 				clearScene(gl);
 				setPMatrix(gl, program, pMatrix);
 
-				long currentTime = System.currentTimeMillis();
 				for (DynamicModel model : models) {
 					model.model.updateAsync(this,
 							model.getCurrentFrame(currentTime));
@@ -720,8 +1057,7 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 				updateEndTime = System.currentTimeMillis();
 
 				for (DynamicModel model : models) {
-					GL glctx = new GL(model.model, currentRx, currentRy,
-							currentRz);
+					GL glctx = new GL(model.model);
 					model.model.draw(glctx);
 					glctx.flush();
 				}
@@ -742,325 +1078,6 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 		@Override
 		public void End() {
 			;
-		}
-
-		/**
-		 * GLオブジェクトの抽象です。
-		 */
-		private class GL implements IGL {
-
-			/**
-			 * バッファインデックスを保持します。
-			 */
-			private int bufferIndex;
-
-			/**
-			 * 頂点リストを保持します。
-			 */
-			private JavaScriptObject vertexes;
-
-			/**
-			 * 法線ベクトルリストを保持します。
-			 */
-			private JavaScriptObject normals;
-
-			/**
-			 * テクスチャ座標リストを保持します。
-			 */
-			private JavaScriptObject coords;
-
-			/**
-			 * 変換行列を保持します。
-			 */
-			private JavaScriptObject mvMatrix;
-
-			/**
-			 * バッファのインデックスを保持します。
-			 */
-			private int vertCount;
-
-			/**
-			 * バッファのインデックスを保持します。
-			 */
-			private int normCount;
-
-			/**
-			 * バッファのインデックスを保持します。
-			 */
-			private int coordCount;
-
-			/**
-			 * 現在のテクスチャを保持します。
-			 */
-			private JavaScriptObject currentTexture;
-
-			/**
-			 * 構築します。
-			 * 
-			 * @param model
-			 *            モデル。nullは不可。
-			 * @param rx
-			 *            回転。
-			 * @param ry
-			 *            回転。
-			 * @param rz
-			 *            回転。
-			 */
-			public GL(MMDModel model, int rx, int ry, int rz) {
-				if (model == null) {
-					throw new IllegalArgumentException();
-				}
-				this.bufferIndex = 0;
-				this.vertexes = null;
-				this.normals = null;
-				this.coords = null;
-				this.mvMatrix = createMVMatrix(rx, ry, rz);
-				this.vertCount = 0;
-				this.normCount = 0;
-				this.coordCount = 0;
-			}
-
-			/**
-			 * 出力します。
-			 */
-			public void flush() {
-				setMVMatrix(gl, program, mvMatrix);
-
-				for (int i = 0; i < bufferIndex; i++) {
-					BufferGroup g = buffers.get(i);
-					drawArrays(gl, program, g.vbuffer, g.nbuffer, g.cbuffer,
-							g.texture);
-				}
-			}
-
-			@Override
-			public FrontFace glGetFrontFace() {
-				return FrontFace.GL_CW;
-			}
-
-			@Override
-			public void glFrontFace(FrontFace mode) {
-				;
-			}
-
-			@Override
-			public void glBegin(C mode, int count) {
-				if (mode == null) {
-					throw new IllegalArgumentException();
-				}
-
-				vertCount = 0;
-				normCount = 0;
-				coordCount = 0;
-				vertexes = createVertexes3(count);
-				normals = createVertexes3(count);
-				coords = createVertexes2(count);
-			}
-
-			@Override
-			public void glEnd() {
-				BufferGroup buffer = null;
-				if (bufferIndex >= buffers.size()) {
-					buffer = new BufferGroup(createBuffer(gl),
-							createBuffer(gl), createBuffer(gl));
-					buffers.add(buffer);
-				} else {
-					buffer = buffers.get(bufferIndex);
-				}
-				initBuffer3(gl, buffer.vbuffer, vertexes);
-				initBuffer3(gl, buffer.nbuffer, normals);
-				initBuffer2(gl, buffer.cbuffer, coords);
-				buffer.texture = currentTexture;
-
-				bufferIndex++;
-			}
-
-			@Override
-			public void glVertex3f(float x, float y, float z) {
-				pushVertexes(vertexes, vertCount, x, y, z);
-				vertCount++;
-			}
-
-			@Override
-			public void glTexCoord2f(float x, float y) {
-				pushVertexes(coords, coordCount, x, y);
-				coordCount++;
-			}
-
-			@Override
-			public void glNormal3f(float x, float y, float z) {
-				pushVertexes(normals, normCount, x, y, z);
-				normCount++;
-			}
-
-			@Override
-			public void glBindTexture(C target, long texture) {
-				if (texture > 0) {
-					int index = ((int) (texture - 1));
-					currentTexture = textures.get(index);
-				} else {
-					currentTexture = null;
-				}
-			}
-
-			@Override
-			public void glBlendFunc(C c1, C c2) {
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
-			public void glPushMatrix() {
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
-			public void glPopMatrix() {
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
-			public void glScalef(float a1, float a2, float a3) {
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
-			public void glColor4f(float a1, float a2, float a3, float a4) {
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
-			public void glEnable(C target) {
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
-			public void glDisable(C target) {
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
-			public boolean glIsEnabled(C target) {
-				// TODO Auto-generated method stub
-				return false;
-			}
-
-			@Override
-			public void glMaterialfv(C c1, C c2, float[] fv) {
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
-			public void glMaterialf(C c1, C c2, float f) {
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
-			public long glGetBindTexture(C target) {
-				// TODO Auto-generated method stub
-				return 0;
-			}
-
-			@Override
-			public void glEnableClientState(C target) {
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
-			public void glDisableClientState(C target) {
-				// TODO Auto-generated method stub
-
-			}
-
-			/**
-			 * 頂点の最大数を取得します。
-			 * 
-			 * @param model
-			 *            モデル。nullは不可。
-			 * @return 頂点の最大数。
-			 */
-			private int getMaxVertexesSize(MMDModel model) {
-				if (model == null) {
-					throw new IllegalArgumentException();
-				}
-				int size = 0;
-				for (int i = 0; i < model.getMaterialCount(); i++) {
-					size = Math
-							.max(size, model.getMaterial(i).getVertexCount());
-				}
-				return size;
-			}
-
-			/**
-			 * 頂点バッファをリセットします。
-			 * 
-			 * @param length
-			 *            長さ。
-			 * @return 頂点バッファ。
-			 */
-			private native JavaScriptObject createVertexes3(int length) /*-{
-				return new Array(length * 3);
-			}-*/;
-
-			/**
-			 * 頂点バッファをリセットします。
-			 * 
-			 * @param length
-			 *            長さ。
-			 * @return 頂点バッファ。
-			 */
-			private native JavaScriptObject createVertexes2(int length) /*-{
-				return new Array(length * 2);
-			}-*/;
-
-			/**
-			 * 頂点を追加します。
-			 * 
-			 * @param vertexes
-			 *            頂点リスト。nullは不可。
-			 * @param offset
-			 *            オフセット。
-			 * @param x
-			 *            座標。
-			 * @param y
-			 *            座標。
-			 * @param z
-			 *            座標。
-			 */
-			private native void pushVertexes(JavaScriptObject vertexes,
-					int offset, float x, float y, float z) /*-{
-				vertexes[offset * 3] = x;
-				vertexes[offset * 3 + 1] = y;
-				vertexes[offset * 3 + 2] = -z;
-			}-*/;
-
-			/**
-			 * 頂点を追加します。
-			 * 
-			 * @param vertexes
-			 *            頂点リスト。nullは不可。
-			 * @param offset
-			 *            オフセット。
-			 * @param x
-			 *            座標。
-			 * @param y
-			 *            座標。
-			 */
-			private native void pushVertexes(JavaScriptObject vertexes,
-					int offset, float x, float y) /*-{
-				vertexes[offset * 2] = x;
-				vertexes[offset * 2 + 1] = y;
-			}-*/;
-
 		}
 
 	}
@@ -1137,8 +1154,8 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 
 		@Override
 		public int getPixel(int x, int y) {
-			// TODO
-			return 0;
+			// TODO: test
+			return getPixelFromBuffer(buffer, (x + y * width) * 4);
 		}
 
 		@Override
@@ -1148,6 +1165,28 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 			}
 			drawToCanvas(buffer, width, height, canvasElement);
 		}
+
+		@Override
+		public JavaScriptObject getPixelBuffer() {
+			return buffer;
+		}
+
+		/**
+		 * 色の値を取得します。
+		 * 
+		 * @param buffer
+		 *            バッファ。nullは不可。
+		 * @param offset
+		 *            オフセット。
+		 * @return RGB値。
+		 */
+		private native int getPixelFromBuffer(JavaScriptObject buffer,
+				int offset) /*-{
+			var r = buffer[offset + 0];
+			var g = buffer[offset + 1];
+			var b = buffer[offset + 2];
+			return (r << 16) | (g << 8) | (b << 0);
+		}-*/;
 
 		/**
 		 * キャンバスに対して描画します。
@@ -1163,15 +1202,13 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 		 */
 		private native void drawToCanvas(JavaScriptObject buffer, int width,
 				int height, Element canvasElement) /*-{
-			console.log("Drawing...");
 			var ctx = canvasElement.getContext("2d");
 			var imageData = ctx.createImageData(width, height);
 			var destBuffer = imageData.data;
-			for(var i = 0; i < buffer.length; i ++) {
+			for ( var i = 0; i < buffer.length; i++) {
 				destBuffer[i] = buffer[i];
 			}
 			ctx.putImageData(imageData, 0, 0);
-			console.log("Completed");
 		}-*/;
 
 	}
