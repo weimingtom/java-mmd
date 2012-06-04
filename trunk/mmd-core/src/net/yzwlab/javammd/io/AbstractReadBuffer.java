@@ -10,6 +10,31 @@ public abstract class AbstractReadBuffer implements IReadBuffer {
 	}
 
 	@Override
+	public byte[] readLine() throws ReadException {
+		final int MAX_LINE = 512;
+		byte[] data = new byte[MAX_LINE];
+		int i = 0;
+		int phase = 0;
+		for (i = 0; i < data.length && isEOF() == false; i++) {
+			data[i] = readByte();
+			if (data[i] == '\r') {
+				phase++;
+			} else if (data[i] == '\n') {
+				i -= phase;
+				break;
+			} else if (phase > 0) {
+				throw new ReadException("Unexpected return code: "
+						+ String.valueOf((int) '\r'));
+			}
+		}
+		byte[] r = new byte[i];
+		for (int j = 0; j < r.length; j++) {
+			r[j] = data[j];
+		}
+		return r;
+	}
+
+	@Override
 	public byte[] readByteArray(int length) throws ReadException {
 		byte[] data = new byte[length];
 		for (int i = 0; i < length; i++) {
