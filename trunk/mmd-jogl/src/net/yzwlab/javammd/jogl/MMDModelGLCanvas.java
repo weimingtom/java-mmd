@@ -71,8 +71,13 @@ public class MMDModelGLCanvas {
 		drawer.add(model);
 
 		MetaseqModel mqoModel = new MetaseqModel();
-		mqoModel.mqoLoadFile(new FileBuffer(new File(f.getParentFile(),
+		mqoModel.load(new FileBuffer(new File(f.getParentFile(),
 				"ƒpƒ\ƒRƒ“.mqo").getPath()), 0.1, 255);
+		drawer.add(mqoModel);
+
+		mqoModel = new MetaseqModel();
+		mqoModel.load(new FileBuffer(new File(f.getParentFile(),
+				"dell_r610.mqo").getPath()), 0.05, 255);
 		drawer.add(mqoModel);
 
 		glcanvas.addGLEventListener(drawer);
