@@ -12,10 +12,10 @@ import javax.imageio.ImageIO;
 import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
 
+import net.yzwlab.javammd.GLTexture;
 import net.yzwlab.javammd.IGL;
 import net.yzwlab.javammd.IGLTextureProvider;
 import net.yzwlab.javammd.ReadException;
-import net.yzwlab.javammd.format.TEXTURE_DESC;
 import net.yzwlab.javammd.image.IImage;
 import net.yzwlab.javammd.image.TargaReader;
 import net.yzwlab.javammd.jogl.io.FileBuffer;
@@ -78,15 +78,14 @@ public class JOGL implements IGL, IGLTextureProvider {
 			BufferedImage textureImage = new BufferedImage(sizeWidth,
 					sizeHeight, BufferedImage.TYPE_4BYTE_ABGR);
 			Graphics g = textureImage.getGraphics();
-			g.drawImage(image, 0, 0, null);
+			g.drawImage(image, 0, 0, sizeWidth, sizeHeight, 0, 0,
+					image.getWidth(), image.getHeight(), null);
 			g.dispose();
 			textureImage.flush();
 
-			TEXTURE_DESC ret = new TEXTURE_DESC();
-			ret.setTexMemWidth(textureImage.getWidth());
-			ret.setTexMemHeight(textureImage.getHeight());
-			ret.setTexWidth(image.getWidth());
-			ret.setTexHeight(image.getHeight());
+			GLTexture ret = new GLTexture();
+			ret.setTexWidth(textureImage.getWidth());
+			ret.setTexHeight(textureImage.getHeight());
 
 			ByteBuffer imageBuffer = ByteBuffer.allocate(textureImage
 					.getWidth() * textureImage.getHeight() * 4);
@@ -119,8 +118,8 @@ public class JOGL implements IGL, IGLTextureProvider {
 					GL2.GL_LINEAR);
 			imageBuffer.position(0);
 			gl.glTexImage2D(GL2.GL_TEXTURE_2D, 0, GL2.GL_RGBA8,
-					ret.getTexMemWidth(), ret.getTexMemHeight(), 0,
-					GL2.GL_RGBA, GL2.GL_UNSIGNED_BYTE, imageBuffer);
+					ret.getTexWidth(), ret.getTexHeight(), 0, GL2.GL_RGBA,
+					GL2.GL_UNSIGNED_BYTE, imageBuffer);
 			gl.glBindTexture(GL2.GL_TEXTURE_2D, 0); // デフォルトテクスチャの割り当て
 			ret.setTextureId(textureId);
 
