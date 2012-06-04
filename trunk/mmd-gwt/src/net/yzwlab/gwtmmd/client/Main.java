@@ -15,10 +15,10 @@ import net.yzwlab.gwtmmd.client.image.CanvasImageService;
 import net.yzwlab.gwtmmd.client.image.CanvasRaster;
 import net.yzwlab.gwtmmd.client.io.FileReadBuffer;
 import net.yzwlab.gwtmmd.client.model.AnalyzedPMDFile;
-import net.yzwlab.javammd.IMMDTextureProvider;
+import net.yzwlab.javammd.GLTexture;
+import net.yzwlab.javammd.IGLTextureProvider;
 import net.yzwlab.javammd.ReadException;
 import net.yzwlab.javammd.format.PMDFile;
-import net.yzwlab.javammd.format.TEXTURE_DESC;
 import net.yzwlab.javammd.image.IImage;
 import net.yzwlab.javammd.image.TargaReader;
 import net.yzwlab.javammd.model.IMotionSegment;
@@ -473,10 +473,10 @@ public class Main implements EntryPoint {
 					for (GLCanvasManager canvasManager : canvasManagers) {
 						GLCanvas glCanvas = canvasManager.getGlCanvas();
 						model.prepare(canvasManager,
-								new IMMDTextureProvider.Handler() {
+								new IGLTextureProvider.Handler() {
 									@Override
 									public void onSuccess(byte[] filename,
-											TEXTURE_DESC desc) {
+											GLTexture desc) {
 										// TODO Auto-generated method stub
 
 									}
@@ -521,9 +521,9 @@ public class Main implements EntryPoint {
 
 			for (GLCanvasManager canvasManager : canvasManagers) {
 				GLCanvas glCanvas = canvasManager.getGlCanvas();
-				model.prepare(canvasManager, new IMMDTextureProvider.Handler() {
+				model.prepare(canvasManager, new IGLTextureProvider.Handler() {
 					@Override
-					public void onSuccess(byte[] filename, TEXTURE_DESC desc) {
+					public void onSuccess(byte[] filename, GLTexture desc) {
 						// TODO Auto-generated method stub
 
 					}

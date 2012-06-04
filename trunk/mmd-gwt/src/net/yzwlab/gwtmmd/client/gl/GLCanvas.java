@@ -3,7 +3,6 @@ package net.yzwlab.gwtmmd.client.gl;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.yzwlab.javammd.IDataMutex;
 import net.yzwlab.javammd.IGL;
 import net.yzwlab.javammd.model.IMotionSegment;
 import net.yzwlab.javammd.model.MMDModel;
@@ -1022,7 +1021,7 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 	/**
 	 * シーン描画用のタイマーです。
 	 */
-	private class DrawSceneTimer extends Timer implements IDataMutex {
+	private class DrawSceneTimer extends Timer {
 
 		/**
 		 * Perspective行列を保持します。
@@ -1050,8 +1049,7 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 				setPMatrix(gl, program, pMatrix);
 
 				for (DynamicModel model : models) {
-					model.model.updateAsync(this,
-							model.getCurrentFrame(currentTime));
+					model.model.updateAsync(model.getCurrentFrame(currentTime));
 				}
 
 				updateEndTime = System.currentTimeMillis();
@@ -1068,16 +1066,6 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 				performanceLabel.setText("モデル更新時間: " + updateDur + "msec."
 						+ ", レンダリング時間: " + dur + "msec.");
 			}
-		}
-
-		@Override
-		public void Begin() {
-			;
-		}
-
-		@Override
-		public void End() {
-			;
 		}
 
 	}

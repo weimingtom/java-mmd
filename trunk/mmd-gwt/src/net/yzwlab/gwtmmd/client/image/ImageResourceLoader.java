@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.yzwlab.gwtmmd.client.gl.GLCanvas;
-import net.yzwlab.javammd.format.TEXTURE_DESC;
+import net.yzwlab.javammd.GLTexture;
 
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.event.dom.client.ErrorEvent;
@@ -33,7 +33,7 @@ public class ImageResourceLoader {
 		 * @param image
 		 *            画像。nullは不可。
 		 */
-		public void onLoad(String filename, TEXTURE_DESC image);
+		public void onLoad(String filename, GLTexture image);
 
 		/**
 		 * エラー発生時の処理です。
@@ -63,7 +63,7 @@ public class ImageResourceLoader {
 	/**
 	 * ダミーテクスチャを保持します。
 	 */
-	private TEXTURE_DESC dummyTexture;
+	private GLTexture dummyTexture;
 
 	/**
 	 * ダミーテクスチャ用キャンバスを保持します。
@@ -102,7 +102,7 @@ public class ImageResourceLoader {
 	 * 
 	 * @return ダミーテクスチャ。
 	 */
-	public TEXTURE_DESC getDummyTexture() {
+	public GLTexture getDummyTexture() {
 		if (dummyTexture != null) {
 			return dummyTexture;
 		}
@@ -116,11 +116,9 @@ public class ImageResourceLoader {
 		dummyTextureCanvas.setHeight(h);
 		dummyTextureCanvas.fillRect("#ffffff", 0, 0, w, h);
 
-		dummyTexture = new TEXTURE_DESC();
+		dummyTexture = new GLTexture();
 		dummyTexture.setTexHeight(h);
-		dummyTexture.setTexMemHeight(h);
 		dummyTexture.setTexWidth(w);
-		dummyTexture.setTexMemWidth(w);
 		dummyTexture.setTextureId(glCanvas.createTexture(
 				dummyTextureCanvas.getElement(), w, h));
 		return dummyTexture;
@@ -222,11 +220,9 @@ public class ImageResourceLoader {
 						memHeight);
 			}
 
-			TEXTURE_DESC desc = new TEXTURE_DESC();
+			GLTexture desc = new GLTexture();
 			desc.setTexHeight(height);
-			desc.setTexMemHeight(memHeight);
 			desc.setTexWidth(width);
-			desc.setTexMemWidth(memWidth);
 			desc.setTextureId(id);
 			handler.onLoad(filename, desc);
 		}
