@@ -72,4 +72,13 @@ public interface IReadBuffer {
 
 	public double[][] readDoubleArray(int len1, int len2) throws ReadException;
 
+	/**
+	 * バッファを文字列として解釈し、1行分のバイト配列を取得します。
+	 * 
+	 * @return 1行分のバイト配列。ストリームの末尾の場合はnull。
+	 * @throws ReadException
+	 *             読み込み失敗時のエラー。
+	 */
+	public byte[] readLine() throws ReadException;
+
 }
