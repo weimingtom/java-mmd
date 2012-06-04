@@ -82,4 +82,9 @@
 			<classpath refid="mmd-core.classpath" />
 		</java>
 	</target>
+
+	<target name="deploy-mmd-jogl" depends="build">
+		<copy todir="../mmd-jogl/lib" file="dist/${ant.project.name}.jar">
+		</copy>
+	</target>
 </project>
