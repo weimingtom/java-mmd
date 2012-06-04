@@ -8,16 +8,16 @@ import java.util.Map;
 import net.yzwlab.gwtmmd.client.gl.GLCanvas;
 import net.yzwlab.gwtmmd.client.image.CanvasRaster;
 import net.yzwlab.gwtmmd.client.image.ImageResourceLoader;
-import net.yzwlab.javammd.IMMDTextureProvider;
+import net.yzwlab.javammd.GLTexture;
+import net.yzwlab.javammd.IGLTextureProvider;
 import net.yzwlab.javammd.ReadException;
-import net.yzwlab.javammd.format.TEXTURE_DESC;
 
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.VerticalPanel;
 
 public class GLCanvasManager implements ImageResourceLoader.Handler,
-		IMMDTextureProvider {
+		IGLTextureProvider {
 
 	/**
 	 * キャンバスを保持します。
@@ -42,7 +42,7 @@ public class GLCanvasManager implements ImageResourceLoader.Handler,
 	/**
 	 * テクスチャ候補の画像を保持します。
 	 */
-	private Map<String, TEXTURE_DESC> textureDescs;
+	private Map<String, GLTexture> textureDescs;
 
 	/**
 	 * 名前解決済みのテクスチャローダを保持します。
@@ -72,7 +72,7 @@ public class GLCanvasManager implements ImageResourceLoader.Handler,
 		this.imageResourceLoader = new ImageResourceLoader(resourcePanel);
 		this.textureLoaders = new ArrayList<TextureLoader>();
 		this.textureImages = new HashMap<String, CanvasRaster>();
-		this.textureDescs = new HashMap<String, TEXTURE_DESC>();
+		this.textureDescs = new HashMap<String, GLTexture>();
 		this.namedTextureLoaders = new HashMap<String, List<TextureLoader>>();
 		this.remainFilenames = new ArrayList<String>();
 		this.resourcePanel = resourcePanel;
@@ -199,7 +199,7 @@ public class GLCanvasManager implements ImageResourceLoader.Handler,
 	}
 
 	@Override
-	public void load(byte[] filename, IMMDTextureProvider.Handler handler)
+	public void load(byte[] filename, IGLTextureProvider.Handler handler)
 			throws ReadException {
 		// いったんダミーキャンバスを入れておく
 		handler.onSuccess(filename, imageResourceLoader.getDummyTexture());
@@ -223,7 +223,7 @@ public class GLCanvasManager implements ImageResourceLoader.Handler,
 	}
 
 	@Override
-	public void onLoad(String name, TEXTURE_DESC raster) {
+	public void onLoad(String name, GLTexture raster) {
 		if (name == null || raster == null) {
 			throw new IllegalArgumentException();
 		}
@@ -259,7 +259,7 @@ public class GLCanvasManager implements ImageResourceLoader.Handler,
 		if (name == null || loader == null) {
 			throw new IllegalArgumentException();
 		}
-		TEXTURE_DESC desc = textureDescs.get(name);
+		GLTexture desc = textureDescs.get(name);
 		if (desc != null) {
 			// ロード済み
 			loader.set(desc);

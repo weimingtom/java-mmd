@@ -3,8 +3,8 @@ package net.yzwlab.gwtmmd.client;
 import net.yzwlab.gwtmmd.client.gl.GLCanvas;
 import net.yzwlab.gwtmmd.client.image.CanvasRaster;
 import net.yzwlab.gwtmmd.client.image.CanvasWidget;
-import net.yzwlab.javammd.IMMDTextureProvider;
-import net.yzwlab.javammd.format.TEXTURE_DESC;
+import net.yzwlab.javammd.GLTexture;
+import net.yzwlab.javammd.IGLTextureProvider;
 
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.user.client.ui.VerticalPanel;
@@ -22,12 +22,12 @@ public class TextureLoader {
 
 	private VerticalPanel panel;
 
-	private IMMDTextureProvider.Handler handler;
+	private IGLTextureProvider.Handler handler;
 
 	private CanvasWidget canvas;
 
 	public TextureLoader(GLCanvas glCanvas, byte[] filename,
-			VerticalPanel panel, IMMDTextureProvider.Handler handler) {
+			VerticalPanel panel, IGLTextureProvider.Handler handler) {
 		if (glCanvas == null || filename == null || panel == null
 				|| handler == null) {
 			throw new IllegalArgumentException();
@@ -78,11 +78,9 @@ public class TextureLoader {
 		int height = raster.getHeight();
 		int index = glCanvas.createTexture(canvas.getElement(), width, height);
 
-		TEXTURE_DESC desc = new TEXTURE_DESC();
+		GLTexture desc = new GLTexture();
 		desc.setTexWidth(width);
-		desc.setTexMemWidth(width);
 		desc.setTexHeight(height);
-		desc.setTexMemHeight(height);
 		desc.setTextureId(index);
 		set(desc);
 	}
@@ -93,7 +91,7 @@ public class TextureLoader {
 	 * @param desc
 	 *            ラスタ化済みの画像。nullは不可。
 	 */
-	public void set(TEXTURE_DESC desc) {
+	public void set(GLTexture desc) {
 		if (desc == null) {
 			throw new IllegalArgumentException();
 		}
