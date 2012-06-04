@@ -87,4 +87,9 @@
 		<copy todir="../mmd-jogl/lib" file="dist/${ant.project.name}.jar">
 		</copy>
 	</target>
+
+	<target name="deploy-mmd-gwt" depends="build">
+		<copy todir="../mmd-gwt/war/WEB-INF/lib" file="dist/${ant.project.name}.jar">
+		</copy>
+	</target>
 </project>
