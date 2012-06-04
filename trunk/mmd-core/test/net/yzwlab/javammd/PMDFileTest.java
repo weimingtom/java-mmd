@@ -11,8 +11,8 @@ import java.io.InputStream;
 import net.yzwlab.javammd.format.TEXTURE_DESC;
 import net.yzwlab.javammd.model.MMDModel;
 
-public class PMDFileTest implements IDataMutex, IMMDTextureProvider, IGL,
-		IMMDTextureProvider.Handler {
+public class PMDFileTest implements IGLTextureProvider, IGL,
+		IGLTextureProvider.Handler {
 
 	public static void main(String[] args) {
 		try {
@@ -66,7 +66,7 @@ public class PMDFileTest implements IDataMutex, IMMDTextureProvider, IGL,
 	}
 
 	@Override
-	public void load(byte[] filename, IMMDTextureProvider.Handler handler) {
+	public void load(byte[] filename, IGLTextureProvider.Handler handler) {
 		if (filename == null || handler == null) {
 			throw new IllegalArgumentException();
 		}
@@ -77,16 +77,6 @@ public class PMDFileTest implements IDataMutex, IMMDTextureProvider, IGL,
 		ret.setTexWidth(100);
 		ret.setTexHeight(100);
 		handler.onSuccess(filename, ret);
-	}
-
-	@Override
-	public void Begin() {
-		;
-	}
-
-	@Override
-	public void End() {
-		;
 	}
 
 	@Override

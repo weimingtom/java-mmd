@@ -5,7 +5,7 @@ import net.yzwlab.javammd.format.TEXTURE_DESC;
 /**
  * テクスチャの実体を提供するインタフェースです。
  */
-public interface IMMDTextureProvider {
+public interface IGLTextureProvider {
 
 	/**
 	 * 読み込み処理のハンドラを示すインタフェースです。
