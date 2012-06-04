@@ -11,10 +11,10 @@ import javax.media.opengl.GLEventListener;
 import javax.media.opengl.awt.GLCanvas;
 import javax.media.opengl.glu.GLU;
 
+import net.yzwlab.javammd.GLTexture;
 import net.yzwlab.javammd.IGLObject;
 import net.yzwlab.javammd.IGLTextureProvider;
 import net.yzwlab.javammd.ReadException;
-import net.yzwlab.javammd.format.TEXTURE_DESC;
 import net.yzwlab.javammd.model.MMDModel;
 
 /**
@@ -156,7 +156,7 @@ public class MMDDrawer implements GLEventListener, IGLTextureProvider.Handler {
 	}
 
 	@Override
-	public void onSuccess(byte[] filename, TEXTURE_DESC desc) {
+	public void onSuccess(byte[] filename, GLTexture desc) {
 		// TODO Auto-generated method stub
 		;
 	}
