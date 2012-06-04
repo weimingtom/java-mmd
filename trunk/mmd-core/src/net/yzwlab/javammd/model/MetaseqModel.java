@@ -3,11 +3,11 @@ package net.yzwlab.javammd.model;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.yzwlab.javammd.GLTexture;
 import net.yzwlab.javammd.IGL;
 import net.yzwlab.javammd.IGL.FrontFace;
 import net.yzwlab.javammd.IGLObject;
 import net.yzwlab.javammd.IGLTextureProvider;
-import net.yzwlab.javammd.GLTexture;
 import net.yzwlab.javammd.IGLTextureProvider.Handler;
 import net.yzwlab.javammd.IReadBuffer;
 import net.yzwlab.javammd.ReadException;
@@ -118,7 +118,7 @@ public class MetaseqModel implements IGLObject {
 		gl.glPopMatrix();
 	}
 
-	public void mqoLoadFile(IReadBuffer buffer, double scale, int alpha)
+	public void load(IReadBuffer buffer, double scale, int alpha)
 			throws ReadException {
 		if (buffer == null) {
 			throw new IllegalArgumentException();
@@ -475,13 +475,13 @@ public class MetaseqModel implements IGLObject {
 			}
 			gl.glBegin(IGL.C.GL_TRIANGLES, vertex_t.length);
 			for (int i = 0; i < vertex_t.length; i++) {
+				// テクスチャ座標配列を設定
+				float[] uv = vertex_t[i].uv;
+				gl.glTexCoord2f(uv[0], uv[1]);
+
 				// 頂点配列を設定
 				float[] v = vertex_t[i].point;
 				gl.glVertex3f(v[0], v[1], v[2]);
-
-				// テクスチャ座標配列を設定
-				v = vertex_t[i].uv;
-				gl.glTexCoord2f(v[0], v[1]);
 
 				// 法線配列を設定
 				v = vertex_t[i].normal;
@@ -559,9 +559,9 @@ public class MetaseqModel implements IGLObject {
 						normal = mqoSnormal(V[F[f].v[0]], V[F[f].v[1]],
 								V[F[f].v[2]]); // 法線ベクトルを計算
 						for (i = 0; i < 4; i++) {
-							vertex_t[dpos] = new VERTEX_TEXUSE();
 							if (i == 3)
 								continue;
+							vertex_t[dpos] = new VERTEX_TEXUSE();
 							vertex_t[dpos].point[0] = (float) (V[F[f].v[i]].x * scale);
 							vertex_t[dpos].point[1] = (float) (V[F[f].v[i]].y * scale);
 							vertex_t[dpos].point[2] = (float) (V[F[f].v[i]].z * scale);
@@ -584,9 +584,9 @@ public class MetaseqModel implements IGLObject {
 						normal = mqoSnormal(V[F[f].v[0]], V[F[f].v[2]],
 								V[F[f].v[3]]); // 法線ベクトルを計算
 						for (i = 0; i < 4; i++) {
-							vertex_t[dpos] = new VERTEX_TEXUSE();
 							if (i == 1)
 								continue;
+							vertex_t[dpos] = new VERTEX_TEXUSE();
 							vertex_t[dpos].point[0] = (float) (V[F[f].v[i]].x * scale);
 							vertex_t[dpos].point[1] = (float) (V[F[f].v[i]].y * scale);
 							vertex_t[dpos].point[2] = (float) (V[F[f].v[i]].z * scale);

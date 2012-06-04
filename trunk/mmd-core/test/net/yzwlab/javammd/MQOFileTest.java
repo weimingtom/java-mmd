@@ -20,7 +20,7 @@ public class MQOFileTest implements IGLTextureProvider, IGL,
 			try {
 				in = new FileInputStream(f);
 				MetaseqModel model = new MetaseqModel();
-				model.mqoLoadFile(new FileBuffer(new DataInputStream(
+				model.load(new FileBuffer(new DataInputStream(
 						new BufferedInputStream(in)), f.length()), 1.0, 255);
 				MQOFileTest main = new MQOFileTest();
 				model.prepare(main, main);
