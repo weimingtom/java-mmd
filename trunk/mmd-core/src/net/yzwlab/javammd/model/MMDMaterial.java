@@ -2,6 +2,7 @@ package net.yzwlab.javammd.model;
 
 import java.util.List;
 
+import net.yzwlab.javammd.GLTexture;
 import net.yzwlab.javammd.IGL;
 import net.yzwlab.javammd.IGLTextureProvider;
 import net.yzwlab.javammd.ReadException;
@@ -9,7 +10,6 @@ import net.yzwlab.javammd.format.MMD_VERTEX_DESC;
 import net.yzwlab.javammd.format.MMD_VERTEX_TEXUSE;
 import net.yzwlab.javammd.format.PMD_MATERIAL_RECORD;
 import net.yzwlab.javammd.format.PMD_VERTEX_RECORD;
-import net.yzwlab.javammd.format.TEXTURE_DESC;
 
 /**
  * MMDのマテリアルを管理するクラスです。
@@ -17,7 +17,7 @@ import net.yzwlab.javammd.format.TEXTURE_DESC;
 public class MMDMaterial {
 	protected PMD_MATERIAL_RECORD m_material;
 
-	protected TEXTURE_DESC m_texture;
+	protected GLTexture m_texture;
 
 	// protected MMD_VERTEX_TEXUSE[] m_pCurrentVertexes;
 
@@ -123,7 +123,7 @@ public class MMDMaterial {
 				new IGLTextureProvider.Handler() {
 
 					@Override
-					public void onSuccess(byte[] filename, TEXTURE_DESC desc) {
+					public void onSuccess(byte[] filename, GLTexture desc) {
 						if (filename == null || desc == null) {
 							throw new IllegalArgumentException();
 						}
@@ -216,18 +216,7 @@ public class MMDMaterial {
 		if (m_texture != null) {
 			gl.glBindTexture(IGL.C.GL_TEXTURE_2D, m_texture.getTextureId());
 		}
-		// pVert = m_pVertexes[0].pCurrentVert;
-		// base = (pVert.point);
-		// offset = ((pVert.point) - (pVert.point));
-		// gl.glVertexPointer(3, IGL.C.GL_FLOAT, sizeof, base + offset);
-		// if (m_texture.tex_mem_height > 0 && m_texture.tex_mem_width > 0) {
-		// offset = ((pVert.uv) - (pVert.point));
-		// gl.glTexCoordPointer(2, IGL.C.GL_FLOAT, sizeof, base + offset);
-		// }
-		// offset = ((pVert.normal) - (pVert.point));
-		// gl.glNormalPointer(GL_FLOAT, sizeof, base + offset);
 		gl.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-		// gl.glDrawArrays(IGL.C.GL_TRIANGLES, 0, m_material.nEdges);
 		gl.glBegin(IGL.C.GL_TRIANGLES, m_pVertexes.length);
 		for (MMD_VERTEX_UNIT unit : m_pVertexes) {
 			unit.pCurrentVert.toGL(gl);
@@ -281,7 +270,7 @@ public class MMDMaterial {
 	 * @param texture
 	 *            テクスチャ。nullは不可。
 	 */
-	private synchronized void setTexture(TEXTURE_DESC texture) {
+	private synchronized void setTexture(GLTexture texture) {
 		if (texture == null) {
 			throw new IllegalArgumentException();
 		}

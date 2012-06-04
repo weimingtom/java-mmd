@@ -1,6 +1,5 @@
 package net.yzwlab.javammd;
 
-import net.yzwlab.javammd.format.TEXTURE_DESC;
 
 /**
  * テクスチャの実体を提供するインタフェースです。
@@ -20,7 +19,7 @@ public interface IGLTextureProvider {
 		 * @param desc
 		 *            テクスチャの定義。nullは不可。
 		 */
-		public void onSuccess(byte[] filename, TEXTURE_DESC desc);
+		public void onSuccess(byte[] filename, GLTexture desc);
 
 		/**
 		 * エラーが発生した場合に呼び出されるハンドラです。
