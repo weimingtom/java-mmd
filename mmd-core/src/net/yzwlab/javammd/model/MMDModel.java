@@ -6,9 +6,9 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import net.yzwlab.javammd.IDataMutex;
 import net.yzwlab.javammd.IGL;
-import net.yzwlab.javammd.IMMDTextureProvider;
+import net.yzwlab.javammd.IGLObject;
+import net.yzwlab.javammd.IGLTextureProvider;
 import net.yzwlab.javammd.IReadBuffer;
 import net.yzwlab.javammd.ReadException;
 import net.yzwlab.javammd.format.MMD_VERTEX_DESC;
@@ -25,7 +25,7 @@ import net.yzwlab.javammd.format.VMD_MOTION_RECORD;
 /**
  * MMDのモデルを表現します。
  */
-public class MMDModel {
+public class MMDModel implements IGLObject {
 
 	protected float m_scale;
 
@@ -244,18 +244,9 @@ public class MMDModel {
 		return setVMD(buffer, vmdFile);
 	}
 
-	/**
-	 * テクスチャの準備を行います。
-	 * 
-	 * @param pTextureProvider
-	 *            テクスチャプロバイダ。nullは不可。
-	 * @param handler
-	 *            ハンドラ。nullは不可。
-	 * @throws ReadException
-	 *             読み込み処理時のエラー。
-	 */
-	public void prepare(IMMDTextureProvider pTextureProvider,
-			IMMDTextureProvider.Handler handler) throws ReadException {
+	@Override
+	public void prepare(IGLTextureProvider pTextureProvider,
+			IGLTextureProvider.Handler handler) throws ReadException {
 		if (pTextureProvider == null || handler == null) {
 			throw new IllegalArgumentException();
 		}
@@ -300,30 +291,21 @@ public class MMDModel {
 	/**
 	 * 更新処理を非同期的に行います。
 	 * 
-	 * @param pMutex
-	 *            同期用オブジェクト。近いうちに廃止予定。
 	 * @param frameNo
 	 *            フレーム番号。
 	 */
-	public void updateAsync(IDataMutex pMutex, float frameNo) {
-		if (m_pVertexList == null || pMutex == null) {
+	public void updateAsync(float frameNo) {
+		if (m_pVertexList == null) {
 			throw new IllegalArgumentException("E_POINTER");
 		}
 		updateMotion(frameNo);
 		for (int i = 0; i < m_bones.size(); i++) {
 			m_bones.get(i).updateSkinning();
 		}
-		pMutex.Begin();
 		m_pVertexList.updateSkinning();
-		pMutex.End();
 	}
 
-	/**
-	 * 描画処理を実行します。
-	 * 
-	 * @param gl
-	 *            描画対象のプラットフォーム。nullは不可。
-	 */
+	@Override
 	public void draw(IGL gl) {
 		if (gl == null) {
 			throw new IllegalArgumentException();

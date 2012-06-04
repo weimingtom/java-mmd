@@ -3,7 +3,7 @@ package net.yzwlab.javammd.model;
 import java.util.List;
 
 import net.yzwlab.javammd.IGL;
-import net.yzwlab.javammd.IMMDTextureProvider;
+import net.yzwlab.javammd.IGLTextureProvider;
 import net.yzwlab.javammd.ReadException;
 import net.yzwlab.javammd.format.MMD_VERTEX_DESC;
 import net.yzwlab.javammd.format.MMD_VERTEX_TEXUSE;
@@ -111,8 +111,8 @@ public class MMDMaterial {
 	 * @throws ReadException
 	 *             ì«Ç›çûÇ›é∏îséûÇÃÉGÉâÅ[ÅB
 	 */
-	public void prepare(IMMDTextureProvider pTextureProvider,
-			final IMMDTextureProvider.Handler handler) throws ReadException {
+	public void prepare(IGLTextureProvider pTextureProvider,
+			final IGLTextureProvider.Handler handler) throws ReadException {
 		if (pTextureProvider == null || handler == null) {
 			throw new IllegalArgumentException();
 		}
@@ -120,7 +120,7 @@ public class MMDMaterial {
 			return;
 		}
 		pTextureProvider.load(m_material.getTextureFileName(),
-				new IMMDTextureProvider.Handler() {
+				new IGLTextureProvider.Handler() {
 
 					@Override
 					public void onSuccess(byte[] filename, TEXTURE_DESC desc) {
