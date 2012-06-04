@@ -8,7 +8,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import net.yzwlab.javammd.format.TEXTURE_DESC;
 import net.yzwlab.javammd.model.MMDModel;
 
 public class PMDFileTest implements IGLTextureProvider, IGL,
@@ -70,9 +69,7 @@ public class PMDFileTest implements IGLTextureProvider, IGL,
 		if (filename == null || handler == null) {
 			throw new IllegalArgumentException();
 		}
-		TEXTURE_DESC ret = new TEXTURE_DESC();
-		ret.setTexMemWidth(100);
-		ret.setTexMemHeight(100);
+		GLTexture ret = new GLTexture();
 		ret.setTextureId(1L);
 		ret.setTexWidth(100);
 		ret.setTexHeight(100);
@@ -200,7 +197,7 @@ public class PMDFileTest implements IGLTextureProvider, IGL,
 	}
 
 	@Override
-	public void onSuccess(byte[] filename, TEXTURE_DESC desc) {
+	public void onSuccess(byte[] filename, GLTexture desc) {
 		;
 	}
 

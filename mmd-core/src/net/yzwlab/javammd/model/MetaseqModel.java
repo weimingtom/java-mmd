@@ -7,10 +7,10 @@ import net.yzwlab.javammd.IGL;
 import net.yzwlab.javammd.IGL.FrontFace;
 import net.yzwlab.javammd.IGLObject;
 import net.yzwlab.javammd.IGLTextureProvider;
+import net.yzwlab.javammd.GLTexture;
 import net.yzwlab.javammd.IGLTextureProvider.Handler;
 import net.yzwlab.javammd.IReadBuffer;
 import net.yzwlab.javammd.ReadException;
-import net.yzwlab.javammd.format.TEXTURE_DESC;
 
 /**
  * GLMetaseqÇÃJavaÇ≈ÇÃé¿ëïÇ≈Ç∑ÅB
@@ -418,7 +418,7 @@ public class MetaseqModel implements IGLObject {
 			pTextureProvider.load(texFile, new Handler() {
 
 				@Override
-				public void onSuccess(byte[] filename, TEXTURE_DESC desc) {
+				public void onSuccess(byte[] filename, GLTexture desc) {
 					textureId = desc.getTextureId();
 					handler.onSuccess(filename, desc);
 				}
