@@ -13,7 +13,7 @@ import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
 
 import net.yzwlab.javammd.IGL;
-import net.yzwlab.javammd.IMMDTextureProvider;
+import net.yzwlab.javammd.IGLTextureProvider;
 import net.yzwlab.javammd.ReadException;
 import net.yzwlab.javammd.format.TEXTURE_DESC;
 import net.yzwlab.javammd.image.IImage;
@@ -21,7 +21,7 @@ import net.yzwlab.javammd.image.TargaReader;
 import net.yzwlab.javammd.jogl.io.FileBuffer;
 import net.yzwlab.javammd.model.DataUtils;
 
-public class JOGL implements IGL, IMMDTextureProvider {
+public class JOGL implements IGL, IGLTextureProvider {
 
 	/**
 	 * 画像サービスを保持します。
@@ -42,7 +42,7 @@ public class JOGL implements IGL, IMMDTextureProvider {
 	}
 
 	@Override
-	public void load(byte[] filename, IMMDTextureProvider.Handler handler)
+	public void load(byte[] filename, IGLTextureProvider.Handler handler)
 			throws ReadException {
 		if (filename == null || handler == null) {
 			throw new IllegalArgumentException();
@@ -323,13 +323,7 @@ public class JOGL implements IGL, IMMDTextureProvider {
 
 	@Override
 	public long glGetBindTexture(C target) {
-		int itarget = 0;
-		if (target == C.GL_TEXTURE_2D) {
-			itarget = GL2.GL_TEXTURE_BINDING_2D;
-		} else {
-			throw new IllegalArgumentException();
-		}
-		// return gl.glGetIntegerv(itarget);
+		// TODO
 		return 0;
 	}
 

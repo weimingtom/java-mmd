@@ -1,6 +1,8 @@
 package net.yzwlab.javammd.jogl;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
@@ -9,8 +11,8 @@ import javax.media.opengl.GLEventListener;
 import javax.media.opengl.awt.GLCanvas;
 import javax.media.opengl.glu.GLU;
 
-import net.yzwlab.javammd.IDataMutex;
-import net.yzwlab.javammd.IMMDTextureProvider;
+import net.yzwlab.javammd.IGLObject;
+import net.yzwlab.javammd.IGLTextureProvider;
 import net.yzwlab.javammd.ReadException;
 import net.yzwlab.javammd.format.TEXTURE_DESC;
 import net.yzwlab.javammd.model.MMDModel;
@@ -18,26 +20,31 @@ import net.yzwlab.javammd.model.MMDModel;
 /**
  * OpenGLÇÃï`âÊèàóùÇ≈Ç∑ÅB
  */
-public class MMDDrawer implements GLEventListener, IDataMutex,
-		IMMDTextureProvider.Handler {
+public class MMDDrawer implements GLEventListener, IGLTextureProvider.Handler {
 
 	private File baseDir;
 
 	private GLCanvas canvas;
 
-	private MMDModel model;
+	private List<IGLObject> models;
 
 	private boolean loaded;
 
 	private Long baseTime;
 
-	public MMDDrawer(File baseDir, GLCanvas canvas, MMDModel model,
-			long baseTime) {
+	public MMDDrawer(File baseDir, GLCanvas canvas, long baseTime) {
 		this.baseDir = baseDir;
 		this.canvas = canvas;
-		this.model = model;
+		this.models = new ArrayList<IGLObject>();
 		this.loaded = false;
 		this.baseTime = null;
+	}
+
+	public void add(IGLObject model) {
+		if (model == null) {
+			throw new IllegalArgumentException();
+		}
+		models.add(model);
 	}
 
 	@Override
@@ -80,13 +87,14 @@ public class MMDDrawer implements GLEventListener, IDataMutex,
 		JOGL jogl = new JOGL(baseDir, gl2);
 		if (loaded == false) {
 			try {
-				model.prepare(jogl, this);
+				for (IGLObject model : models) {
+					model.prepare(jogl, this);
+				}
 			} catch (ReadException e) {
 				e.printStackTrace();
 			}
 			loaded = true;
 		}
-		model.setScale(1.0f);
 		// model.SetFace("Ç…Ç±");
 		// model.SetBoneVisible(30, false);
 
@@ -96,18 +104,24 @@ public class MMDDrawer implements GLEventListener, IDataMutex,
 			if (baseTime == null) {
 				baseTime = System.currentTimeMillis();
 			}
-			double curTime = (System.currentTimeMillis() - baseTime) / 1000.0;
-			float frame = (float) (curTime * 30.0);
-			Integer frameCount = model.getMaxFrame();
-			if (frameCount != null) {
-				if (frameCount > 0) {
-					while (frame > frameCount) {
-						frame -= frameCount;
+			for (IGLObject rawModel : models) {
+				if (!(rawModel instanceof MMDModel)) {
+					continue;
+				}
+				MMDModel model = (MMDModel) rawModel;
+				double curTime = (System.currentTimeMillis() - baseTime) / 1000.0;
+				float frame = (float) (curTime * 30.0);
+				Integer frameCount = model.getMaxFrame();
+				if (frameCount != null) {
+					if (frameCount > 0) {
+						while (frame > frameCount) {
+							frame -= frameCount;
+						}
 					}
 				}
+				float nextFrame = frame;
+				model.updateAsync(nextFrame);
 			}
-			float nextFrame = frame;
-			model.updateAsync(MMDDrawer.this, nextFrame);
 			updateEndTime = System.currentTimeMillis();
 
 			gl2.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
@@ -118,9 +132,11 @@ public class MMDDrawer implements GLEventListener, IDataMutex,
 			gl2.glEnable(GL.GL_DEPTH_TEST);
 
 			gl2.glColor3d(1.0, 1.0, 1.0);
-			gl2.glTranslatef(0.0f, -0.0f, 0.0f);
+			gl2.glTranslatef(0.0f, +10.0f, 0.0f);
 
-			model.draw(jogl);
+			for (IGLObject model : models) {
+				model.draw(jogl);
+			}
 
 			gl2.glDisable(GL.GL_DEPTH_TEST);
 			gl2.glFlush();
@@ -137,16 +153,6 @@ public class MMDDrawer implements GLEventListener, IDataMutex,
 				canvas.repaint();
 			}
 		})).start();
-	}
-
-	@Override
-	public void Begin() {
-		;
-	}
-
-	@Override
-	public void End() {
-		;
 	}
 
 	@Override

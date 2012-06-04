@@ -16,6 +16,7 @@ import javax.swing.JPanel;
 
 import net.yzwlab.javammd.jogl.io.FileBuffer;
 import net.yzwlab.javammd.model.MMDModel;
+import net.yzwlab.javammd.model.MetaseqModel;
 
 /**
  * A minimal program that draws with JOGL in a Swing JFrame using the AWT
@@ -23,6 +24,7 @@ import net.yzwlab.javammd.model.MMDModel;
  * 
  * @author Wade Walker
  */
+@SuppressWarnings("deprecation")
 public class MMDModelGLCanvas {
 
 	static {
@@ -64,8 +66,16 @@ public class MMDModelGLCanvas {
 		}
 
 		GLCanvas glcanvas = new GLCanvas(glcapabilities);
-		glcanvas.addGLEventListener(new MMDDrawer(f.getParentFile(), glcanvas,
-				model, baseTime));
+		model.setScale(1.0f);
+		MMDDrawer drawer = new MMDDrawer(f.getParentFile(), glcanvas, baseTime);
+		drawer.add(model);
+
+		MetaseqModel mqoModel = new MetaseqModel();
+		mqoModel.mqoLoadFile(new FileBuffer(new File(f.getParentFile(),
+				"ƒpƒ\ƒRƒ“.mqo").getPath()), 0.1, 255);
+		drawer.add(mqoModel);
+
+		glcanvas.addGLEventListener(drawer);
 		glcanvas.setSize(new Dimension((int) (320 * 1.5), (int) (240 * 1.5)));
 		panel.add(glcanvas);
 		final JFrame jframe = new JFrame("MMD on JOGL");
