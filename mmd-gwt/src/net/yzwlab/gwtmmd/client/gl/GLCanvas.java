@@ -11,7 +11,6 @@ import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.event.shared.HandlerRegistration;
-import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
 
@@ -19,6 +18,11 @@ import com.google.gwt.user.client.ui.Widget;
  * WebGLキャンバスの実装です。
  */
 public class GLCanvas extends Widget implements HasGLCanvasHandlers {
+
+	/**
+	 * タイマの実行エンジンを保持します。
+	 */
+	private ITimerRunner timerRunner;
 
 	/**
 	 * クロックを保持します。
@@ -48,7 +52,7 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 	/**
 	 * タイマーを保持します。
 	 */
-	private Timer timer;
+	private ITimerRunner.Registration timer;
 
 	/**
 	 * WebGLオブジェクトを保持します。
@@ -78,6 +82,8 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 	/**
 	 * 構築します。
 	 * 
+	 * @param timerRunner
+	 *            タイマ実行エンジン。nullは不可。
 	 * @param camera
 	 *            カメラ。nullは不可。
 	 * @param cameraMode
@@ -89,15 +95,18 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 	 * @param height
 	 *            高さ。
 	 */
-	public GLCanvas(Camera3D camera, Camera3D.Mode cameraMode,
-			Label performanceLabel, int width, int height) {
-		this(new DefaultClock(), camera, cameraMode, performanceLabel, width,
-				height);
+	public GLCanvas(ITimerRunner timerRunner, Camera3D camera,
+			Camera3D.Mode cameraMode, Label performanceLabel, int width,
+			int height) {
+		this(timerRunner, new DefaultClock(), camera, cameraMode,
+				performanceLabel, width, height);
 	}
 
 	/**
 	 * 構築します。
 	 * 
+	 * @param timerRunner
+	 *            タイマ実行エンジン。nullは不可。
 	 * @param clock
 	 *            クロック。nullは不可。
 	 * @param camera
@@ -111,13 +120,14 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 	 * @param height
 	 *            高さ。
 	 */
-	public GLCanvas(IModelClock clock, Camera3D camera,
-			Camera3D.Mode cameraMode, Label performanceLabel, int width,
-			int height) {
-		if (clock == null || camera == null || cameraMode == null
-				|| performanceLabel == null) {
+	public GLCanvas(ITimerRunner timerRunner, IModelClock clock,
+			Camera3D camera, Camera3D.Mode cameraMode, Label performanceLabel,
+			int width, int height) {
+		if (timerRunner == null || clock == null || camera == null
+				|| cameraMode == null || performanceLabel == null) {
 			throw new IllegalArgumentException();
 		}
+		this.timerRunner = timerRunner;
 		this.clock = clock;
 		this.camera = camera;
 		this.cameraMode = cameraMode;
@@ -320,8 +330,7 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 			timer.cancel();
 			timer = null;
 		}
-		timer = new DrawSceneTimer();
-		timer.scheduleRepeating(1000 / 30);
+		timer = timerRunner.scheduleRepeating(1000 / 30, new DrawSceneTask());
 	}
 
 	private void unloadContext() {
@@ -1021,7 +1030,7 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 	/**
 	 * シーン描画用のタイマーです。
 	 */
-	private class DrawSceneTimer extends Timer {
+	private class DrawSceneTask implements ITimerRunner.Runnable {
 
 		/**
 		 * Perspective行列を保持します。
@@ -1031,7 +1040,7 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 		/**
 		 * 構築します。
 		 */
-		public DrawSceneTimer() {
+		public DrawSceneTask() {
 			this.pMatrix = camera.getProjectionMatrix(cameraMode, getWidth(),
 					getHeight());
 		}

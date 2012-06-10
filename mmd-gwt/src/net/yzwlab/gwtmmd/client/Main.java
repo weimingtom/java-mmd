@@ -234,8 +234,8 @@ public class Main implements EntryPoint {
 						mode = Camera3D.Mode.RIGHT;
 					}
 				}
-				GLCanvas glCanvas = new GLCanvas(new ClockImpl(i), camera,
-						mode, perfLabel, 640, 384);
+				GLCanvas glCanvas = new GLCanvas(new DefaultTimerRunner(),
+						new ClockImpl(i), camera, mode, perfLabel, 640, 384);
 				canvasManagers
 						.add(new GLCanvasManager(glCanvas, resourcePanel));
 			}
