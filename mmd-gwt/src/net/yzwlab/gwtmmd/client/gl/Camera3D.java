@@ -36,4 +36,16 @@ public interface Camera3D {
 	 */
 	public JavaScriptObject getModelViewMatrix(Mode mode);
 
+	public int getCurrentRx();
+
+	public void setCurrentRx(int currentRx);
+
+	public int getCurrentRy();
+
+	public void setCurrentRy(int currentRy);
+
+	public int getCurrentRz();
+
+	public void setCurrentRz(int currentRz);
+
 }
