@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import net.yzwlab.gwtmmd.client.gl.Camera3D;
+import net.yzwlab.gwtmmd.client.gl.DefaultCamera;
 import net.yzwlab.gwtmmd.client.gl.GLCanvas;
 import net.yzwlab.gwtmmd.client.gl.GLCanvasEvent;
 import net.yzwlab.gwtmmd.client.gl.GLCanvasHandler;
@@ -222,7 +223,13 @@ public class Main implements EntryPoint {
 				throw new IllegalStateException();
 			}
 
-			final GLCamera camera = new GLCamera();
+			Camera3D cameraImpl = null;
+			if (canvasCount == 1) {
+				cameraImpl = new DefaultCamera();
+			} else {
+				cameraImpl = new GLCamera();
+			}
+			final Camera3D camera = cameraImpl;
 			// camera.setCurrentRy(-1);
 			// camera.setCurrentRx(1);
 			for (int i = 0; i < canvasCount; i++) {

@@ -53,7 +53,7 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 		InputStream in = null;
 		try {
 			in = GreetingServiceImpl.class
-					.getResourceAsStream("mmd/azunyan/azunyan.pmd");
+					.getResourceAsStream("mmd/DIVA_miku/normal.pmd");
 			if (in == null) {
 				throw new FileNotFoundException();
 			}
@@ -84,7 +84,7 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 
 			AnalyzedPMDFile apmdFile = new AnalyzedPMDFile();
 			apmdFile.setFile(pmdFile);
-			apmdFile.setBaseDir("azunyan");
+			apmdFile.setBaseDir("DIVA_miku");
 			apmdFile.setImageFilenames(filenames);
 			return apmdFile;
 		} catch (ReadException e) {
