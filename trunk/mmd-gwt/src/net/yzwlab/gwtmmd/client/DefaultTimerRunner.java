@@ -1,5 +1,10 @@
 package net.yzwlab.gwtmmd.client;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import net.yzwlab.gwtmmd.client.gl.ITimerRunner;
 
 import com.google.gwt.user.client.Timer;
@@ -10,10 +15,15 @@ import com.google.gwt.user.client.Timer;
 public class DefaultTimerRunner implements ITimerRunner {
 
 	/**
+	 * タイマーを保持します。
+	 */
+	private Map<Integer, TimerImpl> timerMap;
+
+	/**
 	 * 構築します。
 	 */
 	public DefaultTimerRunner() {
-		;
+		this.timerMap = new HashMap<Integer, TimerImpl>();
 	}
 
 	@Override
@@ -21,38 +31,94 @@ public class DefaultTimerRunner implements ITimerRunner {
 		if (task == null) {
 			throw new IllegalArgumentException();
 		}
-		RegistrationImpl reg = new RegistrationImpl(task);
-		reg.scheduleRepeating(periodMillis);
-		return reg;
+		TimerImpl timer = timerMap.get(periodMillis);
+		if (timer == null) {
+			timer = new TimerImpl(periodMillis);
+			timer.scheduleRepeating(periodMillis);
+		}
+		timerMap.put(periodMillis, timer);
+		return timer.add(task);
 	}
 
 	/**
 	 * 登録情報の実装です。
 	 */
-	private class RegistrationImpl extends Timer implements
-			ITimerRunner.Registration {
+	private class TimerImpl extends Timer {
+
+		/**
+		 * 間隔を保持します。
+		 */
+		private int period;
 
 		/**
 		 * タスクを保持します。
 		 */
-		private Runnable task;
+		private List<Runnable> tasks;
 
 		/**
 		 * 構築します。
 		 * 
+		 * @param period
+		 *            間隔。
+		 */
+		public TimerImpl(int period) {
+			this.period = period;
+			this.tasks = new ArrayList<Runnable>();
+		}
+
+		/**
+		 * 追加します。
+		 * 
 		 * @param task
 		 *            タスク。nullは不可。
 		 */
-		public RegistrationImpl(Runnable task) {
+		public ITimerRunner.Registration add(ITimerRunner.Runnable task) {
 			if (task == null) {
 				throw new IllegalArgumentException();
 			}
-			this.task = task;
+			tasks.add(task);
+			return new RegistrationImpl(task);
 		}
 
 		@Override
 		public void run() {
-			task.run();
+			for (Runnable task : tasks) {
+				task.run();
+			}
+			if (tasks.size() == 0) {
+				timerMap.remove(period);
+				cancel();
+			}
+		}
+
+		/**
+		 * 登録処理の実装です。
+		 */
+		private class RegistrationImpl implements ITimerRunner.Registration {
+
+			/**
+			 * タスクを保持します。
+			 */
+			private ITimerRunner.Runnable task;
+
+			/**
+			 * タスクを保持します。
+			 * 
+			 * @param task
+			 *            タスク。nullは不可。
+			 */
+			public RegistrationImpl(ITimerRunner.Runnable task) {
+				if (task == null) {
+					throw new IllegalArgumentException();
+				}
+				this.task = task;
+			}
+
+			@Override
+			public void cancel() {
+				tasks.remove(task);
+			}
+
 		}
 
 	}
