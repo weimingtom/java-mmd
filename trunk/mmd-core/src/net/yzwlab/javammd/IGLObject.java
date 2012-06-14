@@ -6,6 +6,14 @@ package net.yzwlab.javammd;
 public interface IGLObject {
 
 	/**
+	 * 更新処理を非同期的に行います。
+	 * 
+	 * @param frameNo
+	 *            フレーム番号。
+	 */
+	public void update(float frameNo);
+
+	/**
 	 * テクスチャの準備を行います。
 	 * 
 	 * @param pTextureProvider

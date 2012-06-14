@@ -288,13 +288,8 @@ public class MMDModel implements IGLObject {
 		return;
 	}
 
-	/**
-	 * 更新処理を非同期的に行います。
-	 * 
-	 * @param frameNo
-	 *            フレーム番号。
-	 */
-	public void updateAsync(float frameNo) {
+	@Override
+	public void update(float frameNo) {
 		if (m_pVertexList == null) {
 			throw new IllegalArgumentException("E_POINTER");
 		}
