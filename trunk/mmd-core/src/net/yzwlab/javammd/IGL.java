@@ -10,6 +10,13 @@ public interface IGL {
 		GL_CW;
 	}
 
+	/**
+	 * 現在描画中のリソースコンテキストを取得します。 1つの描画領域しかない場合は0のみ。複数の描画領域がある場合は0ベースで取得できます。
+	 * 
+	 * @return リソースコンテキスト。
+	 */
+	public int getResourceContext();
+
 	public FrontFace glGetFrontFace();
 
 	public void glFrontFace(FrontFace mode);
