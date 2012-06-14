@@ -7,6 +7,7 @@ import java.util.Map;
 
 import net.yzwlab.gwtmmd.client.gl.Camera3D;
 import net.yzwlab.gwtmmd.client.gl.DefaultCamera;
+import net.yzwlab.gwtmmd.client.gl.DefaultClock;
 import net.yzwlab.gwtmmd.client.gl.GLCanvas;
 import net.yzwlab.gwtmmd.client.gl.GLCanvasEvent;
 import net.yzwlab.gwtmmd.client.gl.GLCanvasHandler;
@@ -16,13 +17,13 @@ import net.yzwlab.gwtmmd.client.image.CanvasImageService;
 import net.yzwlab.gwtmmd.client.image.CanvasRaster;
 import net.yzwlab.gwtmmd.client.io.FileReadBuffer;
 import net.yzwlab.gwtmmd.client.model.AnalyzedPMDFile;
+import net.yzwlab.gwtmmd.client.model.PhysicalWorld;
 import net.yzwlab.javammd.GLTexture;
 import net.yzwlab.javammd.IGLTextureProvider;
 import net.yzwlab.javammd.ReadException;
 import net.yzwlab.javammd.format.PMDFile;
 import net.yzwlab.javammd.image.IImage;
 import net.yzwlab.javammd.image.TargaReader;
-import net.yzwlab.javammd.model.Cube;
 import net.yzwlab.javammd.model.IMotionSegment;
 import net.yzwlab.javammd.model.MMDModel;
 
@@ -235,15 +236,19 @@ public class Main implements EntryPoint {
 			// camera.setCurrentRx(1);
 			for (int i = 0; i < canvasCount; i++) {
 				Camera3D.Mode mode = Camera3D.Mode.CENTER;
+				IModelClock clock = null;
 				if (canvasCount == 2) {
 					if (i == 0) {
 						mode = Camera3D.Mode.LEFT;
 					} else {
 						mode = Camera3D.Mode.RIGHT;
 					}
+					clock = new ClockImpl(i);
+				} else {
+					clock = new DefaultClock();
 				}
 				GLCanvas glCanvas = new GLCanvas(new DefaultTimerRunner(),
-						new ClockImpl(i), camera, mode, perfLabel, 640, 384);
+						clock, camera, mode, perfLabel, 640, 384);
 				canvasManagers
 						.add(new GLCanvasManager(glCanvas, resourcePanel));
 			}
@@ -541,6 +546,7 @@ public class Main implements EntryPoint {
 		try {
 			MMDModel model = new MMDModel();
 			model.setPMD(new FileReadBuffer(ArrayBuffer.create(1)), file);
+			PhysicalWorld world = new PhysicalWorld();
 
 			for (GLCanvasManager canvasManager : canvasManagers) {
 				GLCanvas glCanvas = canvasManager.getGlCanvas();
@@ -559,7 +565,7 @@ public class Main implements EntryPoint {
 				glCanvas.removeAllModels();
 				glCanvas.addModel(model);
 
-				initCubes(glCanvas);
+				glCanvas.addModel(world);
 			}
 
 			String msg = "モデル読み込み完了: Bones=" + model.getBoneCount() + ", IKs="
@@ -762,27 +768,6 @@ public class Main implements EntryPoint {
 	private native void log(String message) /*-{
 		console.log(message);
 	}-*/;
-
-	private void initCubes(GLCanvas canvas) {
-		if (canvas == null) {
-			throw new IllegalArgumentException();
-		}
-
-		for (int y = 0; y < 5; y++) {
-			for (int x = 0; x < 5; x++) {
-				int index = y * 5 + x;
-				Cube cube = new Cube();
-				if (index % 2 == 0) {
-					cube.setColor(1.0f, 0.0f, 0.0f, 1.0f);
-				} else {
-					cube.setColor(0.0f, 0.0f, 1.0f, 1.0f);
-				}
-				cube.setScale(1.0f);
-				cube.setTranslate(x * 3.0f, y * 3.0f, 2.0f);
-				canvas.addModel(cube);
-			}
-		}
-	}
 
 	private class ClockImpl implements IModelClock {
 

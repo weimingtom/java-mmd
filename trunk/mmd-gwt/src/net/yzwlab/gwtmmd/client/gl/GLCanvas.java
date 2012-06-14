@@ -753,6 +753,11 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 		}
 
 		@Override
+		public int getResourceContext() {
+			return 0;
+		}
+
+		@Override
 		public FrontFace glGetFrontFace() {
 			return FrontFace.GL_CW;
 		}
@@ -1048,7 +1053,7 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 			this.model = model;
 			this.motionSeg = null;
 			this.offsetTime = null;
-			this.frameRate = 0.0f;
+			this.frameRate = 30.0f;
 		}
 
 		/**
@@ -1073,11 +1078,13 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 		 * @return 現在のフレーム。
 		 */
 		public float getCurrentFrame(long currentTime) {
-			if (motionSeg == null) {
-				return 0.0f;
-			}
 			if (offsetTime == null) {
 				offsetTime = currentTime;
+			}
+			if (motionSeg == null) {
+				long rcurrentTime = currentTime - offsetTime;
+				float fcurrentTime = ((float) rcurrentTime) / 1000.0f;
+				return ((float) (fcurrentTime * frameRate));
 			}
 			return motionSeg.getFrame(frameRate, currentTime - offsetTime);
 		}
@@ -1088,11 +1095,8 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 		 * @param frameNo
 		 *            フレーム番号。
 		 */
-		public void updateAsync(float frameNo) {
-			if (!(model instanceof MMDModel)) {
-				return;
-			}
-			((MMDModel) model).updateAsync(frameNo);
+		public void update(float frameNo) {
+			model.update(frameNo);
 		}
 
 	}
@@ -1128,7 +1132,7 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 				setPMatrix(gl, program, pMatrix);
 
 				for (DynamicModel model : models) {
-					model.updateAsync(model.getCurrentFrame(currentTime));
+					model.update(model.getCurrentFrame(currentTime));
 				}
 
 				updateEndTime = System.currentTimeMillis();

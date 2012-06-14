@@ -17,6 +17,7 @@
 	<entry-point class='net.yzwlab.gwtmmd.client.Main' />
 	<inherits name="net.yzwlab.javammd" />
 	<inherits name="org.vectomatic.libgwtfile" />
+	<inherits name='com.bulletphysics' />
 
 	<!-- Specify the paths for translatable code -->
 	<source path='client' />

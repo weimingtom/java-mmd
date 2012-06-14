@@ -81,7 +81,7 @@ public class TextureLoader {
 		GLTexture desc = new GLTexture();
 		desc.setTexWidth(width);
 		desc.setTexHeight(height);
-		desc.setTextureId(index);
+		desc.setTextureIds(new long[] { index });
 		set(desc);
 	}
 
