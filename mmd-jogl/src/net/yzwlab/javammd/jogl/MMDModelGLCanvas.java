@@ -15,6 +15,7 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 import net.yzwlab.javammd.jogl.io.FileBuffer;
+import net.yzwlab.javammd.model.Cube;
 import net.yzwlab.javammd.model.MMDModel;
 import net.yzwlab.javammd.model.MetaseqModel;
 
@@ -71,14 +72,51 @@ public class MMDModelGLCanvas {
 		drawer.add(model);
 
 		MetaseqModel mqoModel = new MetaseqModel();
-		mqoModel.load(new FileBuffer(new File(f.getParentFile(),
-				"パソコン.mqo").getPath()), 0.1, 255);
+		mqoModel.load(
+				new FileBuffer(new File(f.getParentFile(), "パソコン.mqo")
+						.getPath()), 0.1, 255);
 		drawer.add(mqoModel);
 
 		mqoModel = new MetaseqModel();
 		mqoModel.load(new FileBuffer(new File(f.getParentFile(),
 				"dell_r610.mqo").getPath()), 0.05, 255);
 		drawer.add(mqoModel);
+
+		Cube cube = new Cube();
+		cube.setScale(2.0f);
+		cube.setColor(1.0f, 0.0f, 0.0f, 1.0f);
+		cube.setTranslate(0.0f, 1.0f, 0.0f);
+		drawer.add(cube);
+
+		cube = new Cube();
+		cube.setScale(2.0f);
+		cube.setColor(0.0f, 0.0f, 1.0f, 1.0f);
+		cube.setTranslate(4.0f, 1.0f, 0.0f);
+		drawer.add(cube);
+
+		cube = new Cube();
+		cube.setScale(2.0f);
+		cube.setColor(1.0f, 0.0f, 0.0f, 1.0f);
+		cube.setTranslate(8.0f, 1.0f, 0.0f);
+		drawer.add(cube);
+
+		cube = new Cube();
+		cube.setScale(2.0f);
+		cube.setColor(0.0f, 0.0f, 1.0f, 1.0f);
+		cube.setTranslate(0.0f, 5.0f, 0.0f);
+		drawer.add(cube);
+
+		cube = new Cube();
+		cube.setScale(2.0f);
+		cube.setColor(1.0f, 0.0f, 0.0f, 1.0f);
+		cube.setTranslate(4.0f, 5.0f, 0.0f);
+		drawer.add(cube);
+
+		cube = new Cube();
+		cube.setScale(2.0f);
+		cube.setColor(0.0f, 0.0f, 1.0f, 1.0f);
+		cube.setTranslate(8.0f, 5.0f, 0.0f);
+		drawer.add(cube);
 
 		glcanvas.addGLEventListener(drawer);
 		glcanvas.setSize(new Dimension((int) (320 * 1.5), (int) (240 * 1.5)));

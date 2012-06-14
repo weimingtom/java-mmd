@@ -151,6 +151,8 @@ public class JOGL implements IGL, IGLTextureProvider {
 		int imode = 0;
 		if (mode == C.GL_TRIANGLES) {
 			imode = GL.GL_TRIANGLES;
+		} else if (mode == C.GL_QUADS) {
+			imode = GL2.GL_QUADS;
 		} else {
 			throw new IllegalArgumentException();
 		}
