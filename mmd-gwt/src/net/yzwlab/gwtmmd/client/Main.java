@@ -778,7 +778,7 @@ public class Main implements EntryPoint {
 					cube.setColor(0.0f, 0.0f, 1.0f, 1.0f);
 				}
 				cube.setScale(1.0f);
-				cube.setTranslate(x * 2.0f, y * 2.0f, 0.0f);
+				cube.setTranslate(x * 3.0f, y * 3.0f, 2.0f);
 				canvas.addModel(cube);
 			}
 		}
