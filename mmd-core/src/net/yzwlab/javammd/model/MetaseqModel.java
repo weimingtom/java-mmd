@@ -386,7 +386,7 @@ public class MetaseqModel implements IGLObject {
 	private class MQO_MATERIAL {
 		boolean isValidMaterialInfo;// マテリアル情報の有効/無効
 		private boolean useTexture; // テクスチャの有無：USE_TEXTURE / NOUSE_TEXTURE
-		private Long textureId; // テクスチャの名前(OpenGL)
+		private GLTexture texture; // テクスチャの名前(OpenGL)
 		float color[/* 4 */]; // 色配列 (r, g, b, a)
 		float dif[/* 4 */]; // 拡散光
 		float amb[/* 4 */]; // 周囲光
@@ -404,7 +404,7 @@ public class MetaseqModel implements IGLObject {
 		public MQO_MATERIAL() {
 			this.isValidMaterialInfo = false;
 			this.useTexture = false;
-			this.textureId = null;
+			this.texture = null;
 			this.vertex_p = null;
 			this.vertex_t = null;
 			this.texFile = null;
@@ -424,7 +424,7 @@ public class MetaseqModel implements IGLObject {
 
 				@Override
 				public void onSuccess(byte[] filename, GLTexture desc) {
-					textureId = desc.getTextureId();
+					texture = desc;
 					handler.onSuccess(filename, desc);
 				}
 
@@ -468,7 +468,7 @@ public class MetaseqModel implements IGLObject {
 			if (useTexture == false) {
 				return false;
 			}
-			if (textureId == null) {
+			if (texture == null) {
 				return false;
 			}
 			return true;
@@ -790,7 +790,8 @@ public class MetaseqModel implements IGLObject {
 						gl.glBlendFunc(IGL.C.GL_SRC_ALPHA,
 								IGL.C.GL_ONE_MINUS_SRC_ALPHA);
 
-						gl.glBindTexture(IGL.C.GL_TEXTURE_2D, mat.textureId);
+						gl.glBindTexture(IGL.C.GL_TEXTURE_2D, mat.texture
+								.getTextureId(gl.getResourceContext()));
 
 						mat.drawVertexT(gl);
 

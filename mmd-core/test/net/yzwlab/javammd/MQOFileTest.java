@@ -65,10 +65,15 @@ public class MQOFileTest implements IGLTextureProvider, IGL,
 			throw new IllegalArgumentException();
 		}
 		GLTexture ret = new GLTexture();
-		ret.setTextureId(1L);
+		ret.setTextureIds(new long[] { 1L });
 		ret.setTexWidth(100);
 		ret.setTexHeight(100);
 		handler.onSuccess(filename, ret);
+	}
+
+	@Override
+	public int getResourceContext() {
+		return 0;
 	}
 
 	@Override

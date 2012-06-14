@@ -214,7 +214,8 @@ public class MMDMaterial {
 		gl.glEnable(IGL.C.GL_BLEND);
 		gl.glBlendFunc(IGL.C.GL_SRC_ALPHA, IGL.C.GL_ONE_MINUS_SRC_ALPHA);
 		if (m_texture != null) {
-			gl.glBindTexture(IGL.C.GL_TEXTURE_2D, m_texture.getTextureId());
+			gl.glBindTexture(IGL.C.GL_TEXTURE_2D,
+					m_texture.getTextureId(gl.getResourceContext()));
 		}
 		gl.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 		gl.glBegin(IGL.C.GL_TRIANGLES, m_pVertexes.length);
