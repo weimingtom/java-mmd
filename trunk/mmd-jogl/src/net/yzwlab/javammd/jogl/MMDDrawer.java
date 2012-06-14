@@ -56,7 +56,7 @@ public class MMDDrawer implements GLEventListener, IGLTextureProvider.Handler {
 
 		GLU glu = new GLU();
 		glu.gluPerspective(30.0, (double) width / (double) height, 1.0, 100.0);
-		gl2.glTranslated(0.0, 0.0, -20.0);
+		gl2.glTranslated(0.0, -5.0, -30.0);
 		glu.gluLookAt(3.0, 2.0 + 14.0, 5.0 + 10.0, 0.0, 0.0 + 14.0, 0.0, 0.0,
 				1.0, 0.0);
 
