@@ -86,6 +86,11 @@ public class MetaseqModel implements IGLObject {
 	}
 
 	@Override
+	public void update(float frameNo) {
+		;
+	}
+
+	@Override
 	public void prepare(IGLTextureProvider pTextureProvider, Handler handler)
 			throws ReadException {
 		if (pTextureProvider == null || handler == null) {
