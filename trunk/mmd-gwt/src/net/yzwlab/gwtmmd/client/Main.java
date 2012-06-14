@@ -22,6 +22,7 @@ import net.yzwlab.javammd.ReadException;
 import net.yzwlab.javammd.format.PMDFile;
 import net.yzwlab.javammd.image.IImage;
 import net.yzwlab.javammd.image.TargaReader;
+import net.yzwlab.javammd.model.Cube;
 import net.yzwlab.javammd.model.IMotionSegment;
 import net.yzwlab.javammd.model.MMDModel;
 
@@ -557,6 +558,8 @@ public class Main implements EntryPoint {
 				});
 				glCanvas.removeAllModels();
 				glCanvas.addModel(model);
+
+				initCubes(glCanvas);
 			}
 
 			String msg = "モデル読み込み完了: Bones=" + model.getBoneCount() + ", IKs="
@@ -742,7 +745,7 @@ public class Main implements EntryPoint {
 	}-*/;
 
 	private native void setBuffers(JavaScriptObject left, JavaScriptObject right) /*-{
-		if($wnd.canvas == null) {
+		if ($wnd.canvas == null) {
 			return;
 		}
 		$wnd.canvas.setLeft(new $wnd.RV3DImageData(left));
@@ -759,6 +762,27 @@ public class Main implements EntryPoint {
 	private native void log(String message) /*-{
 		console.log(message);
 	}-*/;
+
+	private void initCubes(GLCanvas canvas) {
+		if (canvas == null) {
+			throw new IllegalArgumentException();
+		}
+
+		for (int y = 0; y < 5; y++) {
+			for (int x = 0; x < 5; x++) {
+				int index = y * 5 + x;
+				Cube cube = new Cube();
+				if (index % 2 == 0) {
+					cube.setColor(1.0f, 0.0f, 0.0f, 1.0f);
+				} else {
+					cube.setColor(0.0f, 0.0f, 1.0f, 1.0f);
+				}
+				cube.setScale(1.0f);
+				cube.setTranslate(x * 2.0f, y * 2.0f, 0.0f);
+				canvas.addModel(cube);
+			}
+		}
+	}
 
 	private class ClockImpl implements IModelClock {
 
