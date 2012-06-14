@@ -1,5 +1,8 @@
 package net.yzwlab.javammd.model;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import net.yzwlab.javammd.IGL;
 import net.yzwlab.javammd.IGLObject;
 import net.yzwlab.javammd.IGLTextureProvider;
@@ -100,44 +103,78 @@ public class Cube implements IGLObject {
 		if (gl == null) {
 			throw new IllegalArgumentException();
 		}
+		List<Point> points = new ArrayList<Point>();
+
 		gl.glPushMatrix();
 		gl.glColor4f(r, g, b, a);
-		gl.glBegin(IGL.C.GL_QUADS, 24);
+		gl.glBegin(IGL.C.GL_TRIANGLES, 36);
 		gl.glNormal3f(1f, 0f, 0f);
-		glVertex3f(gl, +extent, -extent, +extent);
-		glVertex3f(gl, +extent, -extent, -extent);
-		glVertex3f(gl, +extent, +extent, -extent);
-		glVertex3f(gl, +extent, +extent, +extent);
+		glVertex3f(gl, points, +extent, -extent, +extent);
+		glVertex3f(gl, points, +extent, -extent, -extent);
+		glVertex3f(gl, points, +extent, +extent, -extent);
+		glVertex3f(gl, points, +extent, +extent, +extent);
 		gl.glNormal3f(0f, 1f, 0f);
-		glVertex3f(gl, +extent, +extent, +extent);
-		glVertex3f(gl, +extent, +extent, -extent);
-		glVertex3f(gl, -extent, +extent, -extent);
-		glVertex3f(gl, -extent, +extent, +extent);
+		glVertex3f(gl, points, +extent, +extent, +extent);
+		glVertex3f(gl, points, +extent, +extent, -extent);
+		glVertex3f(gl, points, -extent, +extent, -extent);
+		glVertex3f(gl, points, -extent, +extent, +extent);
 		gl.glNormal3f(0f, 0f, 1f);
-		glVertex3f(gl, +extent, +extent, +extent);
-		glVertex3f(gl, -extent, +extent, +extent);
-		glVertex3f(gl, -extent, -extent, +extent);
-		glVertex3f(gl, +extent, -extent, +extent);
+		glVertex3f(gl, points, +extent, +extent, +extent);
+		glVertex3f(gl, points, -extent, +extent, +extent);
+		glVertex3f(gl, points, -extent, -extent, +extent);
+		glVertex3f(gl, points, +extent, -extent, +extent);
 		gl.glNormal3f(-1f, 0f, 0f);
-		glVertex3f(gl, -extent, -extent, +extent);
-		glVertex3f(gl, -extent, +extent, +extent);
-		glVertex3f(gl, -extent, +extent, -extent);
-		glVertex3f(gl, -extent, -extent, -extent);
+		glVertex3f(gl, points, -extent, -extent, +extent);
+		glVertex3f(gl, points, -extent, +extent, +extent);
+		glVertex3f(gl, points, -extent, +extent, -extent);
+		glVertex3f(gl, points, -extent, -extent, -extent);
 		gl.glNormal3f(0f, -1f, 0f);
-		glVertex3f(gl, -extent, -extent, +extent);
-		glVertex3f(gl, -extent, -extent, -extent);
-		glVertex3f(gl, +extent, -extent, -extent);
-		glVertex3f(gl, +extent, -extent, +extent);
+		glVertex3f(gl, points, -extent, -extent, +extent);
+		glVertex3f(gl, points, -extent, -extent, -extent);
+		glVertex3f(gl, points, +extent, -extent, -extent);
+		glVertex3f(gl, points, +extent, -extent, +extent);
 		gl.glNormal3f(0f, 0f, -1f);
-		glVertex3f(gl, -extent, -extent, -extent);
-		glVertex3f(gl, -extent, +extent, -extent);
-		glVertex3f(gl, +extent, +extent, -extent);
-		glVertex3f(gl, +extent, -extent, -extent);
+		glVertex3f(gl, points, -extent, -extent, -extent);
+		glVertex3f(gl, points, -extent, +extent, -extent);
+		glVertex3f(gl, points, +extent, +extent, -extent);
+		glVertex3f(gl, points, +extent, -extent, -extent);
 		gl.glEnd();
 		gl.glPopMatrix();
 	}
 
-	private void glVertex3f(IGL gl, float x, float y, float z) {
-		gl.glVertex3f(x + tx, y + ty, z + tz);
+	private void glVertex3f(IGL gl, List<Point> points, float x, float y,
+			float z) {
+		points.add(new Point(x + tx, y + ty, z + tz));
+		if (points.size() >= 4) {
+			for (int i = 0; i < 3; i++) {
+				Point p = points.get(0 + i);
+				gl.glVertex3f(p.x, p.y, p.z);
+			}
+			for (int i = 0; i < 3; i++) {
+				Point p = points.get(1 + i);
+				if (i == 0) {
+					p = points.get(i);
+				}
+				gl.glVertex3f(p.x, p.y, p.z);
+			}
+			points.clear();
+		}
 	}
+
+	private class Point {
+
+		private float x;
+
+		private float y;
+
+		private float z;
+
+		public Point(float x, float y, float z) {
+			this.x = x;
+			this.y = y;
+			this.z = z;
+		}
+
+	}
+
 }
