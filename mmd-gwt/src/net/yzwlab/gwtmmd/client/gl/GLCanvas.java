@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.yzwlab.javammd.IGL;
+import net.yzwlab.javammd.IGLObject;
 import net.yzwlab.javammd.model.IMotionSegment;
 import net.yzwlab.javammd.model.MMDModel;
 
@@ -199,7 +200,7 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 	 * @param model
 	 *            モデル。nullは不可。
 	 */
-	public void addModel(MMDModel model) {
+	public void addModel(IGLObject model) {
 		if (model == null) {
 			throw new IllegalArgumentException();
 		}
@@ -564,6 +565,8 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 	 * 
 	 * @param gl
 	 *            WebGLオブジェクト。nullは不可。
+	 * @param drawMode
+	 *            描画モード。nullは不可。
 	 * @param program
 	 *            シェーダ。nullは不可。
 	 * @param vbuffer
@@ -577,7 +580,7 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 	 * @param color
 	 *            色。nullは不可。
 	 */
-	private native void drawArrays(JavaScriptObject gl,
+	private native void drawArrays(JavaScriptObject gl, String drawMode,
 			JavaScriptObject program, JavaScriptObject vbuffer,
 			JavaScriptObject nbuffer, JavaScriptObject cbuffer,
 			JavaScriptObject texture, JavaScriptObject color)/*-{
@@ -600,7 +603,7 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 			useTexture = 1.0;
 		}
 		gl.uniform1f(program.useTexture, useTexture);
-		gl.drawArrays(gl.TRIANGLES, 0, vbuffer.vertexNum);
+		gl.drawArrays(gl[drawMode], 0, vbuffer.vertexNum);
 	}-*/;
 
 	/**
@@ -682,6 +685,11 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 		private JavaScriptObject mvMatrix;
 
 		/**
+		 * 描画モードを保持します。
+		 */
+		private String drawMode;
+
+		/**
 		 * バッファのインデックスを保持します。
 		 */
 		private int vertCount;
@@ -712,7 +720,7 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 		 * @param model
 		 *            モデル。nullは不可。
 		 */
-		public GL(MMDModel model) {
+		public GL(IGLObject model) {
 			if (model == null) {
 				throw new IllegalArgumentException();
 			}
@@ -721,6 +729,7 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 			this.normals = null;
 			this.coords = null;
 			this.mvMatrix = camera.getModelViewMatrix(cameraMode);
+			this.drawMode = null;
 			this.vertCount = 0;
 			this.normCount = 0;
 			this.coordCount = 0;
@@ -738,8 +747,8 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 
 			for (int i = 0; i < bufferIndex; i++) {
 				BufferGroup g = buffers.get(i);
-				drawArrays(gl, program, g.vbuffer, g.nbuffer, g.cbuffer,
-						g.texture, g.color);
+				drawArrays(gl, g.drawMode, program, g.vbuffer, g.nbuffer,
+						g.cbuffer, g.texture, g.color);
 			}
 		}
 
@@ -759,6 +768,11 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 				throw new IllegalArgumentException();
 			}
 
+			if (mode == IGL.C.GL_TRIANGLES) {
+				drawMode = "TRIANGLES";
+			} else {
+				throw new IllegalArgumentException();
+			}
 			vertCount = 0;
 			normCount = 0;
 			coordCount = 0;
@@ -780,6 +794,7 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 			initBuffer3(gl, buffer.vbuffer, vertexes);
 			initBuffer3(gl, buffer.nbuffer, normals);
 			initBuffer2(gl, buffer.cbuffer, coords);
+			buffer.drawMode = drawMode;
 			buffer.texture = currentTexture;
 			buffer.color = currentColor;
 
@@ -1003,7 +1018,7 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 		/**
 		 * モデルを保持します。
 		 */
-		private MMDModel model;
+		private IGLObject model;
 
 		/**
 		 * モーションセグメントを保持します。
@@ -1026,7 +1041,7 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 		 * @param model
 		 *            モデル。nullは不可。
 		 */
-		public DynamicModel(MMDModel model) {
+		public DynamicModel(IGLObject model) {
 			if (model == null) {
 				throw new IllegalArgumentException();
 			}
@@ -1067,6 +1082,19 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 			return motionSeg.getFrame(frameRate, currentTime - offsetTime);
 		}
 
+		/**
+		 * 更新します。
+		 * 
+		 * @param frameNo
+		 *            フレーム番号。
+		 */
+		public void updateAsync(float frameNo) {
+			if (!(model instanceof MMDModel)) {
+				return;
+			}
+			((MMDModel) model).updateAsync(frameNo);
+		}
+
 	}
 
 	/**
@@ -1100,7 +1128,7 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 				setPMatrix(gl, program, pMatrix);
 
 				for (DynamicModel model : models) {
-					model.model.updateAsync(model.getCurrentFrame(currentTime));
+					model.updateAsync(model.getCurrentFrame(currentTime));
 				}
 
 				updateEndTime = System.currentTimeMillis();
@@ -1133,6 +1161,8 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 
 		private JavaScriptObject color;
 
+		private String drawMode;
+
 		public BufferGroup(JavaScriptObject vbuffer, JavaScriptObject nbuffer,
 				JavaScriptObject cbuffer) {
 			super();
@@ -1141,6 +1171,7 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 			this.cbuffer = cbuffer;
 			this.texture = null;
 			this.color = null;
+			this.drawMode = null;
 		}
 
 	}
