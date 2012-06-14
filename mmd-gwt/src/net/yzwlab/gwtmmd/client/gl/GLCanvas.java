@@ -459,6 +459,8 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 		program.normalMatrixUniform = gl.getUniformLocation(program,
 				"uNormalMatrix");
 		program.texture0 = gl.getUniformLocation(program, "texture0");
+		program.vColor = gl.getUniformLocation(program, "vColor");
+		program.useTexture = gl.getUniformLocation(program, "useTexture");
 
 		return program;
 	}-*/;
@@ -572,11 +574,13 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 	 *            バッファ。nullは不可。
 	 * @param texture
 	 *            テクスチャ。nullは不可。
+	 * @param color
+	 *            色。nullは不可。
 	 */
 	private native void drawArrays(JavaScriptObject gl,
 			JavaScriptObject program, JavaScriptObject vbuffer,
 			JavaScriptObject nbuffer, JavaScriptObject cbuffer,
-			JavaScriptObject texture)/*-{
+			JavaScriptObject texture, JavaScriptObject color)/*-{
 		gl.bindBuffer(gl.ARRAY_BUFFER, vbuffer);
 		gl.vertexAttribPointer(program.vertexPositionAttribute, 3, gl.FLOAT,
 				false, 0, 0);
@@ -590,6 +594,12 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, texture);
 		gl.uniform1i(program.texture0, 0);
+		gl.uniform4fv(program.vColor, color);
+		var useTexture = 0.0;
+		if (texture) {
+			useTexture = 1.0;
+		}
+		gl.uniform1f(program.useTexture, useTexture);
 		gl.drawArrays(gl.TRIANGLES, 0, vbuffer.vertexNum);
 	}-*/;
 
@@ -692,6 +702,11 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 		private JavaScriptObject currentTexture;
 
 		/**
+		 * 現在の色を保持します。
+		 */
+		private JavaScriptObject currentColor;
+
+		/**
 		 * 構築します。
 		 * 
 		 * @param model
@@ -709,6 +724,10 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 			this.vertCount = 0;
 			this.normCount = 0;
 			this.coordCount = 0;
+			this.currentTexture = null;
+			this.currentColor = null;
+
+			this.currentColor = createVec4(1.0f, 1.0f, 1.0f, 1.0f);
 		}
 
 		/**
@@ -720,7 +739,7 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 			for (int i = 0; i < bufferIndex; i++) {
 				BufferGroup g = buffers.get(i);
 				drawArrays(gl, program, g.vbuffer, g.nbuffer, g.cbuffer,
-						g.texture);
+						g.texture, g.color);
 			}
 		}
 
@@ -762,6 +781,7 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 			initBuffer3(gl, buffer.nbuffer, normals);
 			initBuffer2(gl, buffer.cbuffer, coords);
 			buffer.texture = currentTexture;
+			buffer.color = currentColor;
 
 			bufferIndex++;
 		}
@@ -820,8 +840,7 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 
 		@Override
 		public void glColor4f(float a1, float a2, float a3, float a4) {
-			// TODO Auto-generated method stub
-
+			this.currentColor = createVec4(a1, a2, a3, a4);
 		}
 
 		@Override
@@ -949,6 +968,29 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 				float x, float y) /*-{
 			vertexes[offset * 2] = x;
 			vertexes[offset * 2 + 1] = y;
+		}-*/;
+
+		/**
+		 * vec4を生成します。
+		 * 
+		 * @param a1
+		 *            値。
+		 * @param a2
+		 *            値。
+		 * @param a3
+		 *            値。
+		 * @param a4
+		 *            値。
+		 * @return vec4。
+		 */
+		private native JavaScriptObject createVec4(float a1, float a2,
+				float a3, float a4) /*-{
+			var r = new Array();
+			r[0] = a1;
+			r[1] = a2;
+			r[2] = a3;
+			r[3] = a4;
+			return r;
 		}-*/;
 
 	}
@@ -1089,6 +1131,8 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 
 		private JavaScriptObject texture;
 
+		private JavaScriptObject color;
+
 		public BufferGroup(JavaScriptObject vbuffer, JavaScriptObject nbuffer,
 				JavaScriptObject cbuffer) {
 			super();
@@ -1096,6 +1140,7 @@ public class GLCanvas extends Widget implements HasGLCanvasHandlers {
 			this.nbuffer = nbuffer;
 			this.cbuffer = cbuffer;
 			this.texture = null;
+			this.color = null;
 		}
 
 	}

@@ -30,12 +30,14 @@
     <script id="shader-fs" type="x-shader/x-fragment">
       precision mediump float;
       varying vec3 vLighting;
-      varying vec2 texCoord;      
+      varying vec2 texCoord;     
       uniform sampler2D texture0;
+      uniform vec4 vColor; 
+      uniform float useTexture;
       
       void main(void) {
         vec4 texelColor = texture2D(texture0, texCoord);
-        gl_FragColor = texelColor; //vec4(texelColor.rgb * vLighting, texelColor.a);
+        gl_FragColor = vColor * (1.0 - useTexture) + vec4(texelColor.rgb, texelColor.a) * useTexture;
       }
     </script>
     <script id="shader-vs" type="x-shader/x-vertex">

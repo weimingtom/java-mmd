@@ -201,9 +201,6 @@ public class GLCanvasManager implements ImageResourceLoader.Handler,
 	@Override
 	public void load(byte[] filename, IGLTextureProvider.Handler handler)
 			throws ReadException {
-		// いったんダミーキャンバスを入れておく
-		handler.onSuccess(filename, imageResourceLoader.getDummyTexture());
-
 		VerticalPanel vpanel = new VerticalPanel();
 		resourcePanel.add(vpanel);
 		TextureLoader loader = new TextureLoader(glCanvas, filename, vpanel,
