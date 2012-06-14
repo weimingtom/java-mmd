@@ -184,7 +184,7 @@ public class ImageResourceLoader {
 			GLTexture desc = new GLTexture();
 			desc.setTexHeight(height);
 			desc.setTexWidth(width);
-			desc.setTextureId(id);
+			desc.setTextureIds(new long[] { id });
 			handler.onLoad(filename, desc);
 		}
 
