@@ -7,6 +7,7 @@ import java.util.Map;
 
 import net.yzwlab.gwtmmd.client.gl.ITimerRunner;
 
+import com.google.gwt.event.shared.UmbrellaException;
 import com.google.gwt.user.client.Timer;
 
 /**
@@ -39,6 +40,16 @@ public class DefaultTimerRunner implements ITimerRunner {
 		timerMap.put(periodMillis, timer);
 		return timer.add(task);
 	}
+
+	/**
+	 * ログを出力します。
+	 * 
+	 * @param message
+	 *            メッセージ。null可。
+	 */
+	private native void log(String message) /*-{
+		console.log(message);
+	}-*/;
 
 	/**
 	 * 登録情報の実装です。
@@ -83,7 +94,20 @@ public class DefaultTimerRunner implements ITimerRunner {
 		@Override
 		public void run() {
 			for (Runnable task : tasks) {
-				task.run();
+				try {
+					task.run();
+				} catch (UmbrellaException ut) {
+					log("begin UmbrellaException");
+					for (Throwable t : ut.getCauses()) {
+						t.printStackTrace();
+						log("  + " + t.getClass().getName() + ": "
+								+ t.getMessage());
+					}
+					log("end UmbrellaException");
+				} catch (Throwable t) {
+					t.printStackTrace();
+					log(t.getClass().getName() + ": " + t.getMessage());
+				}
 			}
 			if (tasks.size() == 0) {
 				timerMap.remove(period);

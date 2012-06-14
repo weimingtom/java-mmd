@@ -315,11 +315,17 @@ public class Main implements EntryPoint {
 							if (event == null) {
 								throw new IllegalArgumentException();
 							}
-							int width = canvas.getWidth();
-							int height = canvas.getHeight();
-							PixelBuffer buffer = canvas.readPixels(0, 0, width,
-									height);
-							setRenderedBuffer(index, buffer);
+							try {
+								int width = canvas.getWidth();
+								int height = canvas.getHeight();
+								PixelBuffer buffer = canvas.readPixels(0, 0,
+										width, height);
+								setRenderedBuffer(index, buffer);
+							} catch (Throwable th) {
+								th.printStackTrace();
+								log("onDraw: " + th.getClass().getName() + ": "
+										+ th.getMessage());
+							}
 						}
 					});
 				}
@@ -399,25 +405,31 @@ public class Main implements EntryPoint {
 
 				@Override
 				public void onSuccess(AnalyzedPMDFile result) {
-					loadPMD(result.getFile(), dlg);
-					boolean first = true;
-					for (String filename : result.getImageFilenames()) {
-						int pos = filename.indexOf("*");
-						if (pos > 0) {
-							filename = filename.substring(0, pos);
-						}
-						if (first) {
+					try {
+						loadPMD(result.getFile(), dlg);
+						boolean first = true;
+						for (String filename : result.getImageFilenames()) {
+							int pos = filename.indexOf("*");
+							if (pos > 0) {
+								filename = filename.substring(0, pos);
+							}
+							if (first) {
+								for (GLCanvasManager canvasManager : canvasManagers) {
+									canvasManager.load(result.getBaseDir(),
+											filename);
+								}
+								first = false;
+								continue;
+							}
 							for (GLCanvasManager canvasManager : canvasManagers) {
-								canvasManager.load(result.getBaseDir(),
+								canvasManager.addQueue(result.getBaseDir(),
 										filename);
 							}
-							first = false;
-							continue;
 						}
-						for (GLCanvasManager canvasManager : canvasManagers) {
-							canvasManager.addQueue(result.getBaseDir(),
-									filename);
-						}
+					} catch (Throwable e) {
+						Window.alert("Exception: " + e.getClass().getName()
+								+ ": " + e.getMessage());
+						e.printStackTrace();
 					}
 				}
 			});
@@ -425,6 +437,9 @@ public class Main implements EntryPoint {
 			initHandlers(this);
 		} catch (IllegalStateException e) {
 			Window.alert("初期化に失敗。WebGLをサポートしていない環境かも・・・？");
+		} catch (Throwable e) {
+			Window.alert("Exception: " + e.getClass().getName() + ": "
+					+ e.getMessage());
 		}
 	}
 
@@ -727,9 +742,22 @@ public class Main implements EntryPoint {
 	}-*/;
 
 	private native void setBuffers(JavaScriptObject left, JavaScriptObject right) /*-{
+		if($wnd.canvas == null) {
+			return;
+		}
 		$wnd.canvas.setLeft(new $wnd.RV3DImageData(left));
 		$wnd.canvas.setRight(new $wnd.RV3DImageData(right));
 		$wnd.canvas.draw();
+	}-*/;
+
+	/**
+	 * ログを出力します。
+	 * 
+	 * @param message
+	 *            メッセージ。null可。
+	 */
+	private native void log(String message) /*-{
+		console.log(message);
 	}-*/;
 
 	private class ClockImpl implements IModelClock {
