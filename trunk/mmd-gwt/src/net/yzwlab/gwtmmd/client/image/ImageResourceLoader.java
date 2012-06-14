@@ -61,16 +61,6 @@ public class ImageResourceLoader {
 	private GLCanvas glCanvas;
 
 	/**
-	 * ダミーテクスチャを保持します。
-	 */
-	private GLTexture dummyTexture;
-
-	/**
-	 * ダミーテクスチャ用キャンバスを保持します。
-	 */
-	private CanvasWidget dummyTextureCanvas;
-
-	/**
 	 * 構築します。
 	 */
 	public ImageResourceLoader(VerticalPanel container) {
@@ -80,8 +70,6 @@ public class ImageResourceLoader {
 		this.container = container;
 		this.entries = new ArrayList<Entry>();
 		this.glCanvas = null;
-		this.dummyTexture = null;
-		this.dummyTextureCanvas = null;
 	}
 
 	/**
@@ -95,33 +83,6 @@ public class ImageResourceLoader {
 			throw new IllegalArgumentException();
 		}
 		this.glCanvas = glCanvas;
-	}
-
-	/**
-	 * ダミーテクスチャを取得します。
-	 * 
-	 * @return ダミーテクスチャ。
-	 */
-	public GLTexture getDummyTexture() {
-		if (dummyTexture != null) {
-			return dummyTexture;
-		}
-		final int w = 256;
-		final int h = 256;
-
-		dummyTextureCanvas = new CanvasWidget(Document.get().createElement(
-				"canvas"));
-		container.add(dummyTextureCanvas);
-		dummyTextureCanvas.setWidth(w);
-		dummyTextureCanvas.setHeight(h);
-		dummyTextureCanvas.fillRect("#ffffff", 0, 0, w, h);
-
-		dummyTexture = new GLTexture();
-		dummyTexture.setTexHeight(h);
-		dummyTexture.setTexWidth(w);
-		dummyTexture.setTextureId(glCanvas.createTexture(
-				dummyTextureCanvas.getElement(), w, h));
-		return dummyTexture;
 	}
 
 	public void load(String filename, String url, Handler handler) {
