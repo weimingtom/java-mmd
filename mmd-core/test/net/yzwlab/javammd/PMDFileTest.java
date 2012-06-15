@@ -29,6 +29,10 @@ public class PMDFileTest implements IGLTextureProvider, IGL,
 				}
 				PMDFileTest main = new PMDFileTest();
 				model.prepare(main, main);
+				for (int i = 0; i < 10; i++) {
+					System.err.println("-- update #" + i + " --");
+					model.update(0.0f);
+				}
 				model.draw(main);
 			} finally {
 				if (in != null) {

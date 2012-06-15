@@ -248,14 +248,14 @@ public class MMDMaterial {
 		for (int i = 0; i < m_material.getNEdges(); i++) {
 			pBone = m_pVertexes[i].pOriginalVert.getBones()[0];
 			if (pBone != null) {
-				vis = pBone.IsVisible();
+				vis = pBone.isVisible();
 				if (vis == false) {
 					break;
 				}
 			}
 			pBone = m_pVertexes[i].pOriginalVert.getBones()[1];
 			if (pBone != null) {
-				vis = pBone.IsVisible();
+				vis = pBone.isVisible();
 				if (vis == false) {
 					break;
 				}

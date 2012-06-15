@@ -22,7 +22,7 @@ public class MMDIK {
 
 	protected List<MMDBone> m_bones;
 
-	public static int Compare(MMDIK pLeft, MMDIK pRight) {
+	public static int compare(MMDIK pLeft, MMDIK pRight) {
 		int sortVal1 = 0;
 		int sortVal2 = 0;
 		if (pLeft == null || pRight == null) {
@@ -42,14 +42,14 @@ public class MMDIK {
 	/**
 	 * 構築します。
 	 * 
-	 * @param pIK
+	 * @param ik
 	 *            IK。nullは不可。
 	 */
-	public MMDIK(PMD_IK_RECORD pIK) {
-		if (pIK == null) {
+	public MMDIK(PMD_IK_RECORD ik) {
+		if (ik == null) {
 			throw new IllegalArgumentException();
 		}
-		if (pIK.getLink().size() == 0) {
+		if (ik.getLink().size() == 0) {
 			throw new IllegalArgumentException();
 		}
 		this.m_bones = new ArrayList<MMDBone>();
@@ -57,7 +57,7 @@ public class MMDIK {
 		this.m_pEffect = null;
 		this.m_pTarget = null;
 		this.m_bEnabled = false;
-		this.m_ik = pIK;
+		this.m_ik = ik;
 		m_pTarget = null;
 		m_pEffect = null;
 		m_fact = 0.0f;
@@ -69,31 +69,34 @@ public class MMDIK {
 		m_pEffect = null;
 	}
 
-	public void Init(List<MMDBone> bones) {
+	public void init(List<MMDBone> bones) {
+		if (bones == null) {
+			throw new IllegalArgumentException();
+		}
 		MMDBone pBone = null;
 		m_pTarget = bones.get(m_ik.getParent());
 		m_pEffect = bones.get(m_ik.getTo());
-		m_fact = m_ik.getFact() * 3.1415926f;
+		m_fact = (float) (m_ik.getFact() * Math.PI);
 		for (int i = 0; i < m_ik.getLink().size(); i++) {
 			pBone = bones.get(m_ik.getLink().get(i));
 			m_bones.add(pBone);
-			pBone.UpdateIKLimitAngle();
+			pBone.updateIKLimitAngle();
 		}
 	}
 
-	public byte[] GetTargetName() {
+	public byte[] getTargetName() {
 		if (m_pTarget == null) {
 			throw new IllegalArgumentException("E_UNEXPECTED");
 		}
-		return m_pTarget.GetName();
+		return m_pTarget.getName();
 	}
 
-	public void SetEnabled(boolean enabled) {
+	public void setEnabled(boolean enabled) {
 		m_bEnabled = enabled;
 		return;
 	}
 
-	public boolean IsEnabled() {
+	public boolean isEnabled() {
 		Boolean pEnabled = false;
 		pEnabled = m_bEnabled;
 		return pEnabled;
@@ -103,11 +106,6 @@ public class MMDIK {
 	 * IKを更新します。
 	 */
 	public void update() {
-		float dp = 0.0f;
-		int index = 0;
-		boolean limitAngle = false;
-		MMDBone pBone = null;
-		float rotAngle = 0.0f;
 		if (m_pTarget == null || m_pEffect == null) {
 			throw new IllegalArgumentException("E_UNEXPECTED");
 		}
@@ -127,16 +125,18 @@ public class MMDIK {
 		MMD_VECTOR3 targetPositionBuf = new MMD_VECTOR3();
 
 		MMD_VECTOR3 targetOriginalPosition = m_pTarget
-				.GetPositionFromLocal(new MMD_VECTOR3());
+				.getPositionFromLocal(new MMD_VECTOR3());
 		MMD_VECTOR4 rotQuat = new MMD_VECTOR4();
 		MMD_VECTOR3 rotAxis = new MMD_VECTOR3();
 		MMD_VECTOR3 rotQuatBuf = new MMD_VECTOR3();
+		MMD_VECTOR3 effectOriginalPosition = new MMD_VECTOR3();
 		for (int it = 0; it < m_ik.getCount(); it++) {
-			index = 0;
+			int index = 0;
 			for (Iterator<MMDBone> bit = m_bones.iterator(); bit.hasNext(); index++) {
-				pBone = bit.next();
+				MMDBone pBone = bit.next();
 				MMD_VECTOR3 effectPosition = m_pEffect
-						.GetPositionFromLocal(effectPositionBuf);
+						.getPositionFromLocal(effectPositionBuf);
+				effectOriginalPosition.copyFrom(effectPosition);
 				MMD_MATRIX matBone = pBone.getLocal(matBoneBuf);
 				MMD_MATRIX matInvBone = matBone.inverse(matInvBoneBuf);
 				effectPosition = effectPosition.transform(matInvBone);
@@ -144,16 +144,20 @@ public class MMDIK {
 				MMD_VECTOR3 targetPosition = targetPositionBuf
 						.transform(matInvBone);
 				diff.subtract(effectPosition, targetPosition);
-				dp = 0.0f;
-				dp = diff.dotProduct(diff);
+				float dp = diff.dotProduct(diff);
 				if (dp < 0.0000001f) {
 					return;
 				}
+				// (1)基準関節→エフェクタ位置への方向ベクトル
 				effectPosition.normalize();
+				// (2)基準関節→目標位置への方向ベクトル
 				targetPosition.normalize();
+
+				// ベクトル(1)を(2)に一致させるための最短回転量計算
 				dp = effectPosition.dotProduct(targetPosition);
-				rotAngle = (float) Math.acos(dp);
+				float rotAngle = (float) Math.acos(dp);
 				if (0.00000001f < Math.abs(rotAngle)) {
+					// 回転が必要
 					if (rotAngle < -m_fact) {
 						rotAngle = -m_fact;
 					} else if (m_fact < rotAngle) {
@@ -166,18 +170,32 @@ public class MMDIK {
 					}
 					rotAxis.normalize();
 					rotQuat.createAxis(rotAxis, rotAngle);
-					limitAngle = false;
-					limitAngle = pBone.IsIKLimitAngle();
+					// String effectName = new String(m_pEffect.getName());
+					// if (m_pEffect.getParentName() != null) {
+					// effectName += "(<"
+					// + new String(m_pEffect.getParentName()) + ")";
+					// }
+					// String targetName = new String(m_pTarget.getName());
+					// if (m_pTarget.getParentName() != null) {
+					// targetName += "(<"
+					// + new String(m_pTarget.getParentName()) + ")";
+					// }
+					// System.err.println("MMDIK(" + effectName + " -> "
+					// + targetName + " / #" + index + "): effector="
+					// + effectOriginalPosition + ", target="
+					// + targetOriginalPosition + ", rotQuat=" + rotQuat
+					// + ", rotAngle=" + rotAngle);
+
+					boolean limitAngle = pBone.isIKLimitAngle();
 					if (limitAngle) {
 						rotQuat = rotQuat.limitAngle(rotQuatBuf);
 					}
 					rotQuat.normalize();
-					MMDBone.PositionAndQT pqt = pBone.GetVectors();
-					MMD_VECTOR3 destPosition = pqt.getPosition();
+					MMDBone.PositionAndQT pqt = pBone.getVectors();
 					MMD_VECTOR4 destRotation = pqt.getQt();
 					destRotation.multiply(destRotation, rotQuat);
 					destRotation.normalize();
-					pBone.SetVectors(destPosition, destRotation);
+					pBone.setVectors(pqt.getPosition(), destRotation);
 					for (int j = index; j >= 0; j--) {
 						m_bones.get(j).updateMatrix();
 					}

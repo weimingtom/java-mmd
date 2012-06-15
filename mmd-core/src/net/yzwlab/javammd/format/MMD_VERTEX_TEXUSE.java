@@ -55,8 +55,8 @@ public class MMD_VERTEX_TEXUSE implements Serializable {
 		if (buffer == null) {
 			throw new IllegalArgumentException();
 		}
-		this.point.copyFrom((new MMD_VECTOR3()).Read(buffer));
-		this.normal.copyFrom((new MMD_VECTOR3()).Read(buffer));
+		this.point.copyFrom((new MMD_VECTOR3()).read(buffer));
+		this.normal.copyFrom((new MMD_VECTOR3()).read(buffer));
 		this.uv.copyFrom((new MMD_VECTOR2()).Read(buffer));
 		return this;
 	}

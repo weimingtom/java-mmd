@@ -293,7 +293,7 @@ public class MMD_VECTOR4 implements Serializable {
 		return angle.createEuler(this);
 	}
 
-	public MMD_VECTOR4 Read(IReadBuffer buffer) throws ReadException {
+	public MMD_VECTOR4 read(IReadBuffer buffer) throws ReadException {
 		if (buffer == null) {
 			throw new IllegalArgumentException();
 		}
@@ -302,5 +302,11 @@ public class MMD_VECTOR4 implements Serializable {
 		this.z = buffer.readFloat();
 		this.w = buffer.readFloat();
 		return this;
+	}
+
+	@Override
+	public String toString() {
+		return "MMD_VECTOR4 [x=" + x + ", y=" + y + ", z=" + z + ", w=" + w
+				+ "]";
 	}
 }

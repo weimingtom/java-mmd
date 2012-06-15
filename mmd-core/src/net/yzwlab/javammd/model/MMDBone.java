@@ -20,7 +20,7 @@ import net.yzwlab.javammd.format.VMD_MOTION_RECORD;
 public class MMDBone {
 	protected PMD_BONE_RECORD m_bone;
 
-	protected MMDBone m_pParent;
+	private MMDBone m_parent;
 
 	protected MMDBone m_pChild;
 
@@ -42,7 +42,9 @@ public class MMDBone {
 
 	protected boolean m_bVisible;
 
-	public static int Less(Motion pLeft, Motion pRight) {
+	private MMD_MATRIX effectLocalTemp;
+
+	public static int less(Motion pLeft, Motion pRight) {
 		int f1 = 0;
 		int f2 = 0;
 		if (pLeft == null || pRight == null) {
@@ -71,7 +73,7 @@ public class MMDBone {
 		if (pBone == null) {
 			throw new IllegalArgumentException();
 		}
-		this.m_bVisible = false;
+		this.m_bVisible = true;
 		this.m_motions = new ArrayList<Motion>();
 		this.m_bIKLimitAngle = false;
 		this.m_effectSkinning = new MMD_MATRIX();
@@ -81,33 +83,24 @@ public class MMDBone {
 		this.m_invTransform = new MMD_MATRIX();
 		this.m_offset = new MMD_VECTOR3();
 		this.m_pChild = null;
-		this.m_pParent = null;
+		this.m_parent = null;
 		this.m_bone = pBone;
-		m_pParent = null;
-		m_pChild = null;
-		m_bIKLimitAngle = false;
-		m_bVisible = true;
-		m_offset = new MMD_VECTOR3();
-		m_invTransform = new MMD_MATRIX();
-		m_effectPosition = new MMD_VECTOR3();
-		m_effectLocal = new MMD_MATRIX();
-		m_effectPosition = new MMD_VECTOR3();
-		m_effectSkinning = new MMD_MATRIX();
+		this.effectLocalTemp = new MMD_MATRIX();
 	}
 
 	public void dispose() {
-		ClearMotion();
+		clearMotion();
 	}
 
-	public void Init(List<MMDBone> bones) {
+	public void init(List<MMDBone> bones) {
 		if ((m_bone.getParent() & 0x8000) == 0) {
 			if (m_bone.getParent() >= bones.size()) {
 				throw new IllegalArgumentException("E_UNEXPECTED");
 			}
-			m_pParent = bones.get(m_bone.getParent());
-			m_offset.setX(m_bone.getPos()[0] - m_pParent.m_bone.getPos()[0]);
-			m_offset.setY(m_bone.getPos()[1] - m_pParent.m_bone.getPos()[1]);
-			m_offset.setZ(m_bone.getPos()[2] - m_pParent.m_bone.getPos()[2]);
+			m_parent = bones.get(m_bone.getParent());
+			m_offset.setX(m_bone.getPos()[0] - m_parent.m_bone.getPos()[0]);
+			m_offset.setY(m_bone.getPos()[1] - m_parent.m_bone.getPos()[1]);
+			m_offset.setZ(m_bone.getPos()[2] - m_parent.m_bone.getPos()[2]);
 		} else {
 			m_offset.setX(m_bone.getPos()[0]);
 			m_offset.setY(m_bone.getPos()[1]);
@@ -123,38 +116,39 @@ public class MMDBone {
 		m_invTransform.getValues()[3][0] = -m_bone.getPos()[0];
 		m_invTransform.getValues()[3][1] = -m_bone.getPos()[1];
 		m_invTransform.getValues()[3][2] = -m_bone.getPos()[2];
-		Reset();
+		reset();
 	}
 
-	public void SetVisible(boolean visible) {
+	public void setVisible(boolean visible) {
 		m_bVisible = visible;
 		return;
 	}
 
-	public boolean IsVisible() {
+	public boolean isVisible() {
 		return m_bVisible;
 	}
 
-	public void Reset() {
+	public void reset() {
 		m_effectPosition.toZero();
 		m_effectRotation.toZero();
 		m_effectRotation.setW(1.0f);
 		m_effectLocal.generateIdentity();
-		m_effectLocal.getValues()[3][0] = m_bone.getPos()[0];
-		m_effectLocal.getValues()[3][1] = m_bone.getPos()[1];
-		m_effectLocal.getValues()[3][2] = m_bone.getPos()[2];
+		float[][] localValues = m_effectLocal.getValues();
+		localValues[3][0] = m_bone.getPos()[0];
+		localValues[3][1] = m_bone.getPos()[1];
+		localValues[3][2] = m_bone.getPos()[2];
 		return;
 	}
 
-	public void ClearMotion() {
+	public void clearMotion() {
 		m_motions.clear();
 	}
 
-	public byte[] GetName() {
+	public byte[] getName() {
 		return DataUtils.getStringData(m_bone.getName());
 	}
 
-	public boolean IsTarget(VMD_MOTION_RECORD pMotion) {
+	public boolean isTarget(VMD_MOTION_RECORD pMotion) {
 		if (pMotion == null) {
 			throw new IllegalArgumentException("E_POINTER");
 		}
@@ -250,23 +244,23 @@ public class MMDBone {
 		return pDest;
 	}
 
-	public void PrepareMotion() {
+	public void prepareMotion() {
 		Collections.sort(m_motions, new Comparator<Motion>() {
 			@Override
 			public int compare(Motion m1, Motion m2) {
-				return Less(m1, m2);
+				return less(m1, m2);
 			}
 		});
 	}
 
-	public void UpdateMotion(float elapsedFrame) {
+	public void updateMotion(float elapsedFrame) {
 		float offset = 0.0f;
 		Motion pBegin = null;
 		Motion pEnd = null;
 		pBegin = null;
 		pEnd = null;
 		offset = 0.0f;
-		MotionSet motionSet = FindMotion(elapsedFrame);
+		MotionSet motionSet = findMotion(elapsedFrame);
 		if (motionSet == null) {
 			return;
 		}
@@ -274,13 +268,13 @@ public class MMDBone {
 		pEnd = motionSet.motion2;
 		offset = motionSet.offset;
 		if (pEnd == null) {
-			pBegin.GetVectors(m_effectPosition, m_effectRotation);
+			pBegin.getVectors(m_effectPosition, m_effectRotation);
 		} else {
 			MMD_VECTOR3 beginPos = new MMD_VECTOR3(), endPos = new MMD_VECTOR3();
 			MMD_VECTOR4 beginQt = new MMD_VECTOR4(), endQt = new MMD_VECTOR4();
-			pBegin.GetVectors(beginPos, beginQt);
-			pEnd.GetVectors(endPos, endQt);
-			m_effectPosition = pEnd.Lerp(beginPos, endPos, offset);
+			pBegin.getVectors(beginPos, beginQt);
+			pEnd.getVectors(endPos, endQt);
+			m_effectPosition = pEnd.lerp(beginPos, endPos, offset);
 			pEnd.lerp(m_effectRotation, beginQt, endQt, offset);
 		}
 	}
@@ -290,15 +284,20 @@ public class MMDBone {
 	 */
 	public void updateMatrix() {
 		m_effectLocal.fromQuaternion(m_effectRotation);
-		m_effectLocal.getValues()[3][0] = m_effectPosition.getX()
-				+ m_offset.getX();
-		m_effectLocal.getValues()[3][1] = m_effectPosition.getY()
-				+ m_offset.getY();
-		m_effectLocal.getValues()[3][2] = m_effectPosition.getZ()
-				+ m_offset.getZ();
-		if (m_pParent != null) {
-			m_effectLocal.multiply(new MMD_MATRIX(m_effectLocal),
-					m_pParent.m_effectLocal);
+		float[][] localValues = m_effectLocal.getValues();
+		localValues[3][0] = m_effectPosition.getX() + m_offset.getX();
+		localValues[3][1] = m_effectPosition.getY() + m_offset.getY();
+		localValues[3][2] = m_effectPosition.getZ() + m_offset.getZ();
+		// String parentName = "NONE";
+		// if (m_parent != null) {
+		// parentName = new String(m_parent.getName());
+		// }
+		// System.err.println("MMDBone(" + new String(getName())
+		// + ")updateMatrix: m_effectPosition=" + m_effectPosition
+		// + ", m_offset=" + m_offset + "  (parent=" + parentName + ")");
+		if (m_parent != null) {
+			effectLocalTemp.copyFrom(m_effectLocal);
+			m_effectLocal.multiply(effectLocalTemp, m_parent.m_effectLocal);
 		}
 	}
 
@@ -314,7 +313,8 @@ public class MMDBone {
 		return m_motions.get(m_motions.size() - 1).getFrameNo();
 	}
 
-	public void UpdateIKLimitAngle() {
+	public void updateIKLimitAngle() {
+		// TODO 暫定措置
 		if (Arrays.equals(DataUtils.getStringData(m_bone.getName(), 20),
 				new byte[] { (byte) -115, (byte) -74, (byte) -126, (byte) -48,
 						(byte) -126, (byte) -76 }/* 左ひざ */)
@@ -326,7 +326,7 @@ public class MMDBone {
 		return;
 	}
 
-	public boolean IsIKLimitAngle() {
+	public boolean isIKLimitAngle() {
 		return m_bIKLimitAngle;
 	}
 
@@ -337,13 +337,14 @@ public class MMDBone {
 	 *            バッファ。nullは不可。
 	 * @return local行列のうち位置。
 	 */
-	public MMD_VECTOR3 GetPositionFromLocal(MMD_VECTOR3 buffer) {
+	public MMD_VECTOR3 getPositionFromLocal(MMD_VECTOR3 buffer) {
 		if (buffer == null) {
 			throw new IllegalArgumentException();
 		}
-		buffer.setX((m_effectLocal.getValues()[3][0]));
-		buffer.setY(m_effectLocal.getValues()[3][1]);
-		buffer.setZ(m_effectLocal.getValues()[3][2]);
+		float[][] localValues = m_effectLocal.getValues();
+		buffer.setX(localValues[3][0]);
+		buffer.setY(localValues[3][1]);
+		buffer.setZ(localValues[3][2]);
 		return buffer;
 	}
 
@@ -362,11 +363,11 @@ public class MMDBone {
 		return buffer;
 	}
 
-	public PositionAndQT GetVectors() {
+	public PositionAndQT getVectors() {
 		return new PositionAndQT(m_effectPosition, m_effectRotation);
 	}
 
-	public void SetVectors(MMD_VECTOR3 pPos, MMD_VECTOR4 pQt) {
+	public void setVectors(MMD_VECTOR3 pPos, MMD_VECTOR4 pQt) {
 		if (pPos == null || pQt == null) {
 			throw new IllegalArgumentException("E_POINTER");
 		}
@@ -374,7 +375,7 @@ public class MMDBone {
 		m_effectRotation.copyFrom(pQt);
 	}
 
-	public MotionSet FindMotion(float elapsedTime) {
+	public MotionSet findMotion(float elapsedTime) {
 		int fr = 0;
 		Motion pEMotion = null;
 		Motion pSMotion = null;
@@ -401,6 +402,18 @@ public class MMDBone {
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * 親の名前を取得します。
+	 * 
+	 * @return 親の名前。
+	 */
+	public byte[] getParentName() {
+		if (m_parent == null) {
+			return null;
+		}
+		return m_parent.getName();
 	}
 
 	/**
@@ -500,7 +513,7 @@ public class MMDBone {
 			return m_motion.getFrameNo() + offset;
 		}
 
-		public void GetVectors(MMD_VECTOR3 pos, MMD_VECTOR4 qt) {
+		public void getVectors(MMD_VECTOR3 pos, MMD_VECTOR4 qt) {
 			if (pos == null || qt == null) {
 				throw new IllegalArgumentException();
 			}
@@ -508,7 +521,7 @@ public class MMDBone {
 			qt.copyFrom(m_qt);
 		}
 
-		public MMD_VECTOR3 Lerp(MMD_VECTOR3 pValue1, MMD_VECTOR3 pValue2,
+		public MMD_VECTOR3 lerp(MMD_VECTOR3 pValue1, MMD_VECTOR3 pValue2,
 				float weight) {
 			MMD_VECTOR3 pDest = new MMD_VECTOR3();
 			float posLerp = 0.0f;
