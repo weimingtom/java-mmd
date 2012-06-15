@@ -401,44 +401,62 @@ public class Main implements EntryPoint {
 			final DialogBox dlg = new LoadingDialogBox("PMD");
 			dlg.center();
 
-			greetingService.getDefaultPMD(new AsyncCallback<AnalyzedPMDFile>() {
-				@Override
-				public void onFailure(Throwable caught) {
-					dlg.hide();
-					Window.alert("Error: " + caught.getClass().getName() + ": "
-							+ caught.getMessage());
-				}
+			if (isBullet()) {
+				PhysicalWorld world = new PhysicalWorld();
 
-				@Override
-				public void onSuccess(AnalyzedPMDFile result) {
-					try {
-						loadPMD(result.getFile(), dlg);
-						boolean first = true;
-						for (String filename : result.getImageFilenames()) {
-							int pos = filename.indexOf("*");
-							if (pos > 0) {
-								filename = filename.substring(0, pos);
-							}
-							if (first) {
-								for (GLCanvasManager canvasManager : canvasManagers) {
-									canvasManager.load(result.getBaseDir(),
-											filename);
-								}
-								first = false;
-								continue;
-							}
-							for (GLCanvasManager canvasManager : canvasManagers) {
-								canvasManager.addQueue(result.getBaseDir(),
-										filename);
-							}
-						}
-					} catch (Throwable e) {
-						Window.alert("Exception: " + e.getClass().getName()
-								+ ": " + e.getMessage());
-						e.printStackTrace();
-					}
+				for (GLCanvasManager canvasManager : canvasManagers) {
+					GLCanvas glCanvas = canvasManager.getGlCanvas();
+					glCanvas.removeAllModels();
+					glCanvas.addModel(world);
 				}
-			});
+				dlg.hide();
+			} else {
+				greetingService
+						.getDefaultPMD(new AsyncCallback<AnalyzedPMDFile>() {
+							@Override
+							public void onFailure(Throwable caught) {
+								dlg.hide();
+								Window.alert("Error: "
+										+ caught.getClass().getName() + ": "
+										+ caught.getMessage());
+							}
+
+							@Override
+							public void onSuccess(AnalyzedPMDFile result) {
+								try {
+									loadPMD(result.getFile(), dlg);
+									boolean first = true;
+									for (String filename : result
+											.getImageFilenames()) {
+										int pos = filename.indexOf("*");
+										if (pos > 0) {
+											filename = filename.substring(0,
+													pos);
+										}
+										if (first) {
+											for (GLCanvasManager canvasManager : canvasManagers) {
+												canvasManager.load(
+														result.getBaseDir(),
+														filename);
+											}
+											first = false;
+											continue;
+										}
+										for (GLCanvasManager canvasManager : canvasManagers) {
+											canvasManager.addQueue(
+													result.getBaseDir(),
+													filename);
+										}
+									}
+								} catch (Throwable e) {
+									Window.alert("Exception: "
+											+ e.getClass().getName() + ": "
+											+ e.getMessage());
+									e.printStackTrace();
+								}
+							}
+						});
+			}
 
 			initHandlers(this);
 		} catch (IllegalStateException e) {
@@ -546,7 +564,9 @@ public class Main implements EntryPoint {
 		try {
 			MMDModel model = new MMDModel();
 			model.setPMD(new FileReadBuffer(ArrayBuffer.create(1)), file);
-			PhysicalWorld world = new PhysicalWorld();
+			for (int i = 0; i < model.getIKCount(); i++) {
+				model.setIKEnabled(i, false);
+			}
 
 			for (GLCanvasManager canvasManager : canvasManagers) {
 				GLCanvas glCanvas = canvasManager.getGlCanvas();
@@ -564,8 +584,6 @@ public class Main implements EntryPoint {
 				});
 				glCanvas.removeAllModels();
 				glCanvas.addModel(model);
-
-				glCanvas.addModel(world);
 			}
 
 			String msg = "モデル読み込み完了: Bones=" + model.getBoneCount() + ", IKs="
@@ -768,6 +786,19 @@ public class Main implements EntryPoint {
 	private native void log(String message) /*-{
 		console.log(message);
 	}-*/;
+
+	/**
+	 * Bulletモードかどうかを判定します。
+	 * 
+	 * @return Bulletモードであればtrue。
+	 */
+	private boolean isBullet() {
+		String v = Window.Location.getParameter("bullet");
+		if (v == null) {
+			return false;
+		}
+		return v.equalsIgnoreCase("true");
+	}
 
 	private class ClockImpl implements IModelClock {
 
