@@ -46,7 +46,7 @@ public class MMD_MATRIX implements Serializable {
 		this.values = values;
 	}
 
-	public MMD_MATRIX Read(IReadBuffer buffer) throws ReadException {
+	public MMD_MATRIX read(IReadBuffer buffer) throws ReadException {
 		if (buffer == null) {
 			throw new IllegalArgumentException();
 		}

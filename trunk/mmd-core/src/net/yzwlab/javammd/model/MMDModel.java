@@ -92,7 +92,7 @@ public class MMDModel implements IGLObject {
 			m_bones.add(new MMDBone(bone));
 		}
 		for (int i = 0; i < m_bones.size(); i++) {
-			m_bones.get(i).Init(m_bones);
+			m_bones.get(i).init(m_bones);
 		}
 		morps = pmdFile.GetMorpChunk();
 		for (int i = 0; i < morps.size(); i++) {
@@ -112,11 +112,11 @@ public class MMDModel implements IGLObject {
 		Collections.sort(m_iks, new Comparator<MMDIK>() {
 			@Override
 			public int compare(MMDIK o1, MMDIK o2) {
-				return MMDIK.Compare(o1, o2);
+				return MMDIK.compare(o1, o2);
 			}
 		});
 		for (int i = 0; i < m_iks.size(); i++) {
-			m_iks.get(i).Init(m_bones);
+			m_iks.get(i).init(m_bones);
 		}
 		materials = pmdFile.GetMaterialChunk();
 		for (int i = 0; i < materials.size(); i++) {
@@ -186,7 +186,7 @@ public class MMDModel implements IGLObject {
 			added = false;
 			for (int i = 0; i < m_bones.size(); i++) {
 				pBone = m_bones.get(i);
-				br = pBone.IsTarget(motion);
+				br = pBone.isTarget(motion);
 				if (br) {
 					pBone.addMotion(buffer, offset, motion);
 					added = true;
@@ -198,7 +198,7 @@ public class MMDModel implements IGLObject {
 		}
 		for (int i = 0; i < m_bones.size(); i++) {
 			pBone = m_bones.get(i);
-			pBone.PrepareMotion();
+			pBone.prepareMotion();
 		}
 		morps = vmdFile.GetMorpChunk();
 		for (int j = 0; j < morps.size(); j++) {
@@ -280,7 +280,7 @@ public class MMDModel implements IGLObject {
 	 */
 	public void clearMotion() {
 		for (int i = 0; i < m_bones.size(); i++) {
-			m_bones.get(i).ClearMotion();
+			m_bones.get(i).clearMotion();
 		}
 		for (int i = 0; i < m_morps.size(); i++) {
 			m_morps.get(i).ClearMotion();
@@ -442,7 +442,7 @@ public class MMDModel implements IGLObject {
 		if (index >= m_iks.size()) {
 			throw new IllegalArgumentException("E_INVALIDARG");
 		}
-		return m_iks.get(index).GetTargetName();
+		return m_iks.get(index).getTargetName();
 	}
 
 	/**
@@ -456,7 +456,7 @@ public class MMDModel implements IGLObject {
 		if (index >= m_iks.size()) {
 			throw new IllegalArgumentException("E_INVALIDARG");
 		}
-		return m_iks.get(index).IsEnabled();
+		return m_iks.get(index).isEnabled();
 	}
 
 	/**
@@ -471,7 +471,7 @@ public class MMDModel implements IGLObject {
 		if (index >= m_iks.size()) {
 			throw new IllegalArgumentException("E_INVALIDARG");
 		}
-		m_iks.get(index).SetEnabled(value);
+		m_iks.get(index).setEnabled(value);
 	}
 
 	/**
@@ -490,11 +490,11 @@ public class MMDModel implements IGLObject {
 			throw new IllegalArgumentException("E_INVALIDARG");
 		}
 		pBone = m_bones.get(index);
-		curVisible = pBone.IsVisible();
+		curVisible = pBone.isVisible();
 		if (curVisible == visible) {
 			return;
 		}
-		pBone.SetVisible(visible);
+		pBone.setVisible(visible);
 		for (int i = 0; i < m_materials.size(); i++) {
 			pElem = m_materials.get(i);
 			pElem.UpdateVisibility();
@@ -512,7 +512,7 @@ public class MMDModel implements IGLObject {
 		if (index >= m_bones.size()) {
 			throw new IllegalArgumentException("E_INVALIDARG");
 		}
-		return m_bones.get(index).IsVisible();
+		return m_bones.get(index).isVisible();
 	}
 
 	/**
@@ -602,7 +602,7 @@ public class MMDModel implements IGLObject {
 			m_morps.get(i).ApplyMotion(elapsedFrame, ppOriginalDescs);
 		}
 		for (int i = 0; i < m_bones.size(); i++) {
-			m_bones.get(i).UpdateMotion(elapsedFrame);
+			m_bones.get(i).updateMotion(elapsedFrame);
 		}
 		for (int i = 0; i < m_bones.size(); i++) {
 			m_bones.get(i).updateMatrix();
@@ -638,7 +638,7 @@ public class MMDModel implements IGLObject {
 
 		@Override
 		public byte[] getName() {
-			return bone.GetName();
+			return bone.getName();
 		}
 
 	}

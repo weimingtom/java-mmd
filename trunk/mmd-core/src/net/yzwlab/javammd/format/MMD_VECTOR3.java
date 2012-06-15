@@ -254,7 +254,7 @@ public class MMD_VECTOR3 implements Serializable {
 		return buf;
 	}
 
-	public MMD_VECTOR3 Read(IReadBuffer buffer) throws ReadException {
+	public MMD_VECTOR3 read(IReadBuffer buffer) throws ReadException {
 		if (buffer == null) {
 			throw new IllegalArgumentException();
 		}
@@ -262,5 +262,10 @@ public class MMD_VECTOR3 implements Serializable {
 		this.y = buffer.readFloat();
 		this.z = buffer.readFloat();
 		return this;
+	}
+
+	@Override
+	public String toString() {
+		return "MMD_VECTOR3 [x=" + x + ", y=" + y + ", z=" + z + "]";
 	}
 }
