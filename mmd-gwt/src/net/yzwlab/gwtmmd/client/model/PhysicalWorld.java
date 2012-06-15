@@ -75,33 +75,37 @@ public class PhysicalWorld implements IGLObject {
 		bodies.add(new RigidBodyCube(groundRigidBody, cube));
 
 		for (int y = 0; y < 5; y++) {
-			int index = y;
+			for (int x = 0; x < 5; x++) {
+				for (int z = 0; z < 5; z++) {
+					int index = x + y + z;
 
-			Transform fallTransform = new Transform();
-			fallTransform.setIdentity();
-			fallTransform.origin.set(4.0f + y * 0.1f, 20 + y * 1.0f, 0);
+					Transform fallTransform = new Transform();
+					fallTransform.setIdentity();
+					fallTransform.origin.set(x * 1.0f, 20 + y * 1.0f, z * 1.0f);
 
-			DefaultMotionState fallMotionState = new DefaultMotionState(
-					new Transform(fallTransform));
-			float mass = 1;
-			Vector3f fallInertia = new Vector3f(0, 0, 0);
+					DefaultMotionState fallMotionState = new DefaultMotionState(
+							new Transform(fallTransform));
+					float mass = 1;
+					Vector3f fallInertia = new Vector3f(0, 0, 0);
 
-			CollisionShape fallShape = new BoxShape(new Vector3f(0.5f, 0.5f,
-					0.5f));
-			fallShape.calculateLocalInertia(mass, fallInertia);
-			RigidBodyConstructionInfo fallRigidBodyCI = new RigidBodyConstructionInfo(
-					mass, fallMotionState, fallShape, fallInertia);
-			RigidBody fallRigidBody = new RigidBody(fallRigidBodyCI);
-			dynamicsWorld.addRigidBody(fallRigidBody);
+					CollisionShape fallShape = new BoxShape(new Vector3f(0.5f,
+							0.5f, 0.5f));
+					fallShape.calculateLocalInertia(mass, fallInertia);
+					RigidBodyConstructionInfo fallRigidBodyCI = new RigidBodyConstructionInfo(
+							mass, fallMotionState, fallShape, fallInertia);
+					RigidBody fallRigidBody = new RigidBody(fallRigidBodyCI);
+					dynamicsWorld.addRigidBody(fallRigidBody);
 
-			cube = new Cube();
-			if (index % 2 == 0) {
-				cube.setColor(1.0f, 0.0f, 0.0f, 1.0f);
-			} else {
-				cube.setColor(0.0f, 0.0f, 1.0f, 1.0f);
+					cube = new Cube();
+					if (index % 2 == 0) {
+						cube.setColor(1.0f, 0.0f, 0.0f, 1.0f);
+					} else {
+						cube.setColor(0.0f, 0.0f, 1.0f, 1.0f);
+					}
+					cube.setScale(0.5f);
+					bodies.add(new RigidBodyCube(fallRigidBody, cube));
+				}
 			}
-			cube.setScale(0.5f);
-			bodies.add(new RigidBodyCube(fallRigidBody, cube));
 		}
 	}
 
