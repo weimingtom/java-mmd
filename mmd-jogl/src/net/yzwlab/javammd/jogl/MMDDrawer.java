@@ -120,7 +120,7 @@ public class MMDDrawer implements GLEventListener, IGLTextureProvider.Handler {
 					}
 				}
 				float nextFrame = frame;
-				model.updateAsync(nextFrame);
+				model.update(nextFrame);
 			}
 			updateEndTime = System.currentTimeMillis();
 
