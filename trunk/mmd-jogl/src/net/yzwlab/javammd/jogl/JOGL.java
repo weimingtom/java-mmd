@@ -42,6 +42,11 @@ public class JOGL implements IGL, IGLTextureProvider {
 	}
 
 	@Override
+	public int getResourceContext() {
+		return 0;
+	}
+
+	@Override
 	public void load(byte[] filename, IGLTextureProvider.Handler handler)
 			throws ReadException {
 		if (filename == null || handler == null) {
@@ -121,7 +126,7 @@ public class JOGL implements IGL, IGLTextureProvider {
 					ret.getTexWidth(), ret.getTexHeight(), 0, GL2.GL_RGBA,
 					GL2.GL_UNSIGNED_BYTE, imageBuffer);
 			gl.glBindTexture(GL2.GL_TEXTURE_2D, 0); // デフォルトテクスチャの割り当て
-			ret.setTextureId(textureId);
+			ret.setTextureIds(new long[] { textureId });
 
 			handler.onSuccess(filename, ret);
 		} catch (IOException e) {
@@ -151,8 +156,6 @@ public class JOGL implements IGL, IGLTextureProvider {
 		int imode = 0;
 		if (mode == C.GL_TRIANGLES) {
 			imode = GL.GL_TRIANGLES;
-		} else if (mode == C.GL_QUADS) {
-			imode = GL2.GL_QUADS;
 		} else {
 			throw new IllegalArgumentException();
 		}
